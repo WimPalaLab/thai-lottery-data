@@ -63,7 +63,7 @@
 
 ## อัปเดตอัตโนมัติ
 
-GitHub Actions ([`.github/workflows/update.yml`](.github/workflows/update.yml)) รันทุกวันเวลา 17:00 และ 21:00 น. (เวลาไทย)
+GitHub Actions ([`.github/workflows/update.yml`](.github/workflows/update.yml)) รันทุกวันเวลา 17:00 และ 21:00 น. และ 09:00 น. ของวันถัดไป (เวลาไทย)
 เรียก [`scripts/update_from_glo.py`](scripts/update_from_glo.py) ซึ่งดึงงวดใหม่จาก API ของกองสลากฯ เท่านั้น
 ต่อท้าย `data/thai_lottery.csv` และเก็บ JSON ดิบใน `raw/glo/` แล้ว commit ให้เอง
 งวดที่ผลยังไม่ครบทุกรางวัลจะถูกข้ามไปก่อนแล้วลองใหม่รอบถัดไป; สั่งรันเองได้จากแท็บ Actions → Update lottery results → Run workflow
