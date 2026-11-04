@@ -23,11 +23,13 @@ GLO API ──(update_from_glo.py, วันละ 3 รอบ)──▶ data/th
 | `scripts/lotto_data.py` | อ่าน CSV, ตรวจทุกค่าด้วย regex, กำหนดยุค (E1–E3) และระดับความน่าเชื่อถือ |
 | `scripts/lotto_stats.py` | ความถี่ + ค่าคาดหวัง + ช่วง 95%, chi-square, autocorrelation, backtest (ไลบรารีมาตรฐานเท่านั้น) |
 | `scripts/lotto_analysis.py` | V2/V3: แต่ละหลัก, ลักษณะเลข (exact), รายปี, เปรียบเทียบช่วงเวลา, ระยะห่าง + Monte Carlo, Bonferroni/FDR, binomial test |
+| `scripts/lotto_randomness.py` | V4: runs test, serial (transition) test, Ljung–Box, Kolmogorov–Smirnov, poker test, coupon collector + Monte Carlo, power analysis |
+| `scripts/lotto_ranking.py` | V4: order statistics / ค่าสูงสุด-ต่ำสุดจาก Monte Carlo, backtest 10 อันดับแรก/สุดท้ายตามช่วงย้อนหลัง, `years_before` |
 | `scripts/build_site.py` | ตรวจ → คำนวณ → เขียน JSON → คัดลอกหน้าเว็บ (เฉพาะนามสกุลที่อนุญาต) |
 | `scripts/validate_csv.py` | ตัวตรวจ CSV แบบ command line สำหรับ GitHub Actions |
-| `web/*.html` | 6 หน้า: หน้าแรก, ผลย้อนหลัง, สถิติ, ห้องทดลอง, สุ่มจริงไหม, ข้อมูล |
+| `web/*.html` | 10 หน้า: หน้าแรก, ผลย้อนหลัง, สถิติ, อันดับ, วันเดียวกัน, สุ่มเลข, ห้องทดลอง, สุ่มจริงไหม, ทฤษฎีที่ใช้ (HTML ล้วน), ข้อมูล — head/nav/footer เหมือนกันทุกหน้า |
 | `web/assets/app.js`, `app.css` | โค้ดหน้าเว็บทั้งหมด (ไฟล์เดียวต่อชนิด) |
-| `tests/` | unittest ของข้อมูล สถิติ และความปลอดภัยของหน้าเว็บ; `test_lab_js.py` รันส่วน "lab core" ของ `app.js` ด้วย node (ถ้ามี) เทียบกับ Python |
+| `tests/` | unittest ของข้อมูล สถิติ และความปลอดภัยของหน้าเว็บ; `test_lab_js.py` รันส่วน "lab core" ของ `app.js` (ห้องทดลอง, วันเดียวกัน, ตัวสุ่มเลข, `yearsBefore`) ด้วย node (ถ้ามี) เทียบกับ Python/ค่าที่ไล่นับด้วยมือ; `test_v4.py` เทสต์ V4 ฝั่ง Python |
 
 ## ไฟล์ข้อมูลที่สร้าง (`_site/data/`)
 
@@ -43,10 +45,15 @@ GLO API ──(update_from_glo.py, วันละ 3 รอบ)──▶ data/th
 | `stats/timeline.json` | ต่อปี ต่อแหล่งข้อมูล: งวด, หมายเลข, ช่วงปกติของเลข 1 ตัว, ลักษณะเลข | สถิติ (รายปี) |
 | `stats/compare.json` | คู่ช่วงเวลาที่เทียบได้และผล chi-square homogeneity | สถิติ (เทียบช่วงเวลา) |
 | `stats/gaps.json` | ระยะห่างระหว่างการออกของ last2 เทียบค่าที่คาดไว้และช่วง Monte Carlo | สุ่มจริงไหม |
-| `stats/randomness.json` | ผลทดสอบความสุ่มทั้งหมด | หน้าสุ่มจริงไหม |
+| `stats/randomness.json` | ต่อ `data[ช่วงเวลา][แหล่งข้อมูล]`: ผลทดสอบความสุ่มทั้งหมด (chi-square เดิม + V4) พร้อม p หลังปรับรวมกัน, backtest, power, รายละเอียด runs/serial/Ljung–Box/KS/poker/coupon | หน้าสุ่มจริงไหม |
+| `stats/ranking.json` | ต่อขอบเขต: order statistics และค่าสูงสุด/ต่ำสุดจากการจำลองของ last2/back3/front3 และตัวเลขรายหลัก; `backtests[all|last20y|last10y|last5y]` (ทุกแหล่งข้อมูล) | หน้าอันดับ |
 | `thai_lottery.csv` | สำเนา CSV สำหรับดาวน์โหลด | หน้าข้อมูล |
 
-ขอบเขต (scope) = ช่วงเวลา (`all`, `e3`, `official`, `last5y`) × แหล่งข้อมูล (`all`, `checked` = ตัดข้อมูลแหล่งเดียว, `official`) คำนวณไว้ทุกคู่ล่วงหน้า หน้าเว็บแค่เลือกแสดง ยกเว้นห้องทดลองที่ต้องนับตามเงื่อนไขที่ผู้ใช้ตั้งเองในเครื่อง (จาก `index.json`)
+ขอบเขต (scope) = ช่วงเวลา (`all`, `last20y`, `last10y`, `last5y`, `e3`, `official`) × แหล่งข้อมูล (`all`, `checked` = ตัดข้อมูลแหล่งเดียว, `official`) คำนวณไว้ทุกคู่ล่วงหน้า หน้าเว็บแค่เลือกแสดง ยกเว้นห้องทดลองและหน้าวันเดียวกันที่ต้องนับตามเงื่อนไขที่ผู้ใช้ตั้งเองในเครื่อง (จาก `index.json`) และตัวสุ่มเลขที่สุ่มในเครื่อง (ฟังก์ชันคำนวณทั้งหมดอยู่ในส่วน "lab core" ที่เทสต์ได้)
+
+สถานะในหน้า (มุมมอง, รางวัล, ช่วงเวลา, แหล่งข้อมูล, วันที่) เก็บใน query string ด้วย `history.replaceState` และตรวจกับรายการที่อนุญาต/regex ทุกครั้งก่อนใช้ (`readState`) ค่าที่ไม่รู้จักใช้ค่าเริ่มต้น — ไม่มีการใช้ storage
+
+Monte Carlo ทั้งหมดใช้ `random.Random(2538)` (seed คงที่) และ cache ตามขนาดปัญหา ผลจึงเหมือนเดิมทุก build (เวลา build ราว 6 วินาที)
 
 Cache: ทุกไฟล์ข้อมูลโหลดด้วย `?v=<version>` (hash ของ CSV + โค้ดหน้าเว็บ) ส่วน `manifest.json` โหลดแบบ `no-cache` ทุกครั้ง ผลงวดใหม่จึงขึ้นทันทีหลัง deploy
 
@@ -88,7 +95,9 @@ Cache: ทุกไฟล์ข้อมูลโหลดด้วย `?v=<vers
 
 | เรื่อง | ตัดสินใจ | เหตุผล |
 |---|---|---|
-| Framework | HTML/CSS/JS ล้วน ไม่ใช้ Next.js/Astro | ผู้ใช้เน้นความปลอดภัย: ไม่มี dependency ให้ถูกโจมตีผ่าน npm, ไม่มีขั้นตอน build ของ JS, เว็บมีแค่ 6 หน้า |
+| Framework | HTML/CSS/JS ล้วน ไม่ใช้ Next.js/Astro | ผู้ใช้เน้นความปลอดภัย: ไม่มี dependency ให้ถูกโจมตีผ่าน npm, ไม่มีขั้นตอน build ของ JS, เว็บมีแค่ 10 หน้า |
+| เมนู "เพิ่มเติม" | `<details>` ใน nav (JS แค่ปิดเมื่อคลิกนอก/กด Esc) | 10 หน้าไม่พอดีแถบล่างที่ 360px; ไม่ต้องใช้ JS และไม่ต้องแก้ CSP |
+| ตัวสุ่มเลข | `crypto.getRandomValues` + rejection sampling | ไม่เอียงแม้แต่น้อย ไม่ใช้ `Math.random` (เทสต์ห้ามไว้) |
 | ห้องทดลองคำนวณใน JS | เงื่อนไขอิสระคำนวณล่วงหน้าไม่ได้ | ฟังก์ชันคำนวณแยกเป็นส่วน "lab core" ที่ไม่แตะ DOM และเทสต์เทียบกับ Python ด้วย node |
 | ระยะห่าง: เฉพาะ last2 | 1 หมายเลขต่องวดทุกยุค | เลขท้าย 3 ตัวเปลี่ยนจาก 4 เป็น 2 หมายเลขต่องวด โอกาสต่องวดจึงไม่คงที่ |
 | กราฟ | SVG/CSS ที่เขียนเอง ไม่ใช้ ECharts | กราฟมีแค่ heatmap, histogram, แถบ; ไม่ต้องโหลดไลบรารี ~1 MB และไม่ต้องอนุญาต script ภายนอกใน CSP |

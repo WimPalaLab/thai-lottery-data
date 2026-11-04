@@ -74,6 +74,41 @@ function fmtP(p) {
   return p.toFixed(3);
 }
 
+// ชื่อหลักตามตำแหน่ง (นับจากซ้าย)
+const POS_NAMES = {
+  6: ["หลักแสน", "หลักหมื่น", "หลักพัน", "หลักร้อย", "หลักสิบ", "หลักหน่วย"],
+  3: ["หลักร้อย", "หลักสิบ", "หลักหน่วย"],
+  2: ["หลักสิบ", "หลักหน่วย"],
+};
+const MONTHS_LONG = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+
+// ---------- สถานะใน URL (ตรวจทุกค่ากับรายการที่อนุญาตก่อนใช้) ----------
+const PERIOD_KEYS = ["all", "last20y", "last10y", "last5y", "e3", "official"];
+const TRUST_KEYS = ["all", "checked", "official"];
+function readState(spec) {
+  const q = new URLSearchParams(location.search);
+  const out = {};
+  for (const [k, [allowed, dflt]] of Object.entries(spec)) {
+    const v = q.get(k);
+    const ok = v !== null && (Array.isArray(allowed) ? allowed.includes(v) : allowed.test(v));
+    out[k] = ok ? v : dflt;
+  }
+  return out;
+}
+function writeState(obj) {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(obj)) if (v !== null && v !== undefined && v !== "") q.set(k, String(v));
+  history.replaceState(null, "", `?${q}`);
+}
+
+// ความกว้างของกราฟ (หน่วย viewBox) ให้ใกล้ความกว้างจริงบนจอ ตัวอักษรในกราฟจึงขนาดใกล้เคียงกันทุกจอ
+function chartW(half) {
+  const vw = Math.min(document.documentElement.clientWidth || 360, 1080);
+  let w = vw - 32 - 38;
+  if (half && vw >= 900) w = (vw - 32 - 16) / 2 - 38;
+  return Math.round(Math.max(280, Math.min(1000, w)));
+}
+
 const PRIZE_LABEL = {
   first: "รางวัลที่ 1",
   near_first: "ข้างเคียงรางวัลที่ 1",
@@ -300,6 +335,14 @@ async function pageHome() {
       h("p", { class: "muted small section" },
         "อยากรู้ว่ามีเลขไหน \"ออกบ่อย\" จริงไหม? ดู ", h("a", { href: "random.html" }, "ผลทดสอบความสุ่ม"),
         " หรือ ", h("a", { href: "stats.html" }, "ความถี่เทียบกับค่าที่คาดไว้"))),
+    h("section", { class: "card section stack" },
+      h("h2", null, "เครื่องมือ"),
+      h("ul", { class: "tool-links" },
+        h("li", null, h("a", { href: "ranking.html" }, "อันดับความถี่"), h("span", { class: "small muted" }, "เรียงเลขจากออกบ่อยไปน้อย พร้อมค่าที่คาดไว้")),
+        h("li", null, h("a", { href: "samedate.html" }, "ผลวันเดียวกันทุกปี"), h("span", { class: "small muted" }, "เช่น ทุกงวด 16 พ.ย. ที่ผ่านมา")),
+        h("li", null, h("a", { href: "stats.html?v=digits&p=first" }, "ตัวเลขรายหลัก"), h("span", { class: "small muted" }, "หลักแสนถึงหลักหน่วยของรางวัลที่ 1")),
+        h("li", null, h("a", { href: "generator.html" }, "สุ่มเลข"), h("span", { class: "small muted" }, "สุ่มเท่ากันหรือถ่วงตามสถิติ พร้อมโอกาสจริง")),
+        h("li", null, h("a", { href: "methods.html" }, "ทฤษฎีที่ใช้"), h("span", { class: "small muted" }, "ทุกวิธีคำนวณในเว็บนี้อธิบายแบบภาษาง่าย")))),
     responsibleBox());
 }
 
@@ -394,11 +437,8 @@ function periodHas(period, row, idx) {
   if (period === "all") return true;
   if (period === "e3") return row.era === "E3";
   if (period === "official") return row.trust_level === "official";
-  if (period === "last5y") {
-    const last = idx[idx.length - 1].draw_date;
-    const cut = `${Number(last.slice(0, 4)) - 5}${last.slice(4)}`;
-    return row.draw_date > cut;
-  }
+  const m = /^last(\d+)y$/.exec(period);
+  if (m) return row.draw_date > yearsBefore(idx[idx.length - 1].draw_date, Number(m[1]));
   return true;
 }
 
@@ -426,7 +466,7 @@ function scopeControls(json, state, redraw, opts = {}) {
   }
   fields.push(selectBox("trust", "แหล่งข้อมูล", json.trusts.map((k) => [k, json.trust_labels[k]]), state.trust,
     (v) => { state.trust = v; state.selected = null; redraw(); }));
-  return h("div", { class: "controls" }, fields);
+  return h("div", { class: "controls controls-compact" }, fields);
 }
 
 function scopeData(json, state) {
@@ -511,7 +551,7 @@ function rangeRows(o) {
 
 // แบบแนวตั้ง (แกน x เป็นตัวเลข เช่น หลัก 0–9, ผลรวม, ปี, ระยะห่าง)
 function rangeBars(o) {
-  const W = 360, H = 200, padL = 34, padR = 6, padT = 10, padB = 34;
+  const W = chartW(o.half), H = o.half ? 190 : 220, padL = 34, padR = 6, padT = 10, padB = 34;
   const n = o.labels.length;
   const max = Math.max(1, ...o.observed, ...o.ranges.map((r) => r[1]), ...o.expected) * 1.08;
   const bw = (W - padL - padR) / n;
@@ -552,15 +592,17 @@ const shortLabel = (l) => l.replace(/ \(เช่น [^)]*\)$/, "");
 
 // ---------- page: stats ----------
 const STAT_VIEWS = [
-  ["freq", "ความถี่"], ["digits", "แต่ละหลัก"], ["chars", "ลักษณะเลข"], ["timeline", "รายปี"], ["compare", "เทียบช่วงเวลา"],
+  ["freq", "ความถี่"], ["digits", "รายหลัก (แสน–หน่วย)"], ["chars", "ลักษณะเลข"], ["timeline", "รายปี"], ["compare", "เทียบช่วงเวลา"],
 ];
 
 async function pageStats() {
-  const params = new URLSearchParams(location.search);
+  const u = readState({
+    v: [STAT_VIEWS.map((v) => v[0]), "freq"], p: [Object.keys(WIDTH), "last2"],
+    period: [PERIOD_KEYS, "all"], trust: [TRUST_KEYS, "all"],
+  });
   const state = {
-    view: oneOf(params.get("v"), STAT_VIEWS.map((v) => v[0]), "freq"),
-    prize: oneOf(params.get("p"), Object.keys(WIDTH), "last2"),
-    period: "all", trust: "all", selected: null, block: 0, pair: null, tmode: "char:parity:1", tnum: "",
+    view: u.v, prize: u.p, period: u.period, trust: u.trust,
+    selected: null, block: 0, pair: null, tmode: "char:parity:1", tnum: "",
   };
   const tabs = h("div", { class: "seg tabs", role: "group", "aria-label": "เลือกมุมมอง" });
   const body = h("div");
@@ -573,10 +615,12 @@ async function pageStats() {
       type: "button", "aria-pressed": String(state.view === k),
       onclick: () => { state.view = k; state.selected = null; draw(); },
     }, label)));
-    history.replaceState(null, "", `?v=${state.view}&p=${state.prize}`);
+    const cur = tabs.querySelector('[aria-pressed="true"]');
+    if (cur) tabs.scrollLeft = cur.offsetLeft - (tabs.clientWidth - cur.offsetWidth) / 2;
     try {
       const nodes = await views[state.view](state, draw);
       if (my !== seq) return;
+      writeState({ v: state.view, p: state.prize, period: state.period, trust: state.trust });
       body.replaceChildren(...nodes.flat(Infinity).filter(Boolean));
       if (focusId) {
         const el = document.getElementById(focusId);
@@ -755,7 +799,7 @@ function freqTable(f, keyOf, start = 0, count = f.counts.length) {
 }
 
 function histogram(hist) {
-  const W = 640, H = 240, padL = 40, padB = 34, padT = 12;
+  const W = chartW(false), H = 230, padL = 40, padB = 34, padT = 12;
   const n = hist.observed.length;
   const max = Math.max(...hist.observed, ...hist.expected);
   const bw = (W - padL - 10) / n;
@@ -781,32 +825,47 @@ function histogram(hist) {
   const table = h("details", null, h("summary", null, "แสดงเป็นตาราง"), h("div", { class: "table-wrap" }, h("table", null,
     h("thead", null, h("tr", null, h("th", null, "ออก (ครั้ง)"), h("th", { class: "n" }, "จำนวนเลขจริง"), h("th", { class: "n" }, "คาดไว้"))),
     h("tbody", null, hist.observed.map((v, k) => h("tr", null, h("td", null, k), h("td", { class: "n" }, v), h("td", { class: "n" }, fmt1.format(hist.expected[k]))))))));
-  return [h("div", { class: "chart chart-wide" }, svg), legend, table];
+  return [h("div", { class: "chart" }, svg), legend, table];
 }
 
-// ----- มุมมอง: แต่ละหลัก -----
+// ----- มุมมอง: รายหลัก -----
+// ตารางสรุป: แถว = ตัวเลข 0–9, คอลัมน์ = หลัก (แสน → หน่วย) ดูได้ในจอเดียว
+function digitMatrix(d, names) {
+  const mark = (c) => (c > d.range95[1] ? " ▲" : c < d.range95[0] ? " ▼" : "");
+  return h("div", { class: "table-wrap" }, h("table", { class: "matrix" },
+    h("caption", { class: "small muted" }, `จำนวนครั้งที่ตัวเลขแต่ละตัวอยู่ในแต่ละหลัก · คาดไว้ ${fmt1.format(d.expected)} ครั้งทุกช่อง (ช่วงปกติ ${fmtR(d.range95)}) · ▲/▼ = มาก/น้อยกว่าช่วงปกติ`),
+    h("thead", null, h("tr", null, h("th", { scope: "col" }, "ตัวเลข"), names.map((n) => h("th", { class: "n", scope: "col", title: n }, n.replace(/^หลัก/, ""))))),
+    h("tbody", null, [...Array(10).keys()].map((digit) => h("tr", null,
+      h("th", { scope: "row", class: "mono" }, String(digit)),
+      d.positions.map((pos) => h("td", { class: `n${isOut(pos.counts[digit], d.range95) ? " out-cell" : ""}` },
+        fmt.format(pos.counts[digit]), mark(pos.counts[digit]))))))));
+}
+
 async function viewDigits(state, redraw) {
   const dj = await getData("stats/digits.json");
   const scope = scopeData(dj, state);
   const d = scope[state.prize];
   const total = Object.values(scope).reduce((a, x) => a + x.positions.filter((p) => p.p !== null).length, 0);
-  const posLabel = (k) => (state.prize === "first" ? `หลักที่ ${k} (นับจากซ้าย)` : `หลักที่ ${k}`);
+  const names = POS_NAMES[WIDTH[state.prize]];
   return [
     h("section", { class: "card section stack" }, prizeSeg(DIGIT_PRIZES, state, redraw), scopeControls(dj, state, redraw)),
     h("section", { class: "card section stack" },
       h("h2", null, `ตัวเลข 0–9 ในแต่ละหลักของ${PRIZE_LABEL[state.prize]}`),
+      h("p", { class: "small muted" }, `${names.join(" · ")} (อ่านจากซ้ายไปขวา)`),
       h("div", { class: "stat-row" },
         stat("งวดที่มีรางวัลนี้", fmt.format(d.eligible_draws)),
         stat("จำนวนหมายเลข", fmt.format(d.n)),
         stat("คาดไว้ต่อตัวเลข", fmt1.format(d.expected)),
         stat("ช่วงปกติ 95%", fmtR(d.range95))),
       scopeNote(dj, state),
-      h("p", { class: "small muted" }, `ถ้าสุ่มจริง ตัวเลข 0–9 ในแต่ละหลักมีโอกาสเท่ากัน (1 ใน 10) · p หลังปรับใช้ Bonferroni ตามจำนวนการทดสอบทั้งหมดในมุมมองนี้ (${total} หลัก จากทุกรางวัล)`)),
+      digitMatrix(d, names),
+      h("p", { class: "small muted" }, `ถ้าสุ่มจริง ตัวเลข 0–9 ในแต่ละหลักมีโอกาสเท่ากัน (1 ใน 10) · p หลังปรับใช้ Bonferroni ตามจำนวนการทดสอบทั้งหมดในมุมมองนี้ (${total} หลัก จากทุกรางวัล) · อยากเรียงตามจำนวนครั้ง ดู `,
+        h("a", { href: `ranking.html?p=digits&dp=${state.prize}&period=${state.period}&trust=${state.trust}` }, "อันดับรายหลัก"))),
     h("div", { class: "grid grid-2e section" }, d.positions.map((pos) => h("section", { class: "card stack" },
-      h("h3", null, posLabel(pos.position)),
+      h("h3", null, names[pos.position - 1]),
       rangeBars({
-        title: `${PRIZE_LABEL[state.prize]} ${posLabel(pos.position)}: จำนวนตัวเลข 0–9 เทียบกับที่คาดไว้`,
-        labels: [...Array(10).keys()].map(String), observed: pos.counts,
+        title: `${PRIZE_LABEL[state.prize]} ${names[pos.position - 1]}: จำนวนตัวเลข 0–9 เทียบกับที่คาดไว้`,
+        labels: [...Array(10).keys()].map(String), observed: pos.counts, half: true,
         expected: Array(10).fill(d.expected), ranges: Array(10).fill(d.range95), catTitle: "ตัวเลข", labelEvery: 1,
       }),
       pLine(pos, `${total} การทดสอบ`)))),
@@ -971,82 +1030,224 @@ function compareDetail(t, r) {
 }
 
 // ---------- page: randomness ----------
-const STRATEGY_LABEL = { hot: "เลขออกบ่อย", cold: "เลขออกน้อย", overdue: "เลขไม่ออกนาน" };
-const ERA_LABEL = { all: "ทั้งหมด", E1: "2538–2543", E2: "2543–2558", E3: "2558–ปัจจุบัน" };
+const STRATEGY_LABEL = { hot: "เลขออกบ่อย", cold: "เลขออกน้อย", overdue: "เลขไม่ออกนาน", top: "10 อันดับแรก", bottom: "10 อันดับสุดท้าย" };
+const ERA_LABEL = { all: "ทั้งขอบเขต", E1: "2538–2543", E2: "2543–2558", E3: "2558–ปัจจุบัน" };
+const TEST_GROUPS = [
+  ["number", "การกระจายของเลข (chi-square)"],
+  ["first_digit", "แต่ละหลักของรางวัลที่ 1 (chi-square)"],
+  ["prize_digits", "ตัวเลขในรางวัลที่ 2–5 แยกตามแหล่งข้อมูล"],
+  ["runs", "การสลับกัน (runs test)"],
+  ["serial", "งวดต่องวด (serial test)"],
+  ["ljung_box", "สหสัมพันธ์หลายช่วงห่าง (Ljung–Box)"],
+  ["ks", "การกระจายของรางวัลที่ 1 (Kolmogorov–Smirnov)"],
+  ["poker", "รูปแบบตัวเลขซ้ำ (poker test)"],
+  ["coupon", "ออกครบทุกเลข (coupon collector)"],
+];
+
+function testLabel(t) {
+  if (t.group === "number") return PRIZE_LABEL[t.label] || t.label;
+  if (t.group === "prize_digits") return (TRUST[t.trust_level] || { label: t.label }).label;
+  return t.label;
+}
+
+// แท่งแนวนอน: อัตราถูกของแต่ละกลยุทธ์เทียบโอกาสสุ่มและช่วงปกติ
+function hitBars(bt) {
+  const scale = 0.2;
+  return h("div", { class: "bars" }, bt.strategies.map((st) => {
+    const fill = h("div", { class: "fill" });
+    fill.style.width = `${Math.min(100, (st.rate / scale) * 100)}%`;
+    const band = h("div", { class: "band" });
+    band.style.left = `${(bt.chance_range95[0] / scale) * 100}%`;
+    band.style.width = `${((bt.chance_range95[1] - bt.chance_range95[0]) / scale) * 100}%`;
+    const mark = h("div", { class: "mark" });
+    mark.style.left = `${(bt.chance_rate / scale) * 100}%`;
+    return h("div", { class: "b" }, h("span", null, STRATEGY_LABEL[st.name]),
+      h("div", { class: "track", role: "img", "aria-label": `${STRATEGY_LABEL[st.name]} ถูก ${pct(st.rate)} (โอกาสสุ่ม ${pct(bt.chance_rate, 0)})` }, band, fill, mark),
+      h("span", { class: "num" }, pct(st.rate)));
+  }));
+}
+
+// autocorrelation lag 1–10 เทียบแถบ ±1.96/√n
+function acfChart(lb, title) {
+  const W = chartW(true), H = 170, padL = 40, padR = 8, padT = 10, padB = 30;
+  const lim = Math.max(lb.band * 1.6, ...lb.r.map((v) => Math.abs(v) * 1.15));
+  const y = (v) => padT + ((lim - v) / (2 * lim)) * (H - padT - padB);
+  const bw = (W - padL - padR) / lb.r.length;
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": title });
+  svg.append(s("rect", { x: padL, width: W - padL - padR, y: y(lb.band), height: y(-lb.band) - y(lb.band), class: "c-band" }));
+  svg.append(s("line", { x1: padL, x2: W - padR, y1: y(0), y2: y(0), class: "c-tick" }));
+  for (const v of [lim, 0, -lim]) svg.append(s("text", { x: padL - 5, y: y(v) + 4, "text-anchor": "end" }, v.toFixed(2)));
+  lb.r.forEach((v, i) => {
+    const out = Math.abs(v) > lb.band;
+    const bar = s("rect", { x: padL + i * bw + bw * 0.25, width: bw * 0.5, y: Math.min(y(v), y(0)), height: Math.max(1, Math.abs(y(v) - y(0))), class: out ? "c-bar out" : "c-bar" });
+    bar.append(s("title", null, `ช่วงห่าง ${i + 1} งวด: r = ${v.toFixed(3)}`));
+    svg.append(bar);
+    svg.append(s("text", { x: padL + i * bw + bw / 2, y: H - padB + 14, "text-anchor": "middle" }, i + 1));
+  });
+  svg.append(s("text", { x: (W + padL) / 2, y: H - 3, "text-anchor": "middle" }, "ช่วงห่าง (งวด)"));
+  const table = h("details", null, h("summary", null, "แสดงเป็นตาราง"), h("div", { class: "table-wrap" }, h("table", null,
+    h("thead", null, h("tr", null, h("th", null, "ช่วงห่าง"), h("th", { class: "n" }, "r"), h("th", null, "ผล"))),
+    h("tbody", null, lb.r.map((v, i) => h("tr", null, h("td", null, `${i + 1} งวด`), h("td", { class: "n" }, v.toFixed(3)),
+      h("td", null, Math.abs(v) > lb.band ? "นอกช่วงปกติ" : "ในช่วงปกติ")))))));
+  return [h("div", { class: "chart" }, svg),
+    h("div", { class: "legend" }, h("span", { class: "key key-band" }), `ช่วงปกติ ±${lb.band.toFixed(3)}`, h("span", { class: "key key-bar" }), "ค่าจริง"), table];
+}
+
+// เส้นสะสม (ECDF) ของรางวัลที่ 1 เทียบเส้นทแยงที่คาดไว้ถ้ากระจายเท่ากัน
+function ecdfChart(values, d) {
+  const W = chartW(true), H = Math.min(260, Math.round(W * 0.7)), pad = 34;
+  const sorted = values.map(Number).sort((a, b) => a - b);
+  const n = sorted.length;
+  const x = (u) => pad + u * (W - pad - 8);
+  const y = (f) => H - pad + 6 - f * (H - pad - 4);
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `สัดส่วนสะสมของรางวัลที่ 1 เทียบเส้นที่คาดไว้ ระยะห่างมากสุด D = ${d.toFixed(3)}` });
+  svg.append(s("line", { x1: x(0), y1: y(0), x2: x(1), y2: y(1), class: "c-tick" }));
+  let pts = `${x(0)},${y(0)}`;
+  sorted.forEach((v, i) => { const u = v / 1e6; pts += ` ${x(u)},${y(i / n)} ${x(u)},${y((i + 1) / n)}`; });
+  pts += ` ${x(1)},${y(1)}`;
+  svg.append(s("polyline", { points: pts, fill: "none", stroke: "var(--accent)", "stroke-width": 2 }));
+  [[0, "000000"], [0.5, "500000"], [1, "999999"]].forEach(([t, label]) => {
+    svg.append(s("text", { x: x(t), y: H - 6, "text-anchor": t === 0 ? "start" : t === 1 ? "end" : "middle" }, label));
+    svg.append(s("text", { x: pad - 4, y: y(t) + 4, "text-anchor": "end" }, `${t * 100}%`));
+  });
+  return [h("div", { class: "chart chart-narrow" }, svg),
+    h("div", { class: "legend" }, h("span", { class: "key key-bar" }), "สัดส่วนสะสมจริง", h("span", { class: "key key-tick" }), "ที่คาดไว้ถ้ากระจายเท่ากัน")];
+}
 
 async function pageRandom() {
-  const r = await getData("stats/randomness.json");
-  const flagged = r.tests.filter((t) => t.p_bonferroni < 0.05);
-  const rawFlag = r.tests.filter((t) => t.p < 0.05);
-  const bt = r.backtest_last2;
-  const ac = r.autocorr_last2;
+  const [rj, gj, idx] = await Promise.all([getData("stats/randomness.json"), getData("stats/gaps.json"), index()]);
+  const st = readState({ period: [PERIOD_KEYS, "all"], trust: [TRUST_KEYS, "all"] });
+  const body = h("div");
+  const controls = h("section", { class: "card stack" });
 
-  const btBars = h("div", { class: "bars" },
-    bt.strategies.map((st) => {
-      const scale = 0.2;
-      const fill = h("div", { class: "fill" });
-      fill.style.width = `${(st.rate / scale) * 100}%`;
-      const band = h("div", { class: "band" });
-      band.style.left = `${(bt.chance_range95[0] / scale) * 100}%`;
-      band.style.width = `${((bt.chance_range95[1] - bt.chance_range95[0]) / scale) * 100}%`;
-      const mark = h("div", { class: "mark" });
-      mark.style.left = `${(bt.chance_rate / scale) * 100}%`;
-      return h("div", { class: "b" }, h("span", null, STRATEGY_LABEL[st.name]),
-        h("div", { class: "track", role: "img", "aria-label": `${STRATEGY_LABEL[st.name]} ถูก ${pct(st.rate)}` }, band, fill, mark),
-        h("span", { class: "num" }, pct(st.rate)));
-    }));
+  function draw() {
+    writeState(st);
+    const focusId = document.activeElement && document.activeElement.id;
+    controls.replaceChildren(scopeControls(rj, st, draw), scopeNote(rj, st));
+    if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus();
+    const r = scopeData(rj, st);
+    const inGroup = (g) => r.tests.filter((t) => t.group === g);
+    const padj = (g) => (inGroup(g)[0] || {}).p_bonferroni;
+    const flagged = r.tests.filter((t) => t.p_bonferroni < 0.05);
+    const rawFlag = r.tests.filter((t) => t.p < 0.05);
+    const bt = r.backtest_last2;
+    const ac = r.autocorr_last2;
+    const rows = idx.filter((x) => periodHas(st.period, x, idx) && trustHas(st.trust, x));
+    const runsRow = (key, label, i) => {
+      const x = r.runs[key];
+      if (!x) return h("tr", null, h("td", null, label), h("td", { colspan: "4" }, "ข้อมูลน้อยเกินไป"));
+      const t = inGroup("runs")[i];
+      return h("tr", null, h("td", null, label), h("td", { class: "n" }, fmt.format(x.runs)),
+        h("td", { class: "n" }, `${fmt1.format(x.expected)} ± ${fmt1.format(1.96 * x.sd)}`),
+        h("td", { class: "n" }, fmtP(x.p)), h("td", null, resultChip(x.p, t ? t.p_bonferroni : x.p)));
+    };
+    const cp = r.coupon;
+    const expSeen = 100 * (1 - Math.pow(0.99, cp.partial_length));
 
-  const groups = [
-    ["number", "การกระจายของเลข (chi-square)"],
-    ["first_digit", "แต่ละหลักของรางวัลที่ 1"],
-    ["prize_digits", "ตัวเลขในรางวัลที่ 2–5 แยกตามแหล่งข้อมูล"],
-  ];
-  const testTable = h("div", { class: "table-wrap" }, h("table", null,
-    h("thead", null, h("tr", null, h("th", null, "การทดสอบ"), h("th", null, "ช่วง"), h("th", { class: "n" }, "p"), h("th", { class: "n" }, "p หลังปรับ"), h("th", null, "ผล"))),
-    groups.map(([g, title]) => h("tbody", null,
-      h("tr", null, h("th", { colspan: "5" }, title)),
-      r.tests.filter((t) => t.group === g).map((t) => h("tr", null,
-        h("td", null, g === "number" ? PRIZE_LABEL[t.label] : g === "prize_digits" ? TRUST[t.trust_level].label : t.label),
-        h("td", null, ERA_LABEL[t.era] || t.era),
-        h("td", { class: "n" }, fmtP(t.p)),
-        h("td", { class: "n" }, fmtP(t.p_bonferroni)),
-        h("td", null, t.p_bonferroni < 0.05 ? h("span", { class: "chip warn" }, "ผิดปกติ")
-          : t.p < 0.05 ? h("span", { class: "chip gray" }, "บังเอิญได้") : h("span", { class: "chip ok" }, "ปกติ"))))))));
+    const testTable = h("div", { class: "table-wrap" }, h("table", null,
+      h("thead", null, h("tr", null, h("th", null, "การทดสอบ"), h("th", null, "ช่วง"), h("th", null, "ค่าสถิติ"), h("th", { class: "n" }, "p"), h("th", { class: "n" }, "p หลังปรับ"), h("th", null, "ผล"))),
+      TEST_GROUPS.filter(([g]) => inGroup(g).length).map(([g, title]) => h("tbody", null,
+        h("tr", null, h("th", { colspan: "6", scope: "colgroup" }, title)),
+        inGroup(g).map((t) => h("tr", null,
+          h("td", null, testLabel(t)), h("td", null, ERA_LABEL[t.era] || t.era), h("td", { class: "small nowrap" }, t.stat || ""),
+          h("td", { class: "n" }, fmtP(t.p)), h("td", { class: "n" }, fmtP(t.p_bonferroni)),
+          h("td", null, resultChip(t.p, t.p_bonferroni))))))));
 
-  const gaps = await gapSection();
-
+    body.replaceChildren(
+      h("section", { class: "card section stack" },
+        h("div", { class: flagged.length ? "callout" : "callout ok" },
+          h("strong", null, flagged.length
+            ? `มี ${flagged.length} จาก ${r.test_count} การทดสอบที่ผิดปกติหลังปรับสำหรับการทดสอบหลายครั้ง`
+            : `ทดสอบ ${r.test_count} แบบ ไม่พบความผิดปกติหลังปรับสำหรับการทดสอบหลายครั้ง`),
+          h("br"),
+          `ขอบเขตนี้มี ${fmt.format(r.draws)} งวด (${thShort(r.first_draw)} – ${thShort(r.last_draw)}) · `,
+          flagged.length ? "ดูรายละเอียดในตารางด้านล่าง ผลที่ผิดปกติไม่ได้บอกเลขของงวดถัดไป"
+            : "ผลสลากมีพฤติกรรมเหมือนการสุ่มที่ยุติธรรม ไม่มีสถิติใดในข้อมูลนี้ที่ช่วยเดาเลขงวดถัดไปได้")),
+      h("div", { class: "grid grid-2e section" },
+        h("section", { class: "card stack" },
+          h("h2", null, "ถ้าเลือกเลขตามสถิติ จะถูกบ่อยขึ้นไหม?"),
+          h("p", { class: "small muted" }, `จำลองย้อนหลัง ${fmt.format(bt.trials)} งวด: ก่อนแต่ละงวดใช้เฉพาะข้อมูลก่อนหน้าในขอบเขตนี้ (ข้าม ${bt.warmup} งวดแรก) เลือกเลขท้าย 2 ตัว ${bt.pick} ตัวตามกลยุทธ์ แล้วนับว่าถูกกี่ครั้ง`),
+          bt.trials ? hitBars(bt) : h("p", { class: "empty" }, "งวดในขอบเขตนี้น้อยเกินไป"),
+          h("p", { class: "small muted" }, `เส้นดำ = โอกาสถ้าเลือกมั่ว ${pct(bt.chance_rate, 0)} · แถบเขียว = ช่วงที่การสุ่มให้ได้ตามปกติ (${pct(bt.chance_range95[0])}–${pct(bt.chance_range95[1])}) · เลือกช่วงย้อนหลัง 5/10/20 ปีได้ที่ `,
+            h("a", { href: `ranking.html?p=last2&period=${st.period}` }, "หน้าอันดับ"))),
+        h("section", { class: "card stack" },
+          h("h2", null, "ซื้อ 1 ใบ ได้คืนเฉลี่ยเท่าไร"),
+          h("div", { class: "stat-row" }, stat("ราคาสลาก", "80 บาท"), stat("รางวัลเฉลี่ยต่อใบ", `${fmt.format(PER_TICKET)} บาท`)),
+          h("p", { class: "small muted" }, `จากเงินรางวัลรวม ${fmt.format(PRIZE_TOTAL)} บาทต่อสลาก 1 ล้านใบ (อัตรารางวัลปัจจุบัน โปรดตรวจสอบกับ GLO) ได้คืนเฉลี่ย ${pct(PER_TICKET / TICKET_PRICE, 0)} ของราคา`),
+          h("h2", { class: "section" }, "ข้อมูลเท่านี้ตรวจความเบี้ยวได้แค่ไหน"),
+          h("p", { class: "small muted" }, `"ไม่พบความผิดปกติ" ไม่ได้แปลว่าไม่มีความเบี้ยวเลย แต่แปลว่าความเบี้ยว (ถ้ามี) เล็กกว่าขนาดที่ข้อมูลชุดนี้จะเห็นได้ ตารางนี้บอกว่าต้องเบี้ยวแค่ไหนจึงจะตรวจเจอ 80% ของครั้ง (power analysis)`),
+          h("div", { class: "table-wrap" }, h("table", null,
+            h("thead", null, h("tr", null, h("th", null, "กรณี"), h("th", { class: "n" }, "ปกติ"), h("th", { class: "n" }, "ต้องออกบ่อยขึ้นอย่างน้อย"))),
+            h("tbody", null, r.power.map((x) => h("tr", null,
+              h("td", null, x.label, h("br"), h("span", { class: "small muted" }, `${fmt.format(x.n)} หมายเลข · ระดับนัยสำคัญ ${x.alpha < 0.01 ? x.alpha.toFixed(4) : x.alpha}`)),
+              h("td", { class: "n" }, pct(x.p0, 0)),
+              h("td", { class: "n" }, x.bias === null ? "ตรวจไม่ได้" : `+${fmt.format(Math.round(x.bias * 100))}% (เป็น ${pct(x.p0 * (1 + x.bias), 1)})`))))),
+          h("p", { class: "small muted" }, "ความเบี้ยวที่เล็กกว่านี้อาจมีอยู่โดยตรวจไม่เจอ แต่ก็ยังห่างไกลจากการชดเชยส่วนที่เสียเฉลี่ย 40% ต่อใบ"))),
+      h("div", { class: "grid grid-2e section" },
+        h("section", { class: "card stack" },
+          h("h2", null, "คู่/คี่ และ สูง/ต่ำ สลับกันตามปกติไหม?"),
+          h("p", { class: "small muted" }, "runs test ของเลขท้าย 2 ตัว: นับจำนวน \"ช่วง\" ที่ค่าแบบเดียวกันออกติดกัน (เช่น คี่ คี่ | คู่ | คี่ = 3 ช่วง) ถ้าสลับกันบ่อยหรือติดกันนานผิดปกติ จำนวนช่วงจะต่างจากที่คาดไว้ · สูง = 50–99, ต่ำ = 00–49"),
+          h("div", { class: "table-wrap" }, h("table", null,
+            h("thead", null, h("tr", null, h("th", null, "ลำดับ"), h("th", { class: "n" }, "ช่วงจริง"), h("th", { class: "n" }, "คาดไว้ (95%)"), h("th", { class: "n" }, "p"), h("th", null, "ผล"))),
+            h("tbody", null, runsRow("parity", "คู่/คี่", 0), runsRow("highlow", "สูง/ต่ำ", 1))))),
+          h("h2", { class: "section" }, "งวดก่อนส่งผลต่องวดถัดไปไหม?"),
+          h("p", { class: "small muted" }, "serial test: นับว่าหลังงวดที่เป็นแบบหนึ่ง งวดถัดไปเป็นแบบไหน (ตาราง 2×2 หรือ 10×10) แล้วทดสอบว่าสองงวดเป็นอิสระกันไหม — ตาราง 10×10 ต้องมีอย่างน้อยราว 500 คู่งวด"),
+          h("div", { class: "table-wrap" }, h("table", null,
+            h("thead", null, h("tr", null, h("th", null, "เลขท้าย 2 ตัว"), h("th", { class: "n" }, "คู่งวด"), h("th", { class: "n" }, "p"), h("th", null, "ผล"))),
+            h("tbody", null, r.serial.map((x) => {
+              const t = inGroup("serial").find((tt) => tt.label.includes(x.label));
+              return h("tr", null, h("td", null, x.label), h("td", { class: "n" }, fmt.format(x.pairs)),
+                h("td", { class: "n" }, x.p === null ? "–" : fmtP(x.p)), h("td", null, resultChip(x.p, t ? t.p_bonferroni : x.p)));
+            }))))),
+        h("section", { class: "card stack" },
+          h("h2", null, "สหสัมพันธ์ระหว่างงวด (ช่วงห่าง 1–10 งวด)"),
+          r.ljung_box.last2 ? [
+            h("p", { class: "small muted" }, `เลขท้าย 2 ตัวของงวดหนึ่งสัมพันธ์กับงวดที่ห่างไป 1–10 งวดไหม (ค่าใกล้ 0 = ไม่สัมพันธ์) · ช่วงห่าง 1 งวด: r = ${ac.r.toFixed(3)}`),
+            ...acfChart(r.ljung_box.last2, "สหสัมพันธ์ของเลขท้าย 2 ตัวที่ช่วงห่าง 1–10 งวด"),
+            h("p", { class: "small p-line" }, `Ljung–Box Q = ${fmt1.format(r.ljung_box.last2.q)} (df 10) · p = ${fmtP(r.ljung_box.last2.p)} · หลังปรับ ${fmtP(padj("ljung_box"))} `,
+              resultChip(r.ljung_box.last2.p, padj("ljung_box"))),
+            h("p", { class: "small muted" }, "แม้สุ่มจริง 10 ค่าก็หลุดแถบปกติได้ 1 ค่าบ่อย ๆ จึงใช้ Ljung–Box รวมทุกช่วงห่างเป็นการทดสอบเดียว (ผลของรางวัลที่ 1 อยู่ในตารางด้านล่าง)")]
+            : h("p", { class: "empty" }, "งวดน้อยเกินไป"))),
+      h("div", { class: "grid grid-2e section" },
+        h("section", { class: "card stack" },
+          h("h2", null, "รางวัลที่ 1 กระจายเท่ากันตลอด 000000–999999 ไหม?"),
+          r.ks_first ? [
+            ...ecdfChart(rows.map((x) => x.first), r.ks_first.d),
+            h("p", { class: "small p-line" }, `Kolmogorov–Smirnov D = ${r.ks_first.d.toFixed(3)} · p = ${fmtP(r.ks_first.p)} · หลังปรับ ${fmtP(padj("ks"))} `, resultChip(r.ks_first.p, padj("ks"))),
+            h("p", { class: "small muted" }, "D = ระยะห่างมากที่สุดระหว่างเส้นจริงกับเส้นทแยง ถ้ารางวัลที่ 1 ออกกระจุกบางช่วง (เช่น ขึ้นต้นด้วยเลขน้อยบ่อย) เส้นจะโก่งห่างจากเส้นทแยง")]
+            : h("p", { class: "empty" }, "งวดน้อยเกินไป")),
+        h("section", { class: "card stack" },
+          h("h2", null, "รูปแบบตัวเลขซ้ำใน 6 หลักของรางวัลที่ 1"),
+          h("p", { class: "small muted" }, "poker test: จัดกลุ่มรางวัลที่ 1 ตามรูปแบบตัวเลขซ้ำ (เช่น 112345 = คู่ 1 คู่) เทียบความน่าจะเป็นที่นับตรงตัวจากเลขทั้ง 1,000,000 แบบ"),
+          rangeRows({
+            title: "รูปแบบตัวเลขซ้ำของรางวัลที่ 1 เทียบกับที่คาดไว้", labels: r.poker.labels,
+            observed: r.poker.observed, expected: r.poker.probs.map((p) => p * r.poker.n), ranges: r.poker.range95, catTitle: "รูปแบบ",
+          }),
+          pLine({ p: r.poker.p, p_bonferroni: padj("poker") }, `${r.test_count} การทดสอบ`))),
+      h("section", { class: "card section stack" },
+        h("h2", null, "ต้องใช้กี่งวดจนเลขท้าย 2 ตัวออกครบ 00–99?"),
+        h("div", { class: "stat-row" },
+          stat("รอบแรกครบใน", cp.completed.length ? `${fmt.format(cp.completed[0])} งวด` : "ยังไม่ครบ"),
+          stat("คาดไว้ถ้าสุ่มจริง", `${fmt1.format(cp.expected)} งวด`),
+          stat("ช่วงปกติ 95%", `${fmt.format(cp.range95[0])}–${fmt.format(cp.range95[1])} งวด`),
+          stat("รอบปัจจุบัน", `เห็นแล้ว ${cp.partial_seen}/100 เลข`)),
+        h("p", { class: "small muted" }, `coupon collector: คาดไว้ = 100 × (1 + 1/2 + … + 1/100) ≈ ${fmt1.format(cp.expected)} งวด (ส่วนเบี่ยงเบนมาตรฐาน ${fmt1.format(cp.sd)}) · ช่วงปกติจากการจำลองการสุ่ม ${fmt.format(cp.sims)} รอบ`,
+          cp.completed.length > 1 ? ` · รอบถัดมาครบใน ${cp.completed.slice(1).map((x) => fmt.format(x)).join(", ")} งวด` : "",
+          ` · รอบปัจจุบันผ่านมา ${fmt.format(cp.partial_length)} งวด เห็นแล้ว ${cp.partial_seen} เลข (ถ้าสุ่มจริงคาดไว้ราว ${fmt.format(Math.round(expSeen))} เลข)`),
+        cp.p !== null ? pLine({ p: cp.p, p_bonferroni: padj("coupon") }, `${r.test_count} การทดสอบ`) : h("p", { class: "small muted" }, "ขอบเขตนี้สั้นเกินกว่าจะเห็นครบทุกเลข จึงไม่ได้ทดสอบ"),
+        h("p", { class: "small muted" }, "เลขที่ยังไม่ออกในรอบนี้ไม่ได้มีโอกาสออกงวดหน้ามากกว่าเลขอื่น")),
+      h("section", { class: "card section stack" },
+        h("h2", null, "ผลการทดสอบทั้งหมด"),
+        h("p", { class: "small muted" }, `p คือโอกาสที่การสุ่มจริงจะให้ผลเบี้ยวอย่างน้อยเท่านี้ ถ้าทดสอบหลายแบบ ย่อมมีบางแบบที่ p < 0.05 โดยบังเอิญ (ทดสอบ ${r.test_count} แบบ คาดว่าจะเจอราว ${fmt1.format(r.test_count * 0.05)} แบบ เจอจริง ${rawFlag.length} แบบ) จึงปรับด้วยวิธี Bonferroni (คูณ p ด้วยจำนวนการทดสอบ) · `,
+          h("a", { href: "methods.html" }, "อ่านวิธีการทดสอบแต่ละแบบ")),
+        testTable,
+        rawFlag.length ? h("p", { class: "small muted" }, `p < 0.05 ก่อนปรับ: ${rawFlag.map((t) => `${testLabel(t)}${t.era !== "all" ? ` (${ERA_LABEL[t.era]})` : ""}`).join(", ")} — หลังปรับ${flagged.length ? "ยังผิดปกติบางรายการ" : "ไม่ผิดปกติ"} · ตัวเลขในรางวัลที่ 2–5 ที่มาจากแหล่งเดียวสะท้อนคุณภาพข้อมูลมากกว่าการออกรางวัล`) : null),
+      gapSection(gj, st));
+  }
+  draw();
   render(
-    pageHead("เลขสุ่มจริงไหม?", `ทดสอบจากผลจริง ${fmt.format(r.first_prize_digits.draws)} งวด`),
-    h("section", { class: "card stack" },
-      h("div", { class: flagged.length ? "callout" : "callout ok" },
-        h("strong", null, flagged.length
-          ? `มี ${flagged.length} การทดสอบที่ผิดปกติหลังปรับสำหรับการทดสอบหลายครั้ง`
-          : `ทดสอบ ${r.test_count} แบบ ไม่พบความผิดปกติหลังปรับสำหรับการทดสอบหลายครั้ง`),
-        h("br"),
-        "ผลสลากมีพฤติกรรมเหมือนการสุ่มที่ยุติธรรม ไม่มีสถิติใดในข้อมูลนี้ที่ช่วยเดาเลขงวดถัดไปได้")),
-    h("div", { class: "grid grid-2e section" },
-      h("section", { class: "card stack" },
-        h("h2", null, "ถ้าเลือกเลขตามสถิติ จะถูกบ่อยขึ้นไหม?"),
-        h("p", { class: "small muted" }, `จำลองย้อนหลัง ${fmt.format(bt.trials)} งวด: ก่อนแต่ละงวดใช้เฉพาะข้อมูลก่อนหน้า เลือกเลขท้าย 2 ตัว ${bt.pick} ตัวตามกลยุทธ์ แล้วนับว่าถูกกี่ครั้ง`),
-        btBars,
-        h("p", { class: "small muted" }, `เส้นดำ = โอกาสถ้าเลือกมั่ว ${pct(bt.chance_rate, 0)} · แถบเขียว = ช่วงที่การสุ่มให้ได้ตามปกติ (${pct(bt.chance_range95[0])}–${pct(bt.chance_range95[1])})`),
-        h("p", null, bt.strategies.every((st) => st.rate >= bt.chance_range95[0] && st.rate <= bt.chance_range95[1])
-          ? "ทุกกลยุทธ์อยู่ในช่วงเดียวกับการเลือกมั่ว"
-          : "มีบางกลยุทธ์อยู่นอกช่วงปกติ (ดูผลทดสอบอื่นประกอบ เพราะทดสอบหลายกลยุทธ์)")),
-      h("section", { class: "card stack" },
-        h("h2", null, "งวดก่อนบอกอะไรเกี่ยวกับงวดถัดไปไหม?"),
-        h("div", { class: "stat-row" }, stat("ค่าสหสัมพันธ์ (r)", ac.r.toFixed(3)), stat("ช่วงปกติ", `±${ac.range95[1].toFixed(3)}`)),
-        h("p", { class: "small muted" }, "วัดว่าเลขท้าย 2 ตัวของงวดหนึ่งสัมพันธ์กับงวดถัดไปไหม ค่าใกล้ 0 แปลว่าไม่สัมพันธ์กัน"),
-        h("h2", { class: "section" }, "ซื้อ 1 ใบ ได้คืนเฉลี่ยเท่าไร"),
-        h("div", { class: "stat-row" }, stat("ราคาสลาก", "80 บาท"), stat("รางวัลเฉลี่ยต่อใบ", `${fmt.format(PER_TICKET)} บาท`)),
-        h("p", { class: "small muted" }, `จากเงินรางวัลรวม ${fmt.format(PRIZE_TOTAL)} บาทต่อสลาก 1 ล้านใบ (อัตรารางวัลปัจจุบัน โปรดตรวจสอบกับ GLO) ได้คืนเฉลี่ย ${pct(PER_TICKET / TICKET_PRICE, 0)} ของราคา`))),
-    h("section", { class: "card section stack" },
-      h("h2", null, "ผลการทดสอบทั้งหมด"),
-      h("p", { class: "small muted" }, `p คือโอกาสที่การสุ่มจริงจะให้ผลเบี้ยวอย่างน้อยเท่านี้ ถ้าทดสอบหลายแบบ ย่อมมีบางแบบที่ p < 0.05 โดยบังเอิญ (ทดสอบ ${r.test_count} แบบ คาดว่าจะเจอราว ${fmt1.format(r.test_count * 0.05)} แบบ เจอจริง ${rawFlag.length} แบบ) จึงปรับด้วยวิธี Bonferroni (คูณ p ด้วยจำนวนการทดสอบ)`),
-      testTable,
-      h("p", { class: "small muted" }, "ตัวอย่าง: หลักหน่วยของรางวัลที่ 1 มี p ต่ำ แต่หลังปรับแล้วไม่ผิดปกติ · ตัวเลขในรางวัลที่ 2–5 ผิดปกติเล็กน้อยเฉพาะข้อมูลแหล่งเดียวที่ยังไม่ได้ตรวจทาน ส่วนข้อมูลทางการกระจายเท่ากัน แสดงว่าคุณภาพข้อมูลมีผลต่อสถิติ")),
-    gaps,
-    responsibleBox());
+    pageHead("เลขสุ่มจริงไหม?", "ทดสอบหลายแบบว่าผลจริงต่างจากการสุ่มที่ยุติธรรมไหม — เลือกช่วงเวลาและแหล่งข้อมูลได้"),
+    controls, body, responsibleBox());
 }
 
 // ---------- page: data ----------
@@ -1094,11 +1295,12 @@ async function pageData() {
         h("li", null, "ค่าที่คาดไว้ของลักษณะเลข (คู่/คี่, ผลรวม, เลขซ้ำ, เลขเรียง) นับแบบตรงตัวจากเลขทุกตัวที่เป็นไปได้ ไม่ใช่ค่าประมาณ"),
         h("li", null, "เปรียบเทียบช่วงเวลาเฉพาะรางวัลที่โครงสร้างเหมือนกันในทั้งสองช่วง (เลขท้าย 3 ตัวมี 4 หมายเลขต่องวดก่อน 1 ก.ย. 2558 และ 2 หมายเลขหลังจากนั้น)"),
         h("li", null, "ระยะห่างระหว่างการออกเทียบกับการแจกแจงเรขาคณิตที่คาดไว้ และช่วงปกติจากการจำลองการสุ่ม 1,000 รอบ"),
-        h("li", null, "ห้องทดลองใช้ exact binomial test และปรับ p ตามจำนวนเงื่อนไขที่ลอง (Bonferroni และ FDR)"))));
+        h("li", null, "ห้องทดลองใช้ exact binomial test และปรับ p ตามจำนวนเงื่อนไขที่ลอง (Bonferroni และ FDR)")),
+      h("p", null, "รายละเอียดทุกวิธีพร้อมสมการและข้อจำกัด: ", h("a", { href: "methods.html" }, "ทฤษฎีที่ใช้"))));
 }
 
 // ---------- lab core (BEGIN) ----------
-// ฟังก์ชันล้วน ไม่แตะ DOM — tests/test_lab_js.py ดึงส่วนนี้ไปรันด้วย node เทียบกับ Python
+// ฟังก์ชันล้วน ไม่แตะ DOM (ห้องทดลอง, วันเดียวกัน, ตัวสุ่มเลข) — tests/test_lab_js.py ดึงส่วนนี้ไปรันด้วย node เทียบกับ Python
 function logFactorials(n) {
   const t = new Float64Array(n + 1);
   for (let i = 1; i <= n; i++) t[i] = t[i - 1] + Math.log(i);
@@ -1201,6 +1403,119 @@ function conditionProb(c, width) {
   for (let i = 0; i < space; i++) if (pred(String(i).padStart(width, "0"))) k++;
   return k / space;
 }
+
+// ----- V4: ช่วงเวลา, วันเดียวกัน, ตัวสุ่มเลข -----
+// วันที่ย้อนหลัง N ปี (29 ก.พ. → 28 ก.พ. ถ้าปีปลายทางไม่ใช่ปีอธิกสุรทิน) เหมือน lotto_ranking.years_before
+function yearsBefore(iso, years) {
+  const [y, m, d] = iso.split("-").map(Number);
+  const ty = y - years;
+  const leap = (ty % 4 === 0 && ty % 100 !== 0) || ty % 400 === 0;
+  const dd = m === 2 && d === 29 && !leap ? 28 : d;
+  return `${String(ty).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+}
+
+// งวดถัดไปตามปกติ (วันที่ 1 และ 16): คืน [เดือน, วัน]
+function nextDrawDay(iso) {
+  const [, m, d] = iso.split("-").map(Number);
+  if (d < 16) return [m, 16];
+  return [m === 12 ? 1 : m + 1, 1];
+}
+
+// งวดที่ตรงกับวัน/เดือนที่เลือกในแต่ละปี: ห่างไม่เกิน tol วัน เลือกงวดที่ใกล้ที่สุดปีละ 1 งวด
+// (ใช้ได้ข้ามปี เช่น 1 ม.ค. ±3 วันรวมงวด 30 ธ.ค. ของปีก่อน)
+function sameDateRows(rows, month, day, tol) {
+  const best = new Map();
+  for (const r of rows) {
+    const [y, mo, d] = r.draw_date.split("-").map(Number);
+    const t = Date.UTC(y, mo - 1, d);
+    for (const ty of [y - 1, y, y + 1]) {
+      const target = Date.UTC(ty, month - 1, day);
+      if (new Date(target).getUTCDate() !== day) continue; // วันที่ไม่มีจริงในปีนั้น เช่น 30 ก.พ.
+      const diff = Math.round(Math.abs(t - target) / 86400000);
+      if (diff > tol) continue;
+      const cur = best.get(ty);
+      if (!cur || diff < cur.diff) best.set(ty, { year: ty, row: r, diff });
+    }
+  }
+  return [...best.values()].sort((a, b) => a.year - b.year);
+}
+
+// นับจำนวนครั้งของแต่ละค่า เรียงจากมากไปน้อย (เท่ากันเรียงตามค่า)
+function tally(values) {
+  const m = new Map();
+  for (const v of values) m.set(v, (m.get(v) || 0) + 1);
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+}
+
+// การแจกแจง exact ของจำนวนเลขที่ "ไม่เคยออก" หลังสุ่ม slots ครั้งจาก space เลข (occupancy, DP)
+function unseenStats(space, slots) {
+  let p = new Float64Array(space + 1);
+  p[0] = 1; // p[k] = P(เห็นแล้ว k เลข)
+  for (let t = 0; t < slots; t++) {
+    const q = new Float64Array(space + 1);
+    for (let k = 0; k <= Math.min(t, space); k++) {
+      if (!p[k]) continue;
+      q[k] += p[k] * (k / space);
+      if (k < space) q[k + 1] += p[k] * ((space - k) / space);
+    }
+    p = q;
+  }
+  let cum = 0, lo = null, hi = space;
+  for (let u = 0; u <= space; u++) { // u = space − k เลขที่ไม่เคยออก
+    cum += p[space - u];
+    if (lo === null && cum >= 0.025) lo = u;
+    if (cum >= 0.975) { hi = u; break; }
+  }
+  return { expected: space * Math.pow(1 - 1 / space, slots), lo, hi };
+}
+
+// จำนวนเลขที่คาดว่าจะออก ≥ k ครั้ง (เลขละ Binomial(slots, 1/space))
+function expectedAtLeast(space, slots, k) {
+  if (slots < k) return 0;
+  const pmf = binomPmfList(slots, 1 / space);
+  let below = 0;
+  for (let i = 0; i < k; i++) below += pmf[i];
+  return space * Math.max(0, 1 - below);
+}
+
+// โอกาสที่เลขหนึ่งจะอยู่ในรางวัลที่มี perDraw หมายเลขต่องวด
+function chanceInDraw(space, perDraw) {
+  return 1 - Math.pow(1 - 1 / space, perDraw);
+}
+
+// สุ่มจำนวนเต็ม 0..n−1 แบบเท่ากันทุกค่าจาก uint32 (ทิ้งค่าที่เกินพหุคูณของ n เพื่อไม่ให้เอียง)
+function uniformBelow(n, nextU32) {
+  const lim = Math.floor(4294967296 / n) * n;
+  let x;
+  do { x = nextU32(); } while (x >= lim);
+  return x % n;
+}
+
+// index ตามน้ำหนักจำนวนเต็ม: r ∈ [0, ผลรวมน้ำหนัก)
+function weightedIndex(weights, r) {
+  let acc = 0;
+  for (let i = 0; i < weights.length; i++) {
+    acc += weights[i];
+    if (r < acc) return i;
+  }
+  return weights.length - 1;
+}
+
+function pickWeighted(weights, nextU32) {
+  const total = weights.reduce((a, b) => a + b, 0);
+  if (!(total > 0)) return uniformBelow(weights.length, nextU32);
+  return weightedIndex(weights, uniformBelow(total, nextU32));
+}
+
+// สร้างเลข 6 หลัก: uniform = เท่ากันทุกเลข; weighted = ถ่วงตามตาราง
+// table.kind "digits": positions[6][10] ถ่วงแต่ละหลักแยกกัน; "last2"/"back3": counts[100|1000] ถ่วงหลักท้าย หลักหน้าสุ่มเท่ากัน
+function makeTicket(mode, table, nextU32) {
+  if (mode !== "weighted" || !table) return String(uniformBelow(1000000, nextU32)).padStart(6, "0");
+  if (table.kind === "digits") return table.positions.map((w) => String(pickWeighted(w, nextU32))).join("");
+  const width = table.kind === "last2" ? 2 : 3;
+  const head = String(uniformBelow(10 ** (6 - width), nextU32)).padStart(6 - width, "0");
+  return head + String(pickWeighted(table.counts, nextU32)).padStart(width, "0");
+}
 // ---------- lab core (END) ----------
 
 // ---------- page: research lab ----------
@@ -1213,7 +1528,7 @@ const LAB_PARITY = { any: "ไม่กำหนด", even: "เลขคู่"
 
 function describeCondition(c, width) {
   const parts = [];
-  c.digits.forEach((d, i) => { if (d !== null) parts.push(`หลักที่ ${i + 1} = ${d}`); });
+  c.digits.forEach((d, i) => { if (d !== null) parts.push(`${POS_NAMES[width][i]} = ${d}`); });
   if (c.parity !== "any") parts.push(LAB_PARITY[c.parity]);
   if (c.sumMin > 0 || c.sumMax < 9 * width) parts.push(c.sumMin === c.sumMax ? `ผลรวม = ${c.sumMin}` : `ผลรวม ${c.sumMin}–${c.sumMax}`);
   if (c.repeat !== "any") parts.push(LAB_REPEAT[c.repeat]);
@@ -1255,7 +1570,7 @@ async function pageLab() {
         sel("lab-period", "ช่วงเวลา", freq.periods.map((k) => [k, freq.period_labels[k]]), state.period),
         sel("lab-trust", "แหล่งข้อมูล", freq.trusts.map((k) => [k, freq.trust_labels[k]]), state.trust)),
       h("fieldset", null, h("legend", null, "ตัวเลขในแต่ละหลัก"),
-        h("div", { class: "digit-row" }, [...Array(width).keys()].map((i) => sel(`lab-d${i}`, `หลักที่ ${i + 1}`, digitOpts, "")))),
+        h("div", { class: "digit-row" }, [...Array(width).keys()].map((i) => sel(`lab-d${i}`, POS_NAMES[width][i], digitOpts, "")))),
       h("div", { class: "controls" },
         sel("lab-parity", "คู่ / คี่", Object.entries(LAB_PARITY), "any"),
         sel("lab-smin", "ผลรวมของหลัก ตั้งแต่", sums, 0),
@@ -1384,6 +1699,445 @@ async function pageLab() {
     responsibleBox());
 }
 
+// ---------- shared (V4) ----------
+function chipList(entries, range, label) {
+  return h("ul", { class: "count-chips", "aria-label": label }, entries.map(([num, c]) => {
+    const out = c > range[1];
+    return h("li", { class: out ? "out" : null, title: out ? "มากกว่าช่วงปกติของเลขหนึ่งตัว" : null },
+      h("span", { class: "mono" }, num), h("span", { class: "c" }, `×${c}`), out ? h("span", { class: "sr-only" }, " (นอกช่วงปกติ)") : null);
+  }));
+}
+
+// การแจกแจงจากการจำลอง (เช่น จำนวนครั้งของเลขอันดับ 1) พร้อมแท่งของค่าจริง
+function distChart(hist, observed, title, xTitle) {
+  const W = chartW(true), H = 180, padL = 40, padR = 6, padT = 18, padB = 34;
+  const total = hist.reduce((a, [, f]) => a + f, 0);
+  const lo = Math.min(hist[0][0], observed), hi = Math.max(hist[hist.length - 1][0], observed);
+  const vals = [];
+  for (let v = lo; v <= hi; v++) vals.push(v);
+  const share = new Map(hist.map(([v, f]) => [v, f / total]));
+  const max = Math.max(...vals.map((v) => share.get(v) || 0)) * 1.1;
+  const bw = (W - padL - padR) / vals.length;
+  const y = (v) => H - padB - (v / max) * (H - padB - padT);
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": title });
+  const step = niceStep(max / 3);
+  for (let v = 0; v <= max; v += step) {
+    svg.append(s("line", { x1: padL, x2: W - padR, y1: y(v), y2: y(v), stroke: "currentColor", "stroke-opacity": 0.1 }));
+    svg.append(s("text", { x: padL - 5, y: y(v) + 4, "text-anchor": "end" }, `${Math.round(v * 100)}%`));
+  }
+  const every = Math.ceil(vals.length / 14);
+  vals.forEach((v, i) => {
+    const sh = share.get(v) || 0;
+    const isObs = v === observed;
+    const barW = Math.min(bw * 0.76, 44);
+    const bar = s("rect", { x: padL + i * bw + (bw - barW) / 2, width: barW, y: y(sh), height: Math.max(isObs ? 2 : 0, H - padB - y(sh)), class: isObs ? "c-bar out" : "c-sim" });
+    bar.append(s("title", null, `${v} ครั้ง: ${pct(sh)} ของการจำลอง${isObs ? " (ค่าจริง)" : ""}`));
+    svg.append(bar);
+    if (isObs) svg.append(s("text", { x: padL + i * bw + bw / 2, y: Math.min(y(sh), H - padB) - 5, "text-anchor": "middle", class: "c-label" }, "จริง"));
+    if (i % every === 0 || isObs) svg.append(s("text", { x: padL + i * bw + bw / 2, y: H - padB + 14, "text-anchor": "middle" }, v));
+  });
+  svg.append(s("text", { x: (W + padL) / 2, y: H - 3, "text-anchor": "middle" }, xTitle));
+  const table = h("details", null, h("summary", null, "แสดงเป็นตาราง"), h("div", { class: "table-wrap" }, h("table", null,
+    h("thead", null, h("tr", null, h("th", null, xTitle), h("th", { class: "n" }, "สัดส่วนของการจำลอง"))),
+    h("tbody", null, hist.map(([v, f]) => h("tr", null, h("td", null, v === observed ? `${v} (ค่าจริง)` : String(v)), h("td", { class: "n" }, pct(f / total))))))));
+  return [h("div", { class: "chart" }, svg),
+    h("div", { class: "legend" }, h("span", { class: "key key-sim" }), "การจำลองการสุ่ม", h("span", { class: "key key-out" }), "ค่าจริง"), table];
+}
+
+// ---------- page: ranking ----------
+const RANK_PRIZES = [["last2", "เลขท้าย 2 ตัว"], ["back3", "เลขท้าย 3 ตัว"], ["front3", "เลขหน้า 3 ตัว"], ["digits", "รายหลัก"]];
+const LOOKBACK_LABEL = { all: "ทุกงวดก่อนหน้า", last20y: "20 ปีก่อนหน้า", last10y: "10 ปีก่อนหน้า", last5y: "5 ปีก่อนหน้า" };
+
+function chanceText(space, perDraw) {
+  const p = chanceInDraw(space, perDraw);
+  return space === 100 ? "1 ใน 100 (1%)" : space === 10 ? "1 ใน 10 (10%)" : `${perDraw} ใน 1,000 (${pct(p, 2)})`;
+}
+
+function rankTable(rows, opts) {
+  return h("div", { class: "table-wrap" }, h("table", { class: "rank-table" },
+    h("caption", { class: "sr-only" }, opts.caption),
+    h("thead", null, h("tr", null,
+      h("th", { class: "n", scope: "col" }, "อันดับ"), h("th", { scope: "col" }, opts.keyTitle),
+      h("th", { class: "n", scope: "col" }, "ออก"), h("th", { class: "n", scope: "col" }, "อันดับนี้ถ้าสุ่มจริง (95%)"),
+      h("th", { scope: "col" }, "ผล"), h("th", { class: "n", scope: "col" }, "คาดไว้ต่อเลข (95%)"),
+      h("th", { class: "n", scope: "col" }, "โอกาสงวดหน้า"))),
+    h("tbody", null, rows)));
+}
+
+function rankRow(rank, key, count, f, os, chance, mark) {
+  const outOrder = os && (count < os.lo || count > os.hi);
+  return h("tr", { class: mark ? "hl" : null },
+    h("td", { class: "n" }, rank), h("td", { class: "mono strong" }, key), h("td", { class: "n" }, fmt.format(count)),
+    h("td", { class: "n" }, os ? `${fmt1.format(os.mean)} (${os.lo}–${os.hi})` : "–"),
+    h("td", null, os ? (outOrder ? h("span", { class: "chip warn" }, "นอกช่วง") : h("span", { class: "chip ok" }, "ปกติ")) : ""),
+    h("td", { class: "n" }, `${fmt2.format(f.expected)} (${fmtR(f.range95)})`),
+    h("td", { class: "n" }, chance));
+}
+
+function orderAt(order, rank) {
+  const j = order.ranks.indexOf(rank);
+  return j < 0 ? null : { mean: order.mean[j], lo: order.lo[j], hi: order.hi[j] };
+}
+
+async function pageRanking() {
+  const [kj, freq, dj] = await Promise.all([getData("stats/ranking.json"), getData("stats/frequency.json"), getData("stats/digits.json")]);
+  const st = readState({
+    p: [RANK_PRIZES.map((x) => x[0]), "last2"], dp: [Object.keys(WIDTH), "first"],
+    period: [PERIOD_KEYS, "all"], trust: [TRUST_KEYS, "all"],
+  });
+  const controls = h("section", { class: "card stack" });
+  const body = h("div");
+  let showAll = false;
+
+  function draw() {
+    writeState(st.p === "digits" ? st : { p: st.p, period: st.period, trust: st.trust });
+    const focusId = document.activeElement && document.activeElement.id;
+    const seg = h("div", { class: "seg", role: "group", "aria-label": "เลือกรางวัล" }, RANK_PRIZES.map(([k, label]) => h("button", {
+      type: "button", "aria-pressed": String(st.p === k), onclick: () => { st.p = k; showAll = false; draw(); },
+    }, label)));
+    const scopeCtl = scopeControls(kj, st, draw);
+    if (st.p === "digits") scopeCtl.prepend(selectBox("dp", "รางวัล", DIGIT_PRIZES, st.dp, (v) => { st.dp = v; draw(); }));
+    controls.replaceChildren(seg, scopeCtl, scopeNote(kj, st));
+    if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus();
+    body.replaceChildren(...(st.p === "digits" ? digitRanking() : numberRanking()).flat(Infinity).filter(Boolean));
+  }
+
+  function numberRanking() {
+    const k = scopeData(kj, st)[st.p];
+    const f = scopeData(freq, st)[st.p];
+    if (!k || !f) return [h("section", { class: "card section" }, h("p", { class: "empty" }, "ไม่มีรางวัลนี้ในขอบเขตที่เลือก"))];
+    const width = WIDTH[st.p];
+    const entries = f.counts.map((c, i) => [String(i).padStart(width, "0"), c])
+      .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+    const chance = chanceText(k.space, k.per_draw);
+    const chanceShort = pct(chanceInDraw(k.space, k.per_draw), k.space === 100 ? 0 : 2);
+    const tops = entries.filter((e) => e[1] === k.max.observed).map((e) => e[0]);
+    const bottoms = entries.filter((e) => e[1] === k.min.observed).map((e) => e[0]);
+    const listNums = (xs) => (xs.length > 6 ? `${xs.slice(0, 6).join(", ")} และอีก ${fmt.format(xs.length - 6)} เลข` : xs.join(", "));
+    const maxIn = k.max.observed <= k.max.range95[1];
+    const minIn = k.min.observed >= k.min.range95[0];
+
+    const tableWrap = h("div", { class: "stack" });
+    const lookup = h("input", { id: "rank-lookup", type: "text", inputmode: "numeric", maxlength: String(width), autocomplete: "off", placeholder: width === 2 ? "00–99" : "000–999" });
+    const found = h("p", { class: "small", "aria-live": "polite" });
+    function fillTable(hl) {
+      const rows = [];
+      const edge = k.space > 100 && !showAll;
+      entries.forEach(([num, c], i) => {
+        const rank = i + 1;
+        if (edge && rank > 20 && rank <= k.space - 20) {
+          if (rank === 21) rows.push(h("tr", null, h("td", { colspan: "7", class: "muted small center" }, `… อันดับ 21–${fmt.format(k.space - 20)} …`)));
+          return;
+        }
+        rows.push(rankRow(rank, num, c, f, orderAt(k.order, rank), chanceShort, num === hl));
+      });
+      const more = k.space > 100
+        ? h("button", { class: "btn btn-ghost", type: "button", onclick: () => { showAll = !showAll; fillTable(hl); } },
+          showAll ? "แสดงเฉพาะ 20 อันดับแรกและสุดท้าย" : `แสดงทั้ง ${fmt.format(k.space)} เลข`)
+        : null;
+      tableWrap.replaceChildren(...[rankTable(rows, { caption: `อันดับความถี่ของ${PRIZE_LABEL[st.p]}`, keyTitle: "เลข" }), more].filter(Boolean));
+    }
+    lookup.addEventListener("input", () => {
+      lookup.value = lookup.value.replace(/[^0-9]/g, "").slice(0, width);
+      if (lookup.value.length !== width) { found.textContent = ""; fillTable(null); return; }
+      const i = entries.findIndex((e) => e[0] === lookup.value);
+      const c = entries[i][1];
+      const same = entries.filter((e) => e[1] === c).length;
+      found.textContent = `เลข ${lookup.value} อยู่อันดับ ${fmt.format(i + 1)} ออก ${c} ครั้ง (มี ${fmt.format(same)} เลขที่ออก ${c} ครั้งเท่ากัน) · คาดไว้ ${fmt2.format(f.expected)} ช่วงปกติ ${fmtR(f.range95)} · โอกาสงวดหน้า ${chance} เท่ากับทุกเลข`;
+      if (k.space > 100 && i >= 20 && i < k.space - 20) showAll = true;
+      fillTable(lookup.value);
+    });
+    fillTable(null);
+
+    const extremeCard = (which) => {
+      const x = k[which];
+      const isMax = which === "max";
+      const inRange = isMax ? maxIn : minIn;
+      return h("section", { class: "card stack" },
+        h("h2", null, isMax ? "อันดับ 1 ออกบ่อยผิดปกติไหม?" : "อันดับสุดท้ายออกน้อยผิดปกติไหม?"),
+        h("p", null, isMax
+          ? `เลขที่ออกบ่อยที่สุด (${listNums(tops)}) ออก ${x.observed} ครั้ง ขณะที่ค่าที่คาดไว้ต่อเลขคือ ${fmt2.format(f.expected)} ครั้ง แต่เมื่อมี ${fmt.format(k.space)} เลขแข่งกัน เลขอันดับ 1 ย่อมสูงกว่าค่าเฉลี่ยเสมอแม้สุ่มจริง`
+          : `เลขที่ออกน้อยที่สุด (${listNums(bottoms)}) ออก ${x.observed} ครั้ง — เมื่อมี ${fmt.format(k.space)} เลข อันดับสุดท้ายย่อมต่ำกว่าค่าเฉลี่ยเสมอแม้สุ่มจริง`),
+        h("div", { class: inRange ? "callout ok" : "callout" },
+          h("strong", null, inRange ? "อยู่ในช่วงปกติของการสุ่ม" : "อยู่นอกช่วงปกติของการสุ่ม"), h("br"),
+          `จำลองการสุ่ม ${fmt.format(k.order.sims)} รอบ: เลข${isMax ? "อันดับ 1" : "อันดับสุดท้าย"}ออก ${x.range95[0]}–${x.range95[1]} ครั้ง (95%) · ${pct(x.share_as_extreme, 0)} ของการจำลอง${isMax ? `ได้อันดับ 1 ออก ${x.observed} ครั้งขึ้นไป` : `ได้อันดับสุดท้ายออก ${x.observed} ครั้งหรือน้อยกว่า`}`),
+        x.hist.length === 1 && x.hist[0][0] === x.observed
+          ? h("p", { class: "small muted" }, `ในการจำลองทุกรอบ เลข${isMax ? "อันดับ 1" : "อันดับสุดท้าย"}ออก ${x.observed} ครั้งเหมือนกัน (มีเลขให้เลือกมากกว่าจำนวนหมายเลขที่ออก จึงย่อมมีเลขที่ไม่เคยออกเสมอ)`)
+          : distChart(x.hist, x.observed, `การแจกแจงของจำนวนครั้งของเลข${isMax ? "อันดับ 1" : "อันดับสุดท้าย"}จากการจำลองการสุ่ม เทียบค่าจริง ${x.observed} ครั้ง`,
+          `จำนวนครั้งของเลข${isMax ? "อันดับ 1" : "อันดับสุดท้าย"}`));
+    };
+
+    const parts = [
+      h("section", { class: "card section stack" },
+        h("div", { class: "callout ok" },
+          h("strong", null, `โอกาสงวดหน้าของทุกเลขเท่ากัน: ${chance}`), h("br"),
+          "อันดับในหน้านี้เป็นสถิติย้อนหลังเท่านั้น การออกรางวัลไม่รู้ว่าเลขไหนเคยออกกี่ครั้ง เลขอันดับ 1 จึงไม่ได้มีโอกาสมากกว่าเลขอันดับสุดท้าย"),
+        h("div", { class: "stat-row" },
+          stat("งวดที่มีรางวัลนี้", fmt.format(k.eligible_draws)),
+          stat("จำนวนหมายเลข", fmt.format(k.slots)),
+          stat("คาดไว้ต่อเลข", fmt2.format(f.expected)),
+          stat("ช่วงปกติต่อเลข", `${fmtR(f.range95)} ครั้ง`))),
+      h("div", { class: "grid grid-2e section" }, extremeCard("max"), extremeCard("min")),
+      h("section", { class: "card section stack" },
+        h("h2", null, `อันดับความถี่: ${PRIZE_LABEL[st.p]}`),
+        h("p", { class: "small muted" }, "เรียงจากออกบ่อยไปน้อย เลขที่ออกเท่ากันเรียงจากเลขน้อยไปมาก · \"คาดไว้ต่อเลข\" = ค่าของเลขใดเลขหนึ่งถ้าสุ่มจริง · \"อันดับนี้ถ้าสุ่มจริง\" = จำนวนครั้งที่เลขอันดับนั้นมักได้จากการจำลองการสุ่ม (ใช้เทียบอันดับได้ตรงกว่า)",
+          k.space > 100 ? " · เลข 3 ตัวคำนวณช่วงของอันดับไว้เฉพาะ 20 อันดับแรกและสุดท้าย" : ""),
+        h("div", { class: "field lookup" }, h("label", { for: "rank-lookup" }, `หาอันดับของเลข ${width} หลัก`), lookup),
+        found,
+        tableWrap),
+    ];
+    if (st.p === "last2") parts.push(backtestCard());
+    else parts.push(h("section", { class: "card section" }, h("p", { class: "small muted" }, "การจำลองย้อนหลัง (backtest) ทำเฉพาะเลขท้าย 2 ตัว เพราะมี 1 หมายเลขต่องวดเท่ากันทุกยุค — ",
+      h("a", { href: `ranking.html?p=last2&period=${st.period}&trust=${st.trust}` }, "ดู backtest เลขท้าย 2 ตัว"))));
+    parts.push(responsibleBox());
+    return parts;
+  }
+
+  function backtestCard() {
+    const lb = kj.lookbacks.includes(st.period) ? st.period : "all";
+    const bt = kj.backtests[lb];
+    const top = bt.strategies.find((x) => x.name === "top");
+    return h("section", { class: "card section stack" },
+      h("h2", null, "ถ้าซื้อ 10 อันดับแรกทุกงวด จะถูกบ่อยแค่ไหน?"),
+      h("p", null, `จำลองย้อนหลัง ${fmt.format(bt.trials)} งวด (${thShort(bt.first_test)} – ล่าสุด): ก่อนแต่ละงวด นับเลขท้าย 2 ตัวจาก${LOOKBACK_LABEL[lb]}เท่านั้น เลือก 10 อันดับแรก (และ 10 อันดับสุดท้ายไว้เทียบ) แล้วดูว่าเลขที่ออกจริงอยู่ในนั้นไหม`),
+      hitBars(bt),
+      h("p", { class: "small muted" }, `เส้นดำ = โอกาสถ้าเลือกมั่ว 10% · แถบเขียว = ช่วงที่การเลือกมั่วให้ได้ตามปกติ (${pct(bt.chance_range95[0])}–${pct(bt.chance_range95[1])}) · 10 อันดับแรกถูก ${fmt.format(top.hits)} จาก ${fmt.format(bt.trials)} งวด (${pct(top.rate)}, p = ${fmtP(top.p)})`),
+      h("div", { class: "table-wrap" }, h("table", null,
+        h("thead", null, h("tr", null, h("th", null, "นับจาก"), h("th", { class: "n" }, "10 อันดับแรก"), h("th", { class: "n" }, "10 อันดับสุดท้าย"), h("th", { class: "n" }, "เลือกมั่ว (95%)"))),
+        h("tbody", null, kj.lookbacks.map((key) => {
+          const b = kj.backtests[key];
+          const cell = (name) => { const x = b.strategies.find((y) => y.name === name); return `${pct(x.rate)} (${x.hits}/${b.trials})`; };
+          return h("tr", { class: key === lb ? "hl" : null }, h("td", null, LOOKBACK_LABEL[key]), h("td", { class: "n" }, cell("top")), h("td", { class: "n" }, cell("bottom")),
+            h("td", { class: "n" }, `10% (${pct(b.chance_range95[0])}–${pct(b.chance_range95[1])})`));
+        })))),
+      h("p", { class: "small muted" }, "ใช้ทุกแหล่งข้อมูลเสมอเพราะต้องมีทุกงวดต่อเนื่องกัน ข้ามงวดแรก 100 งวดเพื่อให้มีข้อมูลย้อนหลังพอ · ช่วงเวลา \"ตั้งแต่ 2558\" และ \"ข้อมูลทางการ\" ใช้แถว \"ทุกงวดก่อนหน้า\" · เลขที่ออกเท่ากันเลือกเลขน้อยก่อน"));
+  }
+
+  function digitRanking() {
+    const dr = scopeData(kj, st).digits[st.dp];
+    const d = scopeData(dj, st)[st.dp];
+    if (!dr || !d) return [h("section", { class: "card section" }, h("p", { class: "empty" }, "ไม่มีรางวัลนี้ในขอบเขตที่เลือก"))];
+    const names = POS_NAMES[WIDTH[st.dp]];
+    return [
+      h("section", { class: "card section stack" },
+        h("div", { class: "callout ok" }, h("strong", null, "ทุกตัวเลขมีโอกาส 1 ใน 10 (10%) ในทุกหลักทุกงวด"), h("br"),
+          "อันดับด้านล่างเป็นสถิติย้อนหลังเท่านั้น ตัวเลขอันดับ 1 ของแต่ละหลักไม่ได้มีโอกาสมากกว่าตัวเลขอื่น"),
+        h("div", { class: "stat-row" },
+          stat("จำนวนหมายเลข", fmt.format(d.n)), stat("คาดไว้ต่อตัวเลข", fmt1.format(d.expected)),
+          stat("ช่วงปกติต่อตัวเลข", fmtR(d.range95)), stat("อันดับ 1 ถ้าสุ่มจริง", `${dr.order.lo[0]}–${dr.order.hi[0]}`)),
+        h("p", { class: "small muted" }, `${PRIZE_LABEL[st.dp]}: ${names.join(" · ")} · "อันดับนี้ถ้าสุ่มจริง" มาจากการจำลองการสุ่ม ${fmt.format(dr.order.sims)} รอบ`)),
+      h("div", { class: "grid grid-2e section" }, d.positions.map((pos, pi) => {
+        const order = pos.counts.map((c, digit) => [String(digit), c]).sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+        return h("section", { class: "card stack" },
+          h("h3", null, `${names[pi]} — ${PRIZE_LABEL[st.dp]}`),
+          rankTable(order.map(([digit, c], i) => rankRow(i + 1, digit, c, d, orderAt(dr.order, i + 1), "10%", false)),
+            { caption: `อันดับตัวเลขใน${names[pi]}ของ${PRIZE_LABEL[st.dp]}`, keyTitle: "ตัวเลข" }));
+      })),
+      responsibleBox(),
+    ];
+  }
+
+  render(pageHead("อันดับความถี่", "เรียงเลขจากออกบ่อยไปน้อย พร้อมค่าที่คาดไว้และช่วงที่การสุ่มจริงให้ได้ — อันดับในอดีตไม่ได้บอกโอกาสของงวดหน้า"),
+    controls, body);
+  draw();
+}
+
+// ---------- page: same date ----------
+async function pageSameDate() {
+  const [m, freq, idx] = await Promise.all([manifest(), getData("stats/frequency.json"), index()]);
+  const [nm, nd] = nextDrawDay(m.latest_draw);
+  const st = readState({
+    m: [/^(1[0-2]|[1-9])$/, String(nm)], d: [/^([1-9]|[12]\d|3[01])$/, String(nd)], tol: [["0", "1", "3"], "3"],
+    period: [PERIOD_KEYS, "all"], trust: [TRUST_KEYS, "all"],
+  });
+  const controls = h("section", { class: "card stack" });
+  const body = h("div");
+
+  function prizeCard(prize, picks) {
+    const space = prize === "last2" ? 100 : 1000;
+    const lists = picks.map(({ row }) => (prize === "last2" ? [row.last2] : row[prize])).filter((l) => l.length);
+    const values = lists.flat();
+    const slots = values.length;
+    if (!slots) return h("section", { class: "card section" }, h("h2", null, PRIZE_LABEL[prize]), h("p", { class: "empty" }, "ไม่มีรางวัลนี้ในงวดที่เลือก (เลขหน้า 3 ตัวเริ่มมีตั้งแต่ 1 ก.ย. 2558)"));
+    const exp = slots / space;
+    const range = binomRange(slots, 1 / space);
+    const t = tally(values);
+    const un = unseenStats(space, slots);
+    const repeats = t.filter((e) => e[1] >= 2).length;
+    const expRepeats = expectedAtLeast(space, slots, 2);
+    const unseen = [];
+    if (space === 100) {
+      const seen = new Set(values);
+      for (let i = 0; i < 100; i++) { const k = String(i).padStart(2, "0"); if (!seen.has(k)) unseen.push(k); }
+    }
+    return h("section", { class: "card section stack" },
+      h("h2", null, PRIZE_LABEL[prize]),
+      h("div", { class: "stat-row" },
+        stat("งวด", fmt.format(lists.length)), stat("หมายเลขที่ออก", fmt.format(slots)),
+        stat("คาดไว้ต่อเลข", fmt2.format(exp)), stat("ช่วงปกติต่อเลข", `${fmtR(range)} ครั้ง`)),
+      h("h3", null, "เลขที่เคยออกในวันนี้ ", h("span", { class: "muted small" }, "(เรียงจากบ่อยไปน้อย)")),
+      chipList(t, range, `${PRIZE_LABEL[prize]} ที่เคยออก`),
+      h("p", { class: "small muted" }, `ออกซ้ำตั้งแต่ 2 ครั้ง ${fmt.format(repeats)} เลข — ถ้าสุ่มจริงคาดไว้ราว ${fmt1.format(expRepeats)} เลข`),
+      h("p", { class: "small" }, h("strong", null, `ไม่เคยออกในวันนี้ ${fmt.format(space - t.length)} จาก ${fmt.format(space)} เลข`),
+        ` — ถ้าสุ่มจริงคาดไว้ ${fmt1.format(un.expected)} เลข (ช่วงปกติ ${fmt.format(un.lo)}–${fmt.format(un.hi)})`),
+      unseen.length ? h("details", null, h("summary", null, `ดูเลขที่ไม่เคยออก (${unseen.length})`), h("div", { class: "num-grid tight" }, unseen.map((k) => h("span", { class: "mono" }, k)))) : null,
+      h("details", null, h("summary", null, "แสดงเป็นตาราง"), h("div", { class: "table-wrap" }, h("table", null,
+        h("thead", null, h("tr", null, h("th", null, "เลข"), h("th", { class: "n" }, "ออก"), h("th", { class: "n" }, "คาดไว้"), h("th", { class: "n" }, "ช่วงปกติ"), h("th", null, "ผล"))),
+        h("tbody", null, t.map(([k, c]) => h("tr", null, h("td", { class: "mono" }, k), h("td", { class: "n" }, c), h("td", { class: "n" }, fmt2.format(exp)),
+          h("td", { class: "n" }, fmtR(range)), h("td", null, c > range[1] ? "นอกช่วงปกติ" : "ในช่วงปกติ"))))))));
+  }
+
+  function draw() {
+    writeState(st);
+    const month = Number(st.m), day = Number(st.d), tol = Number(st.tol);
+    const focusId = document.activeElement && document.activeElement.id;
+    const ctl = scopeControls(freq, st, draw);
+    ctl.prepend(
+      selectBox("sd-day", "วันที่", [...Array(31).keys()].map((i) => [String(i + 1), String(i + 1)]), st.d, (v) => { st.d = v; draw(); }),
+      selectBox("sd-month", "เดือน", MONTHS_LONG.map((l, i) => [String(i + 1), l]), st.m, (v) => { st.m = v; draw(); }),
+      selectBox("sd-tol", "นับงวดที่เลื่อนวัน", [["0", "ตรงวันเท่านั้น"], ["1", "±1 วัน"], ["3", "±3 วัน"]], st.tol, (v) => { st.tol = v; draw(); }));
+    controls.replaceChildren(ctl,
+      h("p", { class: "small muted" }, `ค่าเริ่มต้นคืองวดถัดไป (${nd} ${MONTHS_SHORT[nm - 1]}) · บางงวดออกไม่ตรงวันที่ 1 หรือ 16 (เช่น 17 ม.ค., 2 พ.ค., 30 ธ.ค.) ตัวเลือก ±3 วันจึงรวมงวดที่เลื่อนไปด้วย ปีละไม่เกิน 1 งวด`),
+      scopeNote(freq, st));
+    if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus();
+    const pool = idx.filter((r) => periodHas(st.period, r, idx) && trustHas(st.trust, r));
+    const picks = sameDateRows(pool, month, day, tol);
+    const n = picks.length;
+    const dateText = `${day} ${MONTHS_LONG[month - 1]}`;
+    if (!n) {
+      body.replaceChildren(h("section", { class: "card section" }, h("p", { class: "empty" }, `ไม่พบงวดที่ตรงกับวันที่ ${dateText}${tol ? ` (±${tol} วัน)` : ""} ในขอบเขตนี้`)));
+      return;
+    }
+    const firsts = picks.map(({ row }) => row.first);
+    const dRange = binomRange(n, 0.1);
+    const dObj = { expected: n / 10, range95: dRange, positions: [0, 1, 2, 3, 4, 5].map((p) => ({ counts: digitCountsAt(firsts, p) })) };
+    body.replaceChildren(
+      h("section", { class: "card section stack" },
+        h("div", { class: "callout warn-box" },
+          h("strong", null, `ตัวอย่างน้อยมาก: ${fmt.format(n)} งวดที่ตรงกับวันที่ ${dateText}`), h("br"),
+          `เลขท้าย 2 ตัวแต่ละเลขจึงคาดไว้เพียง ${fmt2.format(n / 100)} ครั้ง (ช่วงปกติ ${fmtR(binomRange(n, 0.01))} ครั้ง) เลขที่ออก 2 ครั้งในวันเดียวกันจึงเป็นเรื่องปกติของการสุ่ม`),
+        h("p", null, "วันที่ไม่มีผลต่อการออกรางวัล เครื่องออกรางวัลไม่รู้ว่าวันนี้วันที่เท่าไร หน้านี้มีไว้ดูย้อนหลังเท่านั้น ทุกเลขมีโอกาสเท่ากันทุกงวด")),
+      prizeCard("last2", picks),
+      prizeCard("back3", picks),
+      prizeCard("front3", picks),
+      h("section", { class: "card section stack" },
+        h("h2", null, "ตัวเลขแต่ละหลักของรางวัลที่ 1 ในวันนี้"),
+        digitMatrix(dObj, POS_NAMES[6])),
+      h("section", { class: "card section stack" },
+        h("details", null, h("summary", null, `งวดที่ใช้ (${n})`), h("div", { class: "table-wrap" }, h("table", null,
+          h("thead", null, h("tr", null, h("th", null, "งวด"), h("th", null, "รางวัลที่ 1"), h("th", null, "หน้า 3"), h("th", null, "ท้าย 3"), h("th", null, "ท้าย 2"))),
+          h("tbody", null, picks.slice().reverse().map(({ row, diff }) => h("tr", null,
+            h("td", null, h("a", { href: `results.html?d=${row.draw_date}` }, thShort(row.draw_date)), diff ? h("span", { class: "muted small" }, ` (ห่าง ${diff} วัน)`) : null),
+            h("td", { class: "mono" }, row.first), h("td", { class: "mono" }, row.front3.join(" ") || "–"),
+            h("td", { class: "mono" }, row.back3.join(" ")), h("td", { class: "mono strong" }, row.last2)))))))),
+      responsibleBox());
+  }
+
+  render(pageHead("ผลวันเดียวกันทุกปี", "ดูว่าในวันที่และเดือนเดียวกันของทุกปี เคยออกเลขอะไรบ้าง เทียบกับที่การสุ่มจริงให้ได้"),
+    controls, body);
+  draw();
+}
+
+function digitCountsAt(numbers, pos) {
+  const c = Array(10).fill(0);
+  for (const v of numbers) c[v.charCodeAt(pos) - 48]++;
+  return c;
+}
+
+// ---------- page: generator ----------
+async function pageGenerator() {
+  const [freq, dj] = await Promise.all([getData("stats/frequency.json"), getData("stats/digits.json")]);
+  const st = readState({
+    mode: [["uniform", "weighted"], "uniform"], src: [["digits", "last2", "back3"], "digits"], n: [["1", "5", "10"], "5"],
+    period: [PERIOD_KEYS, "all"], trust: [TRUST_KEYS, "all"],
+  });
+  const buf = new Uint32Array(1);
+  const nextU32 = () => { crypto.getRandomValues(buf); return buf[0]; };
+  const controls = h("div", { class: "stack" });
+  const out = h("div", { class: "stack", "aria-live": "polite" });
+  const weightsBox = h("div", { class: "stack" });
+  const SRC = [["digits", "แต่ละหลักของรางวัลที่ 1 (แสน–หน่วย)"], ["last2", "เลขท้าย 2 ตัว (00–99)"], ["back3", "เลขท้าย 3 ตัว (000–999)"]];
+
+  function table() {
+    if (st.mode !== "weighted") return null;
+    if (st.src === "digits") return { kind: "digits", positions: scopeData(dj, st).first.positions.map((p) => p.counts) };
+    const f = scopeData(freq, st)[st.src];
+    return f ? { kind: st.src, counts: f.counts } : null;
+  }
+
+  function describeWeights(t) {
+    if (!t) return [];
+    if (t.kind === "digits") {
+      return [h("h3", null, "ตารางที่ใช้ถ่วง: สัดส่วนของตัวเลข 0–9 ในแต่ละหลักของรางวัลที่ 1"),
+        h("div", { class: "table-wrap" }, h("table", null,
+          h("thead", null, h("tr", null, h("th", null, "หลัก"), h("th", { class: "n" }, "ต่ำสุด"), h("th", { class: "n" }, "สูงสุด"), h("th", { class: "n" }, "ถ้าเท่ากัน"))),
+          h("tbody", null, t.positions.map((w, i) => {
+            const tot = w.reduce((a, b) => a + b, 0) || 1;
+            return h("tr", null, h("td", null, POS_NAMES[6][i]), h("td", { class: "n" }, pct(Math.min(...w) / tot)), h("td", { class: "n" }, pct(Math.max(...w) / tot)), h("td", { class: "n" }, "10.0%"));
+          }))))];
+    }
+    const tot = t.counts.reduce((a, b) => a + b, 0) || 1;
+    const zero = t.counts.filter((c) => c === 0).length;
+    const space = t.counts.length;
+    return [h("p", { class: "small" }, `ตารางที่ใช้ถ่วง: ความถี่${PRIZE_LABEL[t.kind]} ${fmt.format(tot)} หมายเลข · เลขที่ถูกหยิบบ่อยสุด ${pct(Math.max(...t.counts) / tot, 2)} (ถ้าเท่ากัน ${pct(1 / space, space === 100 ? 0 : 1)})`,
+      zero ? ` · ${fmt.format(zero)} เลขที่ไม่เคยออกในช่วงนี้จะไม่ถูกหยิบเลย` : "",
+      ` · หลักหน้า ${6 - String(space - 1).length} หลักสุ่มเท่ากัน`)];
+  }
+
+  function drawControls() {
+    writeState(st.mode === "weighted" ? st : { mode: st.mode, n: st.n });
+    const focusId = document.activeElement && document.activeElement.id;
+    const seg = h("div", { class: "seg", role: "group", "aria-label": "วิธีสุ่ม" },
+      [["uniform", "สุ่มเท่ากันทุกเลข"], ["weighted", "ถ่วงตามความถี่ในอดีต"]].map(([k, label]) => h("button", {
+        type: "button", "aria-pressed": String(st.mode === k), onclick: () => { st.mode = k; drawControls(); },
+      }, label)));
+    const fields = h("div", { class: "controls controls-compact" },
+      selectBox("gen-n", "จำนวนใบ", [["1", "1 ใบ"], ["5", "5 ใบ"], ["10", "10 ใบ"]], st.n, (v) => { st.n = v; drawControls(); }));
+    const parts = [seg];
+    if (st.mode === "weighted") {
+      fields.append(selectBox("gen-src", "ถ่วงตาม", SRC, st.src, (v) => { st.src = v; drawControls(); }));
+      const sc = scopeControls(freq, st, drawControls);
+      parts.push(fields, sc, scopeNote(freq, st));
+    } else {
+      parts.push(fields);
+    }
+    parts.push(h("button", { class: "btn", type: "button", id: "gen-go", onclick: generate }, "สุ่มเลข"));
+    controls.replaceChildren(...parts);
+    weightsBox.replaceChildren(...(st.mode === "weighted" ? describeWeights(table()) : [
+      h("p", { class: "small muted" }, "ใช้ crypto.getRandomValues ของเบราว์เซอร์ ทุกเลข 000000–999999 มีโอกาสถูกสุ่มเท่ากัน")]));
+    if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus();
+  }
+
+  function generate() {
+    const t = table();
+    const list = Array.from({ length: Number(st.n) }, () => makeTicket(st.mode, t, nextU32));
+    out.replaceChildren(
+      h("ul", { class: "tickets" }, list.map((v) => h("li", null,
+        h("span", { class: "ticket mono" }, v),
+        h("a", { href: `./?n=${v}` }, "ตรวจกับผลย้อนหลัง")))),
+      h("p", { class: "small muted" }, `${st.mode === "weighted" ? "สุ่มแบบถ่วงตามความถี่ในอดีต" : "สุ่มแบบเท่ากันทุกเลข"} · โอกาสถูกรางวัลที่ 1 ของแต่ละใบ = 1 ใน 1,000,000 เท่ากันทั้งสองแบบ · เลขที่สุ่มได้ไม่ถูกบันทึกหรือส่งออกจากเครื่อง`));
+  }
+
+  const chanceRows = PRIZE_TABLE.map(([label, count, value]) => h("tr", null, h("td", null, label),
+    h("td", { class: "n" }, `1 ใน ${fmt.format(Math.round(1000000 / count))}`), h("td", { class: "n" }, fmt.format(value))));
+  const anyCount = PRIZE_TABLE.reduce((a, [, c]) => a + c, 0);
+  drawControls();
+  render(
+    pageHead("สุ่มเลข", "สุ่มเลข 6 หลักด้วยตัวสุ่มของเบราว์เซอร์ — วิธีสุ่มไม่ได้เปลี่ยนโอกาสถูกรางวัล"),
+    h("div", { class: "grid grid-2" },
+      h("section", { class: "card stack" }, controls, weightsBox, out),
+      h("section", { class: "card stack" },
+        h("h2", null, "โอกาสถูกรางวัลจริงต่อใบ"),
+        h("div", { class: "callout ok" }, h("strong", null, "เท่ากันทั้งสองแบบ และเท่ากับเลขที่คุณเลือกเอง"), h("br"),
+          "การถ่วงตามความถี่แค่เปลี่ยนว่าเครื่องนี้หยิบเลขไหนบ่อย แต่การออกรางวัลจริงไม่รู้ว่าเราได้เลขมาอย่างไร ทุกเลขมีโอกาสเท่ากันทุกงวด"),
+        h("div", { class: "table-wrap" }, h("table", null,
+          h("thead", null, h("tr", null, h("th", null, "รางวัล"), h("th", { class: "n" }, "โอกาสต่อใบ"), h("th", { class: "n" }, "เงินรางวัล (บาท)"))),
+          h("tbody", null, chanceRows,
+            h("tr", null, h("td", null, h("strong", null, "ถูกอย่างน้อย 1 รางวัล")), h("td", { class: "n" }, `ราว 1 ใน ${fmt.format(Math.round(1000000 / anyCount))} (${pct(anyCount / 1000000)})`), h("td", { class: "n" }, "–"))))),
+        h("p", { class: "small muted" }, `เลขหน้า 3 ตัวและเลขท้าย 3 ตัวมีอย่างละ 2 หมายเลขต่องวด จึงเป็น 2 ใน 1,000 = 1 ใน 500 · ได้คืนเฉลี่ย ${fmt.format(PER_TICKET)} บาทต่อใบราคา ${TICKET_PRICE} บาท ไม่ว่าจะเลือกเลขแบบไหน`))),
+    responsibleBox());
+}
+
 // ---------- กล่องการเล่นอย่างรับผิดชอบ ----------
 const PRIZE_TABLE = [
   ["รางวัลที่ 1", 1, 6000000], ["ข้างเคียงรางวัลที่ 1", 2, 100000], ["รางวัลที่ 2", 5, 200000],
@@ -1404,41 +2158,51 @@ function responsibleBox() {
 }
 
 // ---------- ระยะห่างระหว่างการออก (หน้าสุ่มจริงไหม) ----------
-async function gapSection() {
-  const gj = await getData("stats/gaps.json");
-  const state = { period: "all", trust: "all" };
-  const wrap = h("div", { class: "stack" });
-  function draw() {
-    const g = scopeData(gj, state);
-    const labels = g.bins.map(([lo, hi]) => (hi === null ? `${lo}+` : `${lo}–${hi}`));
-    const o = {
-      title: "ระยะห่างระหว่างการออกของเลขท้าย 2 ตัว เทียบกับที่คาดไว้ถ้าสุ่มจริง", labels, observed: g.observed,
-      expected: g.expected, ranges: g.range95, catTitle: "ระยะห่าง (งวด)", xTitle: "ระยะห่าง (งวด)", labelEvery: 2, unit: "ช่วง",
-    };
-    wrap.replaceChildren(
-      h("div", { class: "controls" },
-        selectBox("gperiod", "ช่วงเวลา", gj.periods.map((k) => [k, gj.period_labels[k]]), state.period, (v) => { state.period = v; draw(); }),
-        selectBox("gtrust", "แหล่งข้อมูล", gj.trusts.map((k) => [k, gj.trust_labels[k]]), state.trust, (v) => { state.trust = v; draw(); })),
-      h("div", { class: "stat-row" },
-        stat("งวด", fmt.format(g.draws)), stat("จำนวนระยะห่าง", fmt.format(g.gap_count)),
-        stat("ระยะห่างเฉลี่ย", `${fmt1.format(g.mean_gap)} งวด`), stat("ถ้าสุ่มจริง", "ราว 100 งวด")),
-      ...rangeBars(o), outSummary(o),
-      h("p", { class: "small muted" }, `ค่าที่คาดไว้คำนวณตรงตัวจากการแจกแจงเรขาคณิต (โอกาส 1 ใน 100 ต่องวด) โดยคิดความยาวของข้อมูลแล้ว · ช่วงปกติจากการจำลองการสุ่ม ${fmt.format(g.sims)} รอบ`));
-  }
-  draw();
+function gapSection(gj, st) {
+  const g = scopeData(gj, st);
+  const labels = g.bins.map(([lo, hi]) => (hi === null ? `${lo}+` : `${lo}–${hi}`));
+  const o = {
+    title: "ระยะห่างระหว่างการออกของเลขท้าย 2 ตัว เทียบกับที่คาดไว้ถ้าสุ่มจริง", labels, observed: g.observed,
+    expected: g.expected, ranges: g.range95, catTitle: "ระยะห่าง (งวด)", xTitle: "ระยะห่าง (งวด)", labelEvery: 2, unit: "ช่วง",
+  };
   return h("section", { class: "card section stack" },
     h("h2", null, "ระยะห่างระหว่างการออก"),
     h("p", null, "นับว่าเลขท้าย 2 ตัวเลขเดียวกันออกซ้ำห่างกันกี่งวด รวมทุกเลข แล้วเทียบกับที่การสุ่มจริงจะให้"),
     h("div", { class: "callout ok" },
       h("strong", null, "ระยะห่างยาวไม่ได้ทำให้เลขนั้นมีโอกาสออกมากขึ้น"), h("br"),
       "การออกรางวัลแต่ละงวดไม่จำงวดก่อน ทุกเลขมีโอกาส 1 ใน 100 ทุกงวดเสมอ ไม่ว่าจะไม่ออกมานานแค่ไหน (เว็บนี้จึงไม่จัดอันดับเลขที่ไม่ออกนาน)"),
-    wrap);
+    h("div", { class: "stat-row" },
+      stat("งวด", fmt.format(g.draws)), stat("จำนวนระยะห่าง", fmt.format(g.gap_count)),
+      stat("ระยะห่างเฉลี่ย", g.mean_gap === null ? "–" : `${fmt1.format(g.mean_gap)} งวด`), stat("ถ้าสุ่มจริง", "ราว 100 งวด")),
+    ...rangeBars(o), outSummary(o),
+    h("p", { class: "small muted" }, `ค่าที่คาดไว้คำนวณตรงตัวจากการแจกแจงเรขาคณิต (โอกาส 1 ใน 100 ต่องวด) โดยคิดความยาวของข้อมูลแล้ว · ช่วงปกติจากการจำลองการสุ่ม ${fmt.format(g.sims)} รอบ · ในช่วงเวลาสั้น ระยะห่างยาวจะถูกตัดด้วยขอบของข้อมูล`));
 }
 
 // ---------- boot ----------
-const PAGES = { index: pageHome, results: pageResults, stats: pageStats, lab: pageLab, random: pageRandom, data: pageData };
+const PAGES = {
+  index: pageHome, results: pageResults, stats: pageStats, ranking: pageRanking, samedate: pageSameDate,
+  generator: pageGenerator, lab: pageLab, random: pageRandom, methods: async () => {}, data: pageData,
+};
+
+// เมนู "เพิ่มเติม" (<details>): ปิดเมื่อคลิกนอกเมนูหรือกด Esc
+function setupMenus() {
+  const menus = [...document.querySelectorAll("details.more")];
+  document.addEventListener("click", (e) => {
+    for (const d of menus) if (d.open && !d.contains(e.target)) d.open = false;
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    for (const d of menus) {
+      if (d.open) { d.open = false; d.querySelector("summary").focus(); }
+    }
+  });
+  for (const d of menus) {
+    d.addEventListener("toggle", () => { if (d.open) for (const o of menus) if (o !== d) o.open = false; });
+  }
+}
 
 async function boot() {
+  setupMenus();
   const page = document.body.dataset.page;
   const fn = PAGES[page];
   if (!fn) return;

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="อธิบายทุกวิธีทางสถิติที่ใช้ในเว็บนี้แบบภาษาง่าย">
+  <meta name="color-scheme" content="light dark">
+  <title>ทฤษฎีที่ใช้ — LOTTO INSIGHT</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/app.css?v=__V__">
+  <script type="module" src="assets/app.js?v=__V__"></script>
+</head>
+<body data-page="methods">
+  <a class="sr-only" href="#main">ข้ามไปเนื้อหา</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">LI</span>LOTTO INSIGHT</a>
+      <nav class="nav" aria-label="เมนูหลัก">
+        <a href="./">หน้าแรก</a>
+        <a href="results.html">ผลย้อนหลัง</a>
+        <a href="stats.html">สถิติ</a>
+        <a href="ranking.html">อันดับ</a>
+        <a href="samedate.html">วันเดียวกัน</a>
+        <a href="generator.html">สุ่มเลข</a>
+        <details class="more current">
+          <summary>เพิ่มเติม</summary>
+          <div class="more-panel">
+            <a href="lab.html">ห้องทดลอง</a>
+            <a href="random.html">สุ่มจริงไหม</a>
+            <a href="methods.html" aria-current="page">ทฤษฎีที่ใช้</a>
+            <a href="data.html">ข้อมูล</a>
+          </div>
+        </details>
+      </nav>
+    </div>
+  </header>
+  <main id="main" tabindex="-1">
+    <div class="page-head">
+      <h1>ทฤษฎีที่ใช้</h1>
+      <p>ทุกวิธีคำนวณในเว็บนี้ อธิบายว่าตอบคำถามอะไร คำนวณอย่างไร ใช้ที่หน้าไหน และมีข้อจำกัดอะไร</p>
+    </div>
+    <section class="card stack">
+      <h2>หลักการเดียวที่ใช้ทั้งเว็บ</h2>
+      <p>ทุกตัวเลขที่เห็นจะถูกเทียบกับ <strong>สิ่งที่การสุ่มที่ยุติธรรมให้ได้ตามปกติ</strong> เสมอ ถ้าผลจริงอยู่ในช่วงนั้น แปลว่า "ไม่ต่างจากการสุ่ม" ถ้าอยู่นอกช่วง แปลว่า "แปลกกว่าที่การสุ่มมักให้" ซึ่งก็ยังเกิดได้โดยบังเอิญ โดยเฉพาะเมื่อดูหลายอย่างพร้อมกัน</p>
+      <p>ไม่มีวิธีใดในหน้านี้ที่บอกเลขของงวดถัดไปได้ ถ้าการออกรางวัลสุ่มจริง ทุกเลขมีโอกาสเท่ากันทุกงวด และผลทดสอบทั้งหมดในหน้า <a href="random.html">สุ่มจริงไหม</a> ก็เข้ากับการสุ่มจริง</p>
+      <nav aria-label="สารบัญ" class="toc">
+        <ol>
+          <li><a href="#expected">ค่าที่คาดไว้และตัวหารตามยุค</a></li>
+          <li><a href="#binomial">ช่วงปกติ 95% (การแจกแจงทวินาม)</a></li>
+          <li><a href="#zscore">สีของแผนที่ความถี่ (z-score)</a></li>
+          <li><a href="#chisq">Chi-square goodness-of-fit</a></li>
+          <li><a href="#homog">Chi-square homogeneity</a></li>
+          <li><a href="#exact">การนับแบบตรงตัว</a></li>
+          <li><a href="#binomtest">Exact binomial test</a></li>
+          <li><a href="#bonferroni">Bonferroni</a></li>
+          <li><a href="#fdr">Benjamini–Hochberg (FDR)</a></li>
+          <li><a href="#autocorr">Autocorrelation และ Ljung–Box</a></li>
+          <li><a href="#runs">Runs test</a></li>
+          <li><a href="#serial">Serial test</a></li>
+          <li><a href="#ks">Kolmogorov–Smirnov</a></li>
+          <li><a href="#poker">Poker test</a></li>
+          <li><a href="#coupon">Coupon collector</a></li>
+          <li><a href="#gaps">ระยะห่างระหว่างการออก</a></li>
+          <li><a href="#montecarlo">Monte Carlo</a></li>
+          <li><a href="#orderstat">อันดับภายใต้การสุ่ม</a></li>
+          <li><a href="#backtest">Walk-forward backtest</a></li>
+          <li><a href="#power">Power analysis</a></li>
+          <li><a href="#ev">ค่าคาดหวังต่อใบ</a></li>
+          <li><a href="#samedate">ผลวันเดียวกัน</a></li>
+          <li><a href="#generator">ตัวสุ่มเลข</a></li>
+          <li><a href="#scopes">ช่วงเวลาและแหล่งข้อมูล</a></li>
+        </ol>
+      </nav>
+    </section>
+
+    <section class="card section method" id="expected">
+      <h2>1. ค่าที่คาดไว้และตัวหารตามยุค</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ถ้าสุ่มจริง เลขหนึ่งตัวควรออกกี่ครั้ง</dd>
+        <dt>วิธีคำนวณ</dt><dd><code>คาดไว้ = n ÷ N</code> เมื่อ n = จำนวนหมายเลขที่ออกจริงของรางวัลนั้น และ N = จำนวนเลขที่เป็นไปได้ (100 สำหรับ 2 ตัว, 1,000 สำหรับ 3 ตัว, 10 สำหรับตัวเลขในหนึ่งหลัก) · นับเฉพาะงวดที่มีรางวัลนั้นจริง: เลขหน้า 3 ตัวเริ่ม 1 ก.ย. 2558 และเลขท้าย 3 ตัวมี 4 หมายเลขต่องวดก่อนหน้านั้น 2 หมายเลขหลังจากนั้น จึงนับเป็น "หมายเลข" ไม่ใช่ "งวด"</dd>
+        <dt>ใช้ที่</dt><dd><a href="stats.html">สถิติ</a>, <a href="ranking.html">อันดับ</a>, <a href="samedate.html">วันเดียวกัน</a>, <a href="lab.html">ห้องทดลอง</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ค่าที่คาดไว้เป็นค่าเฉลี่ย ไม่ใช่ค่าที่ต้องได้ ผลจริงย่อมแกว่งรอบค่านี้เสมอ</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="binomial">
+      <h2>2. ช่วงปกติ 95% (การแจกแจงทวินาม)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ออกกี่ครั้งถึงจะเรียกว่า "ปกติ" ถ้าสุ่มจริง</dd>
+        <dt>วิธีคำนวณ</dt><dd>จำนวนครั้งของเลขหนึ่งตัวเป็น <code>X ~ Binomial(n, p)</code> โดย <code>P(X = k) = C(n, k) · pᵏ · (1 − p)ⁿ⁻ᵏ</code> ช่วงปกติคือควอนไทล์ 2.5% ถึง 97.5% ของการแจกแจงนี้ (นับจริงจากตาราง ไม่ใช้ค่าประมาณแบบปกติ)</dd>
+        <dt>ใช้ที่</dt><dd>ทุกกราฟและตาราง: แถบเทา = ช่วงปกติ, ขีดดำ = ค่าที่คาดไว้</dd>
+        <dt>ข้อจำกัด</dt><dd>แม้สุ่มจริง แต่ละเลขก็อยู่นอกช่วงได้ราว 5% ถ้ามี 100 เลข จะมีราว 4–5 เลขอยู่นอกช่วงเป็นปกติ (หน้าเว็บบอกจำนวนที่คาดไว้นี้ทุกครั้ง)</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="zscore">
+      <h2>3. สีของแผนที่ความถี่ (z-score)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>เลขนี้ห่างจากค่าที่คาดไว้มากแค่ไหน เมื่อเทียบกับความแกว่งปกติ</dd>
+        <dt>วิธีคำนวณ</dt><dd><code>z = (ออกจริง − คาดไว้) ÷ √คาดไว้</code> สีน้ำเงิน = น้อยกว่าที่คาด, สีส้ม = มากกว่าที่คาด, เข้มเต็มที่ที่ |z| = 3 และเลขที่อยู่นอกช่วงปกติมีกรอบ</dd>
+        <dt>ใช้ที่</dt><dd><a href="stats.html">สถิติ → ความถี่</a></dd>
+        <dt>ข้อจำกัด</dt><dd>สีไม่ได้บอกโอกาสของงวดหน้า และไม่สื่อด้วยสีอย่างเดียว ทุกช่องมีตัวเลขและตารางให้กางดู</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="chisq">
+      <h2>4. Chi-square goodness-of-fit (และการรวมช่อง)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>เมื่อดูทุกเลขพร้อมกัน การกระจายต่างจากที่คาดไว้เกินกว่าความบังเอิญไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd><code>χ² = Σ (O − E)² ÷ E</code>, df = จำนวนกลุ่ม − 1, p = โอกาสที่ χ² ของการสุ่มจริงจะมากกว่าหรือเท่าค่านี้ (incomplete gamma) · กลุ่มที่คาดไว้น้อยกว่า 5 ครั้งถูกรวมกับกลุ่มข้างเคียงก่อน เพราะ chi-square ไม่แม่นเมื่อค่าที่คาดไว้น้อย</dd>
+        <dt>ใช้ที่</dt><dd><a href="stats.html">สถิติ</a> (ความถี่, รายหลัก, ลักษณะเลข), <a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>บอกได้แค่ว่า "ต่าง" หรือ "ไม่ต่าง" ไม่ได้บอกว่าต่างที่เลขไหน และ p ไม่ใช่โอกาสที่การออกรางวัลยุติธรรม</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="homog">
+      <h2>5. Chi-square homogeneity (เทียบสองช่วงเวลา)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>การกระจายในช่วง A กับช่วง B ต่างกันไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>ตาราง 2 แถว × k กลุ่ม: <code>E = ผลรวมแถว × ผลรวมคอลัมน์ ÷ ผลรวมทั้งหมด</code>, <code>χ² = Σ (O − E)² ÷ E</code>, df = k − 1 (รวมคอลัมน์ติดกันจนทุกช่องคาดไว้ ≥ 5) · เทียบเฉพาะรางวัลที่โครงสร้างเหมือนกันทั้งสองช่วง</dd>
+        <dt>ใช้ที่</dt><dd><a href="stats.html?v=compare">สถิติ → เทียบช่วงเวลา</a></dd>
+        <dt>ข้อจำกัด</dt><dd>เลขท้าย 3 ตัวก่อนและหลัง 2558 เทียบกันตรง ๆ ไม่ได้ (4 vs 2 หมายเลขต่องวด) จึงไม่เทียบ</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="exact">
+      <h2>6. การนับแบบตรงตัว (exact enumeration)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ลักษณะเลขแบบหนึ่ง (เช่น เลขเบิ้ล, ผลรวม 9, ไม่มีตัวเลขซ้ำ) ควรเกิดบ่อยแค่ไหนถ้าสุ่มจริง</dd>
+        <dt>วิธีคำนวณ</dt><dd>ไล่ทุกเลขที่เป็นไปได้ (100, 1,000 หรือ 1,000,000 แบบ) แล้วนับว่ามีกี่แบบที่เข้าลักษณะนั้น เช่น เลข 2 ตัวที่เป็นเลขเบิ้ลมี 10 จาก 100 แบบ = 10% · รางวัลที่ 1 ที่ไม่มีตัวเลขซ้ำมี 10×9×8×7×6×5 = 151,200 แบบ = 15.12%</dd>
+        <dt>ใช้ที่</dt><dd><a href="stats.html?v=chars">ลักษณะเลข</a>, <a href="lab.html">ห้องทดลอง</a>, poker test</dd>
+        <dt>ข้อจำกัด</dt><dd>ไม่มีความคลาดเคลื่อนจากการประมาณ แต่ความน่าจะเป็นที่ถูกต้องก็ยังเป็นเพียงค่าเฉลี่ยระยะยาว</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="binomtest">
+      <h2>7. Exact binomial test</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>จำนวนหมายเลขที่เข้าเงื่อนไขที่ตั้งเอง ต่างจากที่คาดไว้เกินความบังเอิญไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>k = จำนวนที่เข้าเงื่อนไขจาก n หมายเลข, p₀ = สัดส่วนแบบตรงตัว · p-value สองด้าน = ผลรวมของ <code>P(X = j)</code> ทุก j ที่เกิดยากเท่าหรือยากกว่า k</dd>
+        <dt>ใช้ที่</dt><dd><a href="lab.html">ห้องทดลอง</a>, backtest ในหน้า <a href="ranking.html">อันดับ</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ถ้าลองหลายเงื่อนไข ต้องดู p หลังปรับ (ข้อ 8–9) ไม่ใช่ p ดิบ</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="bonferroni">
+      <h2>8. Bonferroni (ปรับเมื่อทดสอบหลายครั้ง)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>เมื่อลองหลายการทดสอบ ผลไหนยังแปลกจริงหลังคิดว่าเราลองไปหลายครั้ง</dd>
+        <dt>วิธีคำนวณ</dt><dd><code>p หลังปรับ = min(1, p × m)</code> เมื่อ m = จำนวนการทดสอบในกลุ่มนั้น ถือว่าผิดปกติเมื่อ p หลังปรับ &lt; 0.05</dd>
+        <dt>ใช้ที่</dt><dd>ทุกตาราง p ในเว็บ (สถิติ, สุ่มจริงไหม, ห้องทดลอง)</dd>
+        <dt>ข้อจำกัด</dt><dd>เข้มงวด อาจพลาดความผิดปกติเล็ก ๆ ที่มีจริง แต่เหมาะกับการกันข้อสรุปผิดจากการลองไปเรื่อย ๆ</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="fdr">
+      <h2>9. Benjamini–Hochberg (FDR)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>คุมสัดส่วนของผล "เจอแต่ไม่จริง" ในบรรดาผลที่เจอ</dd>
+        <dt>วิธีคำนวณ</dt><dd>เรียง p จากน้อยไปมาก <code>q₍ᵢ₎ = min over j ≥ i ของ p₍ⱼ₎ × m ÷ j</code></dd>
+        <dt>ใช้ที่</dt><dd><a href="lab.html">ห้องทดลอง</a> (แสดงคู่กับ Bonferroni), ไฟล์ข้อมูลสถิติ</dd>
+        <dt>ข้อจำกัด</dt><dd>ผ่อนกว่า Bonferroni จึงใช้ประกอบ ไม่ใช้ตัดสิน</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="autocorr">
+      <h2>10. Autocorrelation และ Ljung–Box</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>เลขของงวดหนึ่งสัมพันธ์กับงวดที่ห่างไป 1, 2, …, 10 งวดไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd><code>rₖ = Σ (xₜ − x̄)(xₜ₊ₖ − x̄) ÷ Σ (xₜ − x̄)²</code> ช่วงปกติแต่ละค่า ±1.96/√n · รวมทุก lag ด้วย <code>Q = n(n + 2) Σ rₖ² ÷ (n − k)</code>, df = 10</dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a> (เลขท้าย 2 ตัว และรางวัลที่ 1)</dd>
+        <dt>ข้อจำกัด</dt><dd>วัดเฉพาะความสัมพันธ์เชิงเส้นของค่าตัวเลข ความสัมพันธ์รูปแบบอื่นใช้ serial test (ข้อ 12)</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="runs">
+      <h2>11. Runs test (Wald–Wolfowitz)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>คู่/คี่ หรือ สูง/ต่ำ สลับกันบ่อยหรือติดกันนานเกินปกติไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>R = จำนวนช่วงที่ค่าเหมือนกันติดกัน, <code>E[R] = 2n₁n₂/n + 1</code>, <code>Var[R] = 2n₁n₂(2n₁n₂ − n) ÷ (n²(n − 1))</code>, z = (R − E[R]) ÷ √Var, p จากการแจกแจงปกติสองด้าน</dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ดูเฉพาะลำดับแบบ 2 กลุ่ม ใช้ค่าประมาณแบบปกติซึ่งแม่นเมื่อ n มาก (ที่นี่ n หลักร้อย)</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="serial">
+      <h2>12. Serial test (ตารางงวดต่องวด)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>รู้ผลงวดนี้แล้ว ช่วยบอกอะไรเกี่ยวกับงวดถัดไปไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>นับคู่ (งวดก่อน, งวดถัดไป) เป็นตาราง k × k (คู่/คี่ และ สูง/ต่ำ 2×2, หลักสิบ และหลักหน่วยของเลขท้าย 2 ตัว 10×10) แล้วทดสอบความเป็นอิสระด้วย chi-square: <code>E = ผลรวมแถว × ผลรวมคอลัมน์ ÷ N</code>, df = (k − 1)² (Anderson–Goodman)</dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>คู่เลขท้าย 2 ตัวเต็ม ๆ (100×100 = 10,000 ช่อง) มีข้อมูลน้อยเกินไป จึงใช้ตัวเลขแต่ละหลักแทน ตาราง 10×10 ต้องมีอย่างน้อยราว 500 คู่งวด ช่วงเวลาที่สั้นกว่านั้นจะไม่ทดสอบ</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="ks">
+      <h2>13. Kolmogorov–Smirnov</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>รางวัลที่ 1 กระจายเท่ากันตลอด 000000–999999 หรือกระจุกบางช่วง</dd>
+        <dt>วิธีคำนวณ</dt><dd>เรียงรางวัลที่ 1 ทั้งหมด เทียบสัดส่วนสะสมจริงกับเส้นตรงที่คาดไว้ <code>D = ระยะห่างมากที่สุด</code> · p จากการแจกแจง Kolmogorov โดยใช้ <code>λ = (√n + 0.12 + 0.11/√n) · D</code></dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ไวต่อการเลื่อนของทั้งการกระจาย แต่ไม่ไวต่อความผิดปกติที่เลขบางตัว (ใช้ chi-square ประกอบ)</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="poker">
+      <h2>14. Poker test</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>รูปแบบตัวเลขซ้ำใน 6 หลักของรางวัลที่ 1 (เช่น คู่ 1 คู่, ตอง) เกิดบ่อยตามที่ควรไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>จำนวนเลขที่มีรูปแบบหนึ่ง = (วิธีเลือกตัวเลขให้แต่ละกลุ่ม) × (วิธีเรียงตำแหน่ง) เช่น คู่ 1 คู่ = C(6,2) × 10 × 9 × 8 × 7 × 6 = 453,600 แบบ (45.36%) แล้วทดสอบด้วย chi-square (รวมรูปแบบที่หายาก)</dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>รูปแบบที่หายากมาก (เช่น 6 ตัวเหมือน 10 ใน 1,000,000) ต้องรวมกลุ่มก่อนทดสอบ</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="coupon">
+      <h2>15. Coupon collector</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ต้องใช้กี่งวดจนเลขท้าย 2 ตัวออกครบทั้ง 100 เลข</dd>
+        <dt>วิธีคำนวณ</dt><dd><code>E[T] = 100 × (1 + 1/2 + … + 1/100) ≈ 518.7</code> งวด, ส่วนเบี่ยงเบนมาตรฐาน <code>√(100² Σ 1/i² − E[T]) ≈ 125.8</code> · ช่วงปกติและ p จากการจำลองการสุ่ม 2,000 รอบ</dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ข้อมูลทั้งหมดมีพอให้ครบได้เพียงราว 1 รอบ จึงเป็นการทดสอบที่อ่อน · เลขที่ยังไม่ออกในรอบปัจจุบันไม่ได้มีโอกาสมากขึ้น</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="gaps">
+      <h2>16. ระยะห่างระหว่างการออก (การแจกแจงเรขาคณิต)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>เลขเดียวกันออกซ้ำห่างกันกี่งวด และเป็นไปตามการสุ่มไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>โอกาสต่องวด p = 1/100 · จำนวนระยะห่าง g ที่คาดไว้ (คิดความยาวข้อมูล n งวดแล้ว) <code>= 100 × (n − g) × p² × (1 − p)^(g − 1)</code></dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ระยะห่างของเลขเดียวกันไม่อิสระต่อกัน จึงไม่คำนวณ p ใช้ช่วงจาก Monte Carlo แทน · เว็บนี้ไม่จัดอันดับเลขที่ "ไม่ออกนาน" เพราะการไม่ออกนานไม่ได้เพิ่มโอกาส</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="montecarlo">
+      <h2>17. Monte Carlo (จำลองการสุ่ม)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>สำหรับสิ่งที่คำนวณตรง ๆ ยาก (เช่น เลขอันดับ 1 ควรออกกี่ครั้ง) การสุ่มจริงให้ค่าแบบไหน</dd>
+        <dt>วิธีคำนวณ</dt><dd>ให้คอมพิวเตอร์สุ่มผลรางวัลปลอมที่ยุติธรรมด้วยจำนวนงวดเท่าข้อมูลจริง 500–2,000 รอบ แล้วดูควอนไทล์ 2.5% และ 97.5% ของค่าที่สนใจ · ใช้ seed คงที่ ผลจึงเหมือนเดิมทุกครั้งที่สร้างเว็บ</dd>
+        <dt>ใช้ที่</dt><dd>ระยะห่าง, coupon collector, อันดับ (ข้อ 18)</dd>
+        <dt>ข้อจำกัด</dt><dd>มีความคลาดเคลื่อนจากจำนวนรอบที่จำกัด ขอบของช่วงอาจขยับได้ ±1 ครั้ง</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="orderstat">
+      <h2>18. อันดับภายใต้การสุ่ม (order statistics)</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>เลขอันดับ 1 ออกบ่อยกว่าค่าที่คาดไว้ แปลว่าผิดปกติไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>ในแต่ละรอบของ Monte Carlo เรียงจำนวนครั้งของทุกเลขจากมากไปน้อย แล้วเก็บค่าของอันดับ 1, 2, … · หน้าอันดับแสดงช่วง 95% ของแต่ละอันดับ และการแจกแจงของค่าสูงสุด/ต่ำสุด เทียบค่าจริง</dd>
+        <dt>ใช้ที่</dt><dd><a href="ranking.html">อันดับ</a></dd>
+        <dt>ข้อจำกัด</dt><dd>เมื่อมี 100 เลขแข่งกัน อันดับ 1 จะสูงกว่าค่าเฉลี่ยเสมอแม้สุ่มจริง การเทียบกับช่วงของ "เลขหนึ่งตัว" จึงหลอกตา ต้องเทียบกับช่วงของ "อันดับนั้น" · เลข 3 ตัวเก็บเฉพาะ 20 อันดับแรกและสุดท้าย</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="backtest">
+      <h2>19. Walk-forward backtest</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ถ้าเลือกเลขตามสถิติก่อนทุกงวด จะถูกบ่อยกว่าการเลือกมั่วไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>ก่อนงวด t ใช้เฉพาะข้อมูลก่อน t (ทั้งหมด หรือย้อนหลัง 5/10/20 ปี) เลือก 10 อันดับแรก (และ 10 อันดับสุดท้าย, เลขออกน้อย, เลขไม่ออกนาน) แล้วนับว่าถูกกี่งวด · เทียบกับ 10% และช่วง 95% ของ Binomial(งวดที่ทดสอบ, 0.1) · p จาก exact binomial test</dd>
+        <dt>ใช้ที่</dt><dd><a href="ranking.html">อันดับ</a>, <a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ข้าม 100 งวดแรกเพื่อให้มีข้อมูลย้อนหลัง · เลขที่ออกเท่ากันเลือกเลขน้อยก่อน · ทุกกลยุทธ์ที่ทดสอบได้ผลไม่ต่างจาก 10%</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="power">
+      <h2>20. Power analysis</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>"ไม่พบความผิดปกติ" เพราะไม่มีจริง หรือเพราะข้อมูลน้อยเกินจะเห็น</dd>
+        <dt>วิธีคำนวณ</dt><dd>หาค่า c ที่ <code>P(X ≥ c | p₀) ≤ α/2</code> แล้วหาโอกาสจริง p₁ ที่น้อยที่สุดซึ่ง <code>P(X ≥ c | p₁) ≥ 80%</code> (แบ่งครึ่งหาค่า) รายงานเป็น "ต้องออกบ่อยขึ้นอย่างน้อย x%"</dd>
+        <dt>ใช้ที่</dt><dd><a href="random.html">สุ่มจริงไหม</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ความเบี้ยวที่เล็กกว่านี้อาจมีอยู่โดยตรวจไม่เจอ แต่ต้องใหญ่มากจึงจะชดเชยส่วนที่เสียเฉลี่ย 40% ต่อใบได้</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="ev">
+      <h2>21. ค่าคาดหวังต่อใบ</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ซื้อ 1 ใบ ได้คืนเฉลี่ยเท่าไร</dd>
+        <dt>วิธีคำนวณ</dt><dd>เงินรางวัลรวมต่อสลาก 1 ล้านใบ (รางวัลที่ 1 6,000,000 + ข้างเคียง 200,000 + ที่ 2–5 5,800,000 + เลขหน้า/ท้าย 3 ตัว 16,000,000 + ท้าย 2 ตัว 20,000,000 = 48,000,000 บาท) ÷ 1,000,000 = 48 บาท ต่อใบราคา 80 บาท (60%)</dd>
+        <dt>ใช้ที่</dt><dd>กล่อง "ซื้ออย่างรู้ทัน", <a href="generator.html">สุ่มเลข</a></dd>
+        <dt>ข้อจำกัด</dt><dd>ใช้อัตรารางวัลปัจจุบัน ควรตรวจกับ GLO ถ้ามีการเปลี่ยนแปลง · ค่าเฉลี่ยเท่ากันไม่ว่าจะเลือกเลขแบบไหน</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="samedate">
+      <h2>22. ผลวันเดียวกัน</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ในวันที่และเดือนเดียวกันของทุกปี เคยออกเลขอะไร และต่างจากการสุ่มไหม</dd>
+        <dt>วิธีคำนวณ</dt><dd>เลือกงวดที่ใกล้วันนั้นที่สุดปีละไม่เกิน 1 งวด (ภายใน ±0/1/3 วัน) · คาดไว้ต่อเลข = หมายเลข ÷ 100 พร้อมช่วงทวินาม · จำนวนเลขที่ไม่เคยออกคาดไว้ <code>N × (1 − 1/N)ⁿ</code> และช่วงปกติจากการแจกแจง occupancy ที่คำนวณตรงตัว</dd>
+        <dt>ใช้ที่</dt><dd><a href="samedate.html">วันเดียวกัน</a></dd>
+        <dt>ข้อจำกัด</dt><dd>มีราว 30 งวดต่อวันที่ เลขท้าย 2 ตัวแต่ละเลขคาดไว้เพียงราว 0.3 ครั้ง ผลจึงแกว่งมาก และวันที่ไม่มีผลต่อการออกรางวัล</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="generator">
+      <h2>23. ตัวสุ่มเลข</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>สุ่มเลขให้แบบยุติธรรม หรือแบบถ่วงตามสถิติในอดีต</dd>
+        <dt>วิธีคำนวณ</dt><dd>ใช้ <code>crypto.getRandomValues</code> ของเบราว์เซอร์ ตัดค่าที่เกินพหุคูณของช่วงทิ้ง (rejection sampling) ทุกเลขจึงมีโอกาสเท่ากันพอดี · แบบถ่วง: หยิบตัวเลขแต่ละหลัก (หรือเลขท้าย 2/3 ตัว) ด้วยโอกาสตามความถี่ในช่วงเวลาที่เลือก</dd>
+        <dt>ใช้ที่</dt><dd><a href="generator.html">สุ่มเลข</a></dd>
+        <dt>ข้อจำกัด</dt><dd>การถ่วงเปลี่ยนแค่ว่าเครื่องนี้หยิบเลขไหนบ่อย ไม่ได้เปลี่ยนโอกาสถูกรางวัล (รางวัลที่ 1 = 1 ใน 1,000,000 ทุกใบ)</dd>
+      </dl>
+    </section>
+
+    <section class="card section method" id="scopes">
+      <h2>24. ช่วงเวลาและแหล่งข้อมูล</h2>
+      <dl>
+        <dt>ตอบคำถาม</dt><dd>ผลเปลี่ยนไหมถ้าดูเฉพาะช่วงล่าสุด หรือเฉพาะข้อมูลที่น่าเชื่อถือที่สุด</dd>
+        <dt>วิธีคำนวณ</dt><dd>ช่วงเวลา: ทั้งหมด, 20/10/5 ปีล่าสุด (นับย้อนจากงวดล่าสุด), ตั้งแต่ 1 ก.ย. 2558, เฉพาะข้อมูลทางการ · แหล่งข้อมูล: ทั้งหมด, ตัดข้อมูลแหล่งเดียว, เฉพาะ GLO · คำนวณไว้ล่วงหน้าทุกคู่ และจำไว้ใน URL</dd>
+        <dt>ใช้ที่</dt><dd>ทุกหน้าสถิติ</dd>
+        <dt>ข้อจำกัด</dt><dd>ช่วงสั้นมีงวดน้อย (5 ปี ≈ 120 งวด) ช่วงปกติจึงกว้างและการทดสอบบางแบบทำไม่ได้ · การเลือกช่วงหลายแบบก็คือการทดสอบหลายครั้งเช่นกัน</dd>
+      </dl>
+    </section>
+  </main>
+  <footer>
+    <p>ผลรางวัลบนเว็บไซต์นี้ใช้เพื่ออ้างอิงทางสถิติเท่านั้น โปรดตรวจสอบกับสำนักงานสลากกินแบ่งรัฐบาล (glo.or.th) ก่อนขึ้นเงินรางวัล</p>
+    <p>เว็บไซต์ส่วนตัว ไม่เกี่ยวข้องกับสำนักงานสลากกินแบ่งรัฐบาล · ไม่มีการเก็บข้อมูลผู้ใช้ เลขที่ค้นหาไม่ถูกส่งออกจากเครื่องของคุณ</p>
+    <p id="build-info"></p>
+  </footer>
+  <nav class="bottomnav" aria-label="เมนูหลัก (มือถือ)">
+    <a href="./"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>หน้าแรก</span></a>
+    <a href="results.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2v4M16 2v4M4 10h16"/></svg><span>ผลย้อนหลัง</span></a>
+    <a href="stats.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>สถิติ</span></a>
+    <a href="ranking.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h11M4 18h6"/></svg><span>อันดับ</span></a>
+    <details class="more current">
+      <summary><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>เพิ่มเติม</span></summary>
+      <div class="more-panel">
+        <a href="samedate.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2v4M16 2v4M4 10h16"/><circle cx="12" cy="15.5" r="2"/></svg><span>วันเดียวกัน</span></a>
+        <a href="generator.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h4l10 10h4M3 17h4l3-3M14 10l3-3h4M18 4l3 3-3 3M18 14l3 3-3 3"/></svg><span>สุ่มเลข</span></a>
+        <a href="lab.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6.5L4.6 18.6A1.6 1.6 0 0 0 6 21h12a1.6 1.6 0 0 0 1.4-2.4L14 9.5V3M7.2 15h9.6"/></svg><span>ห้องทดลอง</span></a>
+        <a href="random.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3"/><circle cx="15.5" cy="15.5" r="1.3"/><circle cx="15.5" cy="8.5" r="1.3"/><circle cx="8.5" cy="15.5" r="1.3"/></svg><span>สุ่มจริงไหม</span></a>
+        <a href="methods.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2zM4 21V5M8 7h8M8 11h6"/></svg><span>ทฤษฎีที่ใช้</span></a>
+        <a href="data.html"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg><span>ข้อมูล</span></a>
+      </div>
+    </details>
+  </nav>
+</body>
+</html>

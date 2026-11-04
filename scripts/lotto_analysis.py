@@ -8,7 +8,7 @@
 import random
 from collections import Counter
 
-from lotto_stats import binom_interval, binom_pmf, chi_square_uniform, digit_counts, eligible, gammq
+from lotto_stats import POS_NAMES, binom_interval, binom_pmf, chi_square_uniform, digit_counts, eligible, gammq
 
 WIDTH = {"first": 6, "front3": 3, "back3": 3, "last2": 2}
 
@@ -287,7 +287,7 @@ def compare_periods(a, b, prize):
             [0.01] * 100, keys)
     digits = [str(i) for i in range(10)]
     for pos in range(width):
-        add("digit", f"หลักที่ {pos + 1}", digit_counts(na, pos), digit_counts(nb, pos), [0.1] * 10, digits)
+        add("digit", POS_NAMES[width][pos], digit_counts(na, pos), digit_counts(nb, pos), [0.1] * 10, digits)
     if prize != "first":
         for key, label, cats, fn in characteristic_defs(width):
             probs = char_probs(width)[key]

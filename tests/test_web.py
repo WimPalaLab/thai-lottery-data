@@ -64,8 +64,9 @@ class WebSecurityTest(unittest.TestCase):
 
     def test_nav_is_identical_on_every_page(self):
         pages = sorted(files(".html"))
-        self.assertGreaterEqual(len(pages), 6)
-        expected = None
+        self.assertGreaterEqual(len(pages), 10)
+        every = {"./" if os.path.basename(p) == "index.html" else os.path.basename(p) for p in pages}
+        expected = {}
         for p in pages:
             html = read(p)
             name = os.path.basename(p)
@@ -73,19 +74,46 @@ class WebSecurityTest(unittest.TestCase):
             for cls in ("nav", "bottomnav"):
                 m = re.search(rf'<nav class="{cls}"[^>]*>(.*?)</nav>', html, re.S)
                 self.assertIsNotNone(m, f"{p}: {cls}")
-                hrefs = re.findall(r'<a href="([^"]+)"', m.group(1))
-                current = re.findall(r'<a href="([^"]+)" aria-current="page"', m.group(1))
+                block = m.group(1)
+                hrefs = re.findall(r'<a href="([^"]+)"', block)
+                current = re.findall(r'<a href="([^"]+)" aria-current="page"', block)
                 self.assertEqual(current, [here], f"{p}: {cls}")
-                if expected is None:
-                    expected = hrefs
-                self.assertEqual(hrefs, expected, f"{p}: {cls}")
-        for href in expected:
+                expected.setdefault(cls, hrefs)
+                self.assertEqual(hrefs, expected[cls], f"{p}: {cls}")
+                # ทุกหน้าไปถึงได้จากทั้งเมนูบนและเมนูล่าง ไม่มีหน้าซ้ำ
+                self.assertEqual(sorted(hrefs), sorted(every), f"{p}: {cls}")
+                # เมนู "เพิ่มเติม" เป็น <details> (เปิดได้แม้ไม่มี JS) และทำเครื่องหมายเมื่อหน้าปัจจุบันอยู่ในนั้น
+                more = re.search(r'<details class="more( current)?">\s*<summary>(.*?)</summary>(.*?)</details>', block, re.S)
+                self.assertIsNotNone(more, f"{p}: {cls}")
+                self.assertIn("เพิ่มเติม", more.group(2))
+                inside = re.findall(r'<a href="([^"]+)"', more.group(3))
+                self.assertEqual(bool(more.group(1)), here in inside, f"{p}: {cls}")
+        # มือถือ: ปุ่มหลักไม่เกิน 4 + เพิ่มเติม (ใช้ได้ที่ 360px)
+        bottom_main = re.search(r'<nav class="bottomnav"[^>]*>(.*?)<details', read(pages[0]), re.S).group(1)
+        self.assertLessEqual(len(re.findall(r"<a href=", bottom_main)), 4)
+        for href in expected["nav"]:
             if href != "./":
                 self.assertTrue(os.path.exists(os.path.join(WEB, href)), href)
 
+    def test_methods_page_covers_every_method(self):
+        html = read(os.path.join(WEB, "methods.html"))
+        for anchor in ("expected", "binomial", "zscore", "chisq", "homog", "exact", "binomtest", "bonferroni", "fdr",
+                       "autocorr", "runs", "serial", "ks", "poker", "coupon", "gaps", "montecarlo", "orderstat",
+                       "backtest", "power", "ev", "samedate", "generator", "scopes"):
+            self.assertIn(f'id="{anchor}"', html)
+            self.assertIn(f'href="#{anchor}"', html)
+        for part in ("ตอบคำถาม", "วิธีคำนวณ", "ใช้ที่", "ข้อจำกัด"):
+            self.assertEqual(html.count(f"<dt>{part}</dt>"), 24, part)
+
+    def test_generator_uses_crypto_random(self):
+        js = read(os.path.join(WEB, "assets", "app.js"))
+        self.assertIn("crypto.getRandomValues", js)
+        self.assertNotIn("Math.random", js)
+
     def test_prohibited_wording(self):
         # รวมสคริปต์ Python ที่สร้างข้อความขึ้นเว็บ (ชื่อกลุ่มลักษณะเลข, ชื่อช่วงเวลา)
-        shown = [os.path.join(ROOT, "scripts", n) for n in ("lotto_analysis.py", "build_site.py", "lotto_stats.py")]
+        shown = [os.path.join(ROOT, "scripts", n) for n in ("lotto_analysis.py", "build_site.py", "lotto_stats.py",
+                                                            "lotto_randomness.py", "lotto_ranking.py")]
         for p in files(".html") + files(".js") + shown:
             text = read(p).lower()
             for word in PROHIBITED:

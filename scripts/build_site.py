@@ -14,16 +14,21 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lotto_data as L  # noqa: E402
 import lotto_stats as S  # noqa: E402
 import lotto_analysis as A  # noqa: E402
+import lotto_randomness as R  # noqa: E402
+import lotto_ranking as K  # noqa: E402
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 # ไฟล์หน้าเว็บที่อนุญาตให้คัดลอก (กันไฟล์แปลก ๆ หลุดขึ้นเว็บ)
 ALLOWED_EXT = {".html", ".css", ".js", ".svg", ".ico", ".txt", ".woff2"}
 PERIODS = [
-    ("all", "ทั้งหมด"),
+    ("all", "ทั้งหมด (ตั้งแต่ 2538)"),
+    ("last20y", "20 ปีล่าสุด"),
+    ("last10y", "10 ปีล่าสุด"),
+    ("last5y", "5 ปีล่าสุด"),
     ("e3", "ตั้งแต่ 1 ก.ย. 2558 (โครงสร้างรางวัลปัจจุบัน)"),
     ("official", "เฉพาะข้อมูลทางการ GLO (ตั้งแต่ 16 พ.ย. 2559)"),
-    ("last5y", "5 ปีล่าสุด"),
 ]
+YEAR_WINDOWS = {"last5y": 5, "last10y": 10, "last20y": 20}
 # ตัวกรองระดับความน่าเชื่อถือ (ใช้ร่วมกับช่วงเวลาได้อิสระ)
 TRUSTS = [
     ("all", "ทุกแหล่งข้อมูล"),
@@ -41,9 +46,9 @@ def period_draws(draws, key):
         return [d for d in draws if d["era"] == "E3"]
     if key == "official":
         return [d for d in draws if d["trust_level"] == "official"]
-    if key == "last5y":
-        last = datetime.date.fromisoformat(draws[-1]["draw_date"])
-        cut = last.replace(year=last.year - 5).isoformat()
+    if key in YEAR_WINDOWS:
+        # N ปีย้อนจากงวดล่าสุด (ไม่รวมงวดที่ตรงกับวันเดียวกันเมื่อ N ปีก่อน)
+        cut = K.years_before(draws[-1]["draw_date"], YEAR_WINDOWS[key])
         return [d for d in draws if d["draw_date"] > cut]
     raise KeyError(key)
 
@@ -122,6 +127,17 @@ def characteristics_scope(sub):
     return out
 
 
+def randomness_scope(sub):
+    """การทดสอบความสุ่มทั้งหมดของขอบเขตหนึ่ง: chi-square เดิม + การทดสอบ V4 แล้วปรับ p รวมกัน"""
+    out = S.randomness(sub)
+    extra, detail = R.extra_tests(sub)
+    out["tests"] += extra
+    A.add_adjusted(out["tests"])
+    out["test_count"] = len(out["tests"])
+    out.update(detail)
+    return out
+
+
 def dump(path, obj):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
@@ -161,7 +177,10 @@ def build_data(draws, csv_hash, generated_at):
                                              for tk, _ in TRUSTS}}
     files["stats/compare.json"] = {**meta, "pairs": comparisons(draws)}
     files["stats/gaps.json"] = {**meta, **lists, "data": nested(draws, A.gap_distribution)}
-    files["stats/randomness.json"] = {**meta, **S.randomness(draws)}
+    files["stats/randomness.json"] = {**meta, **lists, "data": nested(draws, randomness_scope)}
+    files["stats/ranking.json"] = {**meta, **lists, "data": nested(draws, K.ranking_scope),
+                                   "backtests": K.backtests(draws),
+                                   "lookbacks": [k for k, _ in K.LOOKBACKS]}
 
     def count(pred):
         return sum(1 for d in draws if pred(d))

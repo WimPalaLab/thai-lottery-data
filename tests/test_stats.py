@@ -111,8 +111,10 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(sum(m["by_era"].values()), len(draws))
         self.assertEqual(sum(m["by_trust"].values()), len(draws))
         self.assertEqual(len(a["index.json"]["rows"]), len(draws))
-        for t in a["stats/randomness.json"]["tests"]:
-            self.assertTrue(0 <= t["p"] <= 1 and not math.isnan(t["p"]))
+        for per in a["stats/randomness.json"]["data"].values():
+            for sc in per.values():
+                for t in sc["tests"]:
+                    self.assertTrue(0 <= t["p"] <= 1 and not math.isnan(t["p"]))
 
 
 if __name__ == "__main__":

@@ -9,6 +9,12 @@ import math
 from collections import Counter
 
 SPACE = {"last2": 100, "back3": 1000, "front3": 1000}
+# ชื่อหลักตามตำแหน่ง (นับจากซ้าย) ใช้แสดงบนเว็บแทน "หลักที่ 1, 2, …"
+POS_NAMES = {
+    6: ["หลักแสน", "หลักหมื่น", "หลักพัน", "หลักร้อย", "หลักสิบ", "หลักหน่วย"],
+    3: ["หลักร้อย", "หลักสิบ", "หลักหน่วย"],
+    2: ["หลักสิบ", "หลักหน่วย"],
+}
 
 
 # ---------- การแจกแจงทวินามและ chi-square ----------
@@ -224,26 +230,35 @@ def prize_digits_by_trust(draws):
 
 
 def randomness(draws):
+    """การทดสอบ chi-square พื้นฐาน + autocorrelation + backtest ของขอบเขตหนึ่ง
+    (ยุคหรือรางวัลที่ไม่มีงวดในขอบเขตนี้จะข้ามไป) — p หลังปรับคำนวณรวมกับการทดสอบ V4 ใน build_site"""
     tests = []
 
     def add(group, label, res, **extra):
-        tests.append({"group": group, "label": label, "chi2": res["chi2"], "df": res["df"],
-                      "p": res["p"], "n": res["n"], **extra})
+        if not res or not res["n"]:
+            return
+        tests.append({"group": group, "label": label, "stat": f"χ² = {res['chi2']:.1f}, df = {res['df']}",
+                      "chi2": res["chi2"], "df": res["df"], "p": res["p"], "n": res["n"], **extra})
 
     for prize in ("last2", "back3", "front3"):
         f = frequency(draws, prize)
         add("number", prize, f["chi_square"], era="all")
-    for e in ("E1", "E2", "E3"):
-        sub = [d for d in draws if d["era"] == e]
-        add("number", "last2", frequency(sub, "last2")["chi_square"], era=e)
+    eras = [e for e in ("E1", "E2", "E3") if any(d["era"] == e for d in draws)]
+    if len(eras) > 1:
+        for e in eras:
+            sub = [d for d in draws if d["era"] == e]
+            add("number", "last2", frequency(sub, "last2")["chi_square"], era=e)
     fd = first_prize_digits(draws)
     for pos in fd["positions"]:
-        add("first_digit", f"หลักที่ {pos['position']}", pos["chi_square"], era="all", position=pos["position"])
-    for e in ("E1", "E2", "E3"):
-        sub = [d for d in draws if d["era"] == e]
-        for pos in first_prize_digits(sub)["positions"]:
-            add("first_digit", f"หลักที่ {pos['position']}", pos["chi_square"], era=e, position=pos["position"])
-    for t in prize_digits_by_trust(draws):
+        add("first_digit", POS_NAMES[6][pos["position"] - 1], pos["chi_square"], era="all", position=pos["position"])
+    if len(eras) > 1:
+        for e in eras:
+            sub = [d for d in draws if d["era"] == e]
+            for pos in first_prize_digits(sub)["positions"]:
+                add("first_digit", POS_NAMES[6][pos["position"] - 1], pos["chi_square"], era=e,
+                    position=pos["position"])
+    by_trust = prize_digits_by_trust(draws)
+    for t in by_trust:
         add("prize_digits", t["trust_level"], t["chi_square"], era="all", trust_level=t["trust_level"])
 
     m = len(tests)
@@ -252,10 +267,13 @@ def randomness(draws):
 
     last2 = [int(d["prizes"]["last2"][0]) for d in draws if d["prizes"]["last2"]]
     return {
+        "draws": len(draws),
+        "first_draw": draws[0]["draw_date"],
+        "last_draw": draws[-1]["draw_date"],
         "tests": tests,
         "test_count": m,
         "first_prize_digits": fd,
-        "prize_digits_by_trust": prize_digits_by_trust(draws),
+        "prize_digits_by_trust": by_trust,
         "autocorr_last2": autocorr_lag1(last2),
         "backtest_last2": backtest_last2(draws),
     }
