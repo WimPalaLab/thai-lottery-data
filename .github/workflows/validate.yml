@@ -1,0 +1,30 @@
+# ตรวจข้อมูล รันเทสต์ และลองสร้างเว็บ กับทุก pull request (อ่านอย่างเดียว ไม่ deploy)
+name: Validate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Validate data
+        run: python scripts/validate_csv.py data/thai_lottery.csv
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build site
+        run: python scripts/build_site.py data/thai_lottery.csv web _site

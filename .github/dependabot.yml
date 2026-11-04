@@ -1,0 +1,7 @@
+# เสนอ PR อัปเดต GitHub Actions ที่ปักไว้ด้วย SHA เมื่อมีเวอร์ชันใหม่ (ตรวจก่อน merge ทุกครั้ง)
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

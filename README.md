@@ -66,7 +66,19 @@
 GitHub Actions ([`.github/workflows/update.yml`](.github/workflows/update.yml)) รันทุกวันเวลา 17:00 และ 21:00 น. และ 09:00 น. ของวันถัดไป (เวลาไทย)
 เรียก [`scripts/update_from_glo.py`](scripts/update_from_glo.py) ซึ่งดึงงวดใหม่จาก API ของกองสลากฯ เท่านั้น
 ต่อท้าย `data/thai_lottery.csv` และเก็บ JSON ดิบใน `raw/glo/` แล้ว commit ให้เอง
-งวดที่ผลยังไม่ครบทุกรางวัลจะถูกข้ามไปก่อนแล้วลองใหม่รอบถัดไป; สั่งรันเองได้จากแท็บ Actions → Update lottery results → Run workflow
+งวดที่ผลยังไม่ครบทุกรางวัลจะถูกข้ามไปก่อนแล้วลองใหม่รอบถัดไป; สั่งรันเองได้จากแท็บ Actions → Update lottery results and deploy site → Run workflow
+ก่อน commit ข้อมูลต้องผ่าน [`scripts/validate_csv.py`](scripts/validate_csv.py) แล้ว workflow เดียวกันจะสร้างเว็บไซต์และ deploy ขึ้น GitHub Pages
+
+## เว็บไซต์ (LOTTO INSIGHT)
+
+หน้าเว็บ static ใน [`web/`](web/) สร้างด้วย [`scripts/build_site.py`](scripts/build_site.py) ไม่มี dependency ภายนอก
+รายละเอียดอยู่ใน [`SPEC.md`](SPEC.md), [`DATA_AND_STATS.md`](DATA_AND_STATS.md), [`ARCHITECTURE.md`](ARCHITECTURE.md)
+
+```bash
+python scripts/build_site.py data/thai_lottery.csv web _site
+python -m http.server 8765 --bind 127.0.0.1 --directory _site
+python -m unittest discover -s tests
+```
 
 ## ไฟล์อื่น
 
