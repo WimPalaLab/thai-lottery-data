@@ -66,6 +66,12 @@ class FrequencyTest(unittest.TestCase):
         self.assertEqual(sum(f["counts"]), 3)
         self.assertAlmostEqual(f["expected"], 0.03)
 
+    def test_expected_outside_is_exact(self):
+        # 1 งวด: ช่วงปกติคือ 0–0 ครั้ง และเลขที่ออก 1 เลขต้องอยู่นอกช่วงเสมอ → คาดไว้ 100 × 0.01 = 1
+        f = S.frequency([draw("2020-01-01", "05")], "last2")
+        self.assertEqual(f["range95"], [0, 0])
+        self.assertAlmostEqual(f["expected_outside"], 1.0)
+
     def test_histogram_sums_to_space(self):
         ds = [draw("2020-01-01", "05")]
         h = S.frequency(ds, "back3")["count_histogram"]

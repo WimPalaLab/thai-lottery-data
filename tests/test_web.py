@@ -57,8 +57,36 @@ class WebSecurityTest(unittest.TestCase):
                 self.assertRegex(url, r"^(http://www\.w3\.org/2000/svg|https://www\.glo\.or\.th/|"
                                       r"http://lotto\.join\.in\.th/|https://news\.sanook\.com/)", f"{p}: {url}")
 
+    def test_no_user_data_storage(self):
+        # ไม่เก็บข้อมูลผู้ใช้: ห้องทดลองเก็บประวัติในหน่วยความจำของหน้าเท่านั้น
+        for p in files(".js"):
+            self.assertIsNone(re.search(r"localStorage|sessionStorage|indexedDB|document\.cookie", read(p)), p)
+
+    def test_nav_is_identical_on_every_page(self):
+        pages = sorted(files(".html"))
+        self.assertGreaterEqual(len(pages), 6)
+        expected = None
+        for p in pages:
+            html = read(p)
+            name = os.path.basename(p)
+            here = "./" if name == "index.html" else name
+            for cls in ("nav", "bottomnav"):
+                m = re.search(rf'<nav class="{cls}"[^>]*>(.*?)</nav>', html, re.S)
+                self.assertIsNotNone(m, f"{p}: {cls}")
+                hrefs = re.findall(r'<a href="([^"]+)"', m.group(1))
+                current = re.findall(r'<a href="([^"]+)" aria-current="page"', m.group(1))
+                self.assertEqual(current, [here], f"{p}: {cls}")
+                if expected is None:
+                    expected = hrefs
+                self.assertEqual(hrefs, expected, f"{p}: {cls}")
+        for href in expected:
+            if href != "./":
+                self.assertTrue(os.path.exists(os.path.join(WEB, href)), href)
+
     def test_prohibited_wording(self):
-        for p in files(".html") + files(".js"):
+        # รวมสคริปต์ Python ที่สร้างข้อความขึ้นเว็บ (ชื่อกลุ่มลักษณะเลข, ชื่อช่วงเวลา)
+        shown = [os.path.join(ROOT, "scripts", n) for n in ("lotto_analysis.py", "build_site.py", "lotto_stats.py")]
+        for p in files(".html") + files(".js") + shown:
             text = read(p).lower()
             for word in PROHIBITED:
                 self.assertNotIn(word.lower(), text, f"{p}: {word}")

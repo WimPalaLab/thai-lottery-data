@@ -120,6 +120,8 @@ def frequency(draws, prize):
         "last_draw": el[-1]["draw_date"] if el else None,
         "expected": slots * p,
         "range95": [lo, hi],
+        # จำนวนเลขที่คาดว่าจะอยู่นอกช่วงปกติแม้สุ่มจริง (ช่วงเป็นจำนวนเต็ม จึงไม่ใช่ 5% พอดี)
+        "expected_outside": space * (1 - sum(binom_pmf(slots, p)[lo:hi + 1])) if slots else 0.0,
         "counts": [counts[k] for k in keys],
         "draws_containing": [containing[k] for k in keys],
         "chi_square": chi_square_uniform([counts[k] for k in keys]) if slots else None,

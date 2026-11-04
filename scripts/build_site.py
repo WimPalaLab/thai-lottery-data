@@ -13,8 +13,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import lotto_data as L  # noqa: E402
 import lotto_stats as S  # noqa: E402
+import lotto_analysis as A  # noqa: E402
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 # ไฟล์หน้าเว็บที่อนุญาตให้คัดลอก (กันไฟล์แปลก ๆ หลุดขึ้นเว็บ)
 ALLOWED_EXT = {".html", ".css", ".js", ".svg", ".ico", ".txt", ".woff2"}
 PERIODS = [
@@ -23,6 +24,14 @@ PERIODS = [
     ("official", "เฉพาะข้อมูลทางการ GLO (ตั้งแต่ 16 พ.ย. 2559)"),
     ("last5y", "5 ปีล่าสุด"),
 ]
+# ตัวกรองระดับความน่าเชื่อถือ (ใช้ร่วมกับช่วงเวลาได้อิสระ)
+TRUSTS = [
+    ("all", "ทุกแหล่งข้อมูล"),
+    ("checked", "ตรวจทานแล้วหรือทางการ (ตัดข้อมูลแหล่งเดียว)"),
+    ("official", "เฉพาะข้อมูลทางการ GLO"),
+]
+STAT_PRIZES = ("last2", "back3", "front3")
+DIGIT_PRIZES = ("first", "front3", "back3", "last2")
 
 
 def period_draws(draws, key):
@@ -37,6 +46,80 @@ def period_draws(draws, key):
         cut = last.replace(year=last.year - 5).isoformat()
         return [d for d in draws if d["draw_date"] > cut]
     raise KeyError(key)
+
+
+def trust_draws(draws, key):
+    if key == "all":
+        return draws
+    if key == "checked":
+        return [d for d in draws if d["trust_level"] in ("official", "cross-checked")]
+    if key == "official":
+        return [d for d in draws if d["trust_level"] == "official"]
+    raise KeyError(key)
+
+
+def scopes(draws):
+    """ทุกคู่ (ช่วงเวลา, ระดับความน่าเชื่อถือ) ที่มีงวดอย่างน้อย 1 งวด"""
+    for pk, plabel in PERIODS:
+        for tk, tlabel in TRUSTS:
+            sub = trust_draws(period_draws(draws, pk), tk)
+            if sub:
+                yield pk, tk, sub
+
+
+def nested(draws, fn):
+    out = {}
+    for pk, tk, sub in scopes(draws):
+        out.setdefault(pk, {})[tk] = fn(sub)
+    return out
+
+
+def comparisons(draws):
+    """คู่ช่วงเวลาที่เปรียบเทียบได้ เฉพาะรางวัลที่โครงสร้างเหมือนกันทั้งสองช่วง:
+    - เลขท้าย 2 ตัวและรางวัลที่ 1: 1 หมายเลขต่องวดตลอด เทียบได้ทุกช่วง
+    - เลขท้าย 3 ตัว: 4 หมายเลขต่องวดก่อน 1 ก.ย. 2558, 2 หมายเลขหลังจากนั้น → เทียบเฉพาะภายในยุคเดียวกัน
+    - เลขหน้า 3 ตัว: มีเฉพาะตั้งแต่ 1 ก.ย. 2558 → เทียบเฉพาะภายในยุคนั้น"""
+    old = [d for d in draws if d["era"] != "E3"]
+    new = [d for d in draws if d["era"] == "E3"]
+    single = [d for d in draws if d["trust_level"] == "single-source"]
+    official = [d for d in draws if d["trust_level"] == "official"]
+
+    def halves(x):
+        m = len(x) // 2
+        return x[:m], x[m:]
+
+    pairs = [
+        ("old_vs_new", "ก่อน vs ตั้งแต่ 1 ก.ย. 2558", old, new, ("last2", "first")),
+        ("old_halves", "ก่อน 1 ก.ย. 2558: ครึ่งแรก vs ครึ่งหลัง", *halves(old), ("last2", "back3", "first")),
+        ("new_halves", "ตั้งแต่ 1 ก.ย. 2558: ครึ่งแรก vs ครึ่งหลัง", *halves(new),
+         ("last2", "back3", "front3", "first")),
+        ("single_vs_official", "ข้อมูลแหล่งเดียว vs ข้อมูลทางการ GLO", single, official, ("last2", "first")),
+    ]
+    out = []
+    for key, label, a, b, prizes in pairs:
+        if not a or not b:
+            continue
+        results = [A.compare_periods(a, b, p) for p in prizes]
+        A.add_adjusted([t for r in results for t in r["tests"]])
+        out.append({"key": key, "label": label,
+                    "a": {"first_draw": a[0]["draw_date"], "last_draw": a[-1]["draw_date"], "draws": len(a)},
+                    "b": {"first_draw": b[0]["draw_date"], "last_draw": b[-1]["draw_date"], "draws": len(b)},
+                    "prizes": list(prizes),
+                    "excluded": [p for p in ("last2", "back3", "front3", "first") if p not in prizes],
+                    "results": results})
+    return out
+
+
+def digits_scope(sub):
+    out = {p: A.digit_positions(sub, p) for p in DIGIT_PRIZES}
+    A.add_adjusted([pos for p in DIGIT_PRIZES for pos in out[p]["positions"]])
+    return out
+
+
+def characteristics_scope(sub):
+    out = {p: A.characteristics(sub, p) for p in STAT_PRIZES}
+    A.add_adjusted([it for p in STAT_PRIZES for it in out[p]["items"]])
+    return out
 
 
 def dump(path, obj):
@@ -67,11 +150,17 @@ def build_data(draws, csv_hash, generated_at):
     for y in years:
         files[f"draws/{y}.json"] = {**meta, "year": y, "draws": [d for d in draws if d["draw_date"][:4] == y]}
 
-    freq = {}
-    for key, label in PERIODS:
-        sub = period_draws(draws, key)
-        freq[key] = {"label": label, **{p: S.frequency(sub, p) for p in ("last2", "back3", "front3")}}
-    files["stats/frequency.json"] = {**meta, "periods": [k for k, _ in PERIODS], "data": freq}
+    lists = {"periods": [k for k, _ in PERIODS], "period_labels": dict(PERIODS),
+             "trusts": [k for k, _ in TRUSTS], "trust_labels": dict(TRUSTS)}
+    files["stats/frequency.json"] = {**meta, **lists,
+                                     "data": nested(draws, lambda sub: {p: S.frequency(sub, p) for p in STAT_PRIZES})}
+    files["stats/digits.json"] = {**meta, **lists, "data": nested(draws, digits_scope)}
+    files["stats/characteristics.json"] = {**meta, **lists, "data": nested(draws, characteristics_scope)}
+    files["stats/timeline.json"] = {**meta, "trusts": lists["trusts"], "trust_labels": lists["trust_labels"],
+                                    "data": {tk: {p: A.yearly(trust_draws(draws, tk), p) for p in STAT_PRIZES}
+                                             for tk, _ in TRUSTS}}
+    files["stats/compare.json"] = {**meta, "pairs": comparisons(draws)}
+    files["stats/gaps.json"] = {**meta, **lists, "data": nested(draws, A.gap_distribution)}
     files["stats/randomness.json"] = {**meta, **S.randomness(draws)}
 
     def count(pred):
