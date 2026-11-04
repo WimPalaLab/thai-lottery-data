@@ -1,0 +1,43 @@
+# เพิ่มงวดใหม่จาก API ของกองสลากฯ ทุกวัน (ไม่มีงวดใหม่ก็ไม่ commit)
+# ผลออกประมาณ 14:30–16:00 น. เวลาไทย จึงรันเวลา 17:00 และ 21:00 น. (10:00 และ 14:00 UTC)
+name: Update lottery results
+
+on:
+  schedule:
+    - cron: "0 10 * * *"
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-results
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch new draws from glo.or.th
+        run: python scripts/update_from_glo.py data/thai_lottery.csv raw/glo
+
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "No new draws."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/thai_lottery.csv raw/glo
+          latest=$(tail -n 1 data/thai_lottery.csv | cut -d, -f1)
+          git commit -m "Add draw results up to ${latest}"
+          git push
