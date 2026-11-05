@@ -304,6 +304,32 @@ details summary { cursor: pointer; color: var(--text); font-weight: 600; padding
 /* ---------- footer ---------- */
 footer { max-width: 1080px; margin: 0 auto; padding: 8px 16px 28px; color: var(--text-2); font-size: .82rem; }
 footer p { margin: 0 0 4px; }
+footer a[href="glossary.html"] { display: inline-flex; align-items: center; min-height: 48px; color: var(--text); }
+
+/* ---------- คำอธิบายศัพท์ ---------- */
+/* ปุ่ม "?" ข้างคำศัพท์: ตาเห็น 20px แต่พื้นที่กดขยายเป็น 48px ด้วย ::before */
+.gl {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; margin-left: 4px; border-radius: 999px; vertical-align: .1em;
+  font-size: .72rem; font-weight: 700; line-height: 1; text-decoration: none;
+  color: var(--text-2); background: var(--card); border: 1px solid var(--border-2);
+}
+.gl::before { content: ""; position: absolute; inset: -14px; }
+.gl:hover { color: var(--accent); border-color: var(--accent); }
+.term { white-space: nowrap; }
+.gl-index { display: grid; gap: 4px 24px; }
+@media (min-width: 760px) { .gl-index { grid-template-columns: 1fr 1fr; } }
+.gl-index h2 { font-size: .95rem; color: var(--text-2); margin: 8px 0 2px; }
+.gl-index ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 4px; }
+.gl-index a { display: inline-flex; align-items: center; min-height: 48px; padding: 0 8px; border-radius: 8px; }
+.gl-index a:hover { background: var(--bg-2); }
+.gl-group-title { margin-top: 24px; }
+.gl-entry { scroll-margin-top: 76px; }
+.gl-entry:target, .gl-entry.is-target { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.gl-entry:focus { outline: none; }
+.gl-entry > p:last-child { margin-bottom: 0; }
+.gl-aka { margin-top: -6px; }
+.gl-see a { display: inline-flex; align-items: center; min-height: 48px; }
 
 /* ---------- analysis / history ---------- */
 .tabs { margin-bottom: 4px; }

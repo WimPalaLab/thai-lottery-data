@@ -19,7 +19,9 @@ def read(p):
 
 # เว็บใช้เองคนเดียว ใช้คำว่า "ทำนาย" ได้ แต่ห้ามอ้างความแน่นอนที่โมเดลไม่ได้ calibrate ไว้ (ดู SPEC.md)
 PROHIBITED = ["โอกาสสูง", "ถูกแน่", "แม่นยำ 100", "รับประกัน", "high chance", "guaranteed"]
-PAGES = ["index", "results", "stats", "analysis", "history", "random", "data"]
+NAV_PAGES = ["index", "results", "stats", "analysis", "history", "random", "data"]
+# หน้าคำอธิบายศัพท์ไม่อยู่ในเมนู (เข้าจากท้ายหน้าและปุ่ม "?" ข้างคำศัพท์)
+PAGES = NAV_PAGES + ["glossary"]
 
 
 class WebSecurityTest(unittest.TestCase):
@@ -61,9 +63,36 @@ class WebSecurityTest(unittest.TestCase):
     def test_every_page_has_same_navigation(self):
         for p in files(".html"):
             html = read(p)
-            for name in PAGES[1:]:
+            for name in NAV_PAGES[1:]:
                 self.assertIn(f'href="{name}.html"', html, p)
-            self.assertEqual(html.count('aria-current="page"'), 2, p)
+            in_nav = os.path.splitext(os.path.basename(p))[0] in NAV_PAGES
+            self.assertEqual(html.count('aria-current="page"'), 2 if in_nav else 0, p)
+            self.assertIn('<a href="glossary.html">', html, f"{p}: ลิงก์คำอธิบายศัพท์ท้ายหน้า")
+
+    def test_glossary_links_have_entries(self):
+        """ทุกลิงก์ไปหน้าคำอธิบายศัพท์ (gl("id"), term(..., "id"), glossary.html#id) ต้องมีคำนั้นอยู่จริง"""
+        js = read(os.path.join(WEB, "assets", "app.js"))
+        block = re.search(r"const GLOSSARY = \[(.*?)\n\];", js, re.S)
+        self.assertIsNotNone(block)
+        ids = re.findall(r'\{ id: "([a-z0-9-]+)"', block.group(1))
+        self.assertGreaterEqual(len(ids), 15)
+        self.assertEqual(len(ids), len(set(ids)), "id ซ้ำ")
+        refs = set(re.findall(r'\b(?:gl|term)\((?:[^()]*?, )?"([a-z0-9-]+)"\)', js))
+        self.assertGreaterEqual(len(refs), 15, "ลิงก์จากหน้าอื่นน้อยเกินไป")
+        refs |= set(re.findall(r"glossary\.html#([a-z0-9-]+)", js + "".join(read(p) for p in files(".html"))))
+        for e in re.findall(r"see: \[([^\]]*)\]", block.group(1)):
+            refs |= set(re.findall(r'"([a-z0-9-]+)"', e))
+        see = re.search(r"const GLOSSARY_SEE = \{(.*?)\n\};", js, re.S)
+        self.assertIsNotNone(see)
+        refs |= set(re.findall(r'"([a-z0-9-]+)": \[', see.group(1)))
+        self.assertEqual(sorted(refs - set(ids)), [], "ลิงก์ไปคำที่ไม่มีในหน้าอธิบายศัพท์")
+        for need in ("p-value", "range95", "expected", "backtest", "validation-holdout", "mean-rank", "hybrid-score",
+                     "global-score", "prize-score", "bonferroni", "autocorrelation", "chi-square", "snapshot", "sha256",
+                     "small-sample"):
+            self.assertIn(need, ids)
+        # ลิงก์รูปแบบ glossary.html#id ต้องผ่าน safeHref ใน app.js
+        safe = re.search(r"if \(/(\^\(.+?)/\.test\(str\)\) return str;", js).group(1)
+        self.assertRegex("glossary.html#p-value", safe.replace("\/", "/"))
 
     def test_prohibited_wording(self):
         for p in files(".html") + files(".js"):
