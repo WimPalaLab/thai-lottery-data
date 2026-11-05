@@ -322,12 +322,56 @@ const GLOSSARY = [
 ];
 const GLOSSARY_BY_ID = Object.fromEntries(GLOSSARY.map((e) => [e.id, e]));
 
-// ปุ่ม "?" เล็ก ๆ ข้างคำศัพท์ → glossary.html#<id>
+// ปุ่ม "?" เล็ก ๆ ข้างคำศัพท์: กดแล้วเปิดคำอธิบายเป็นหน้าต่างเล็กบนหน้าเดิม
+// (ยังเป็นลิงก์ไป glossary.html#<id> สำหรับเปิดในแท็บใหม่ หรือเมื่อเบราว์เซอร์ไม่รองรับหน้าต่างนี้)
 function gl(id) {
   const e = GLOSSARY_BY_ID[id];
   if (!e) return null;
-  return h("a", { class: "gl", href: `glossary.html#${id}`, "aria-label": `${e.term} คืออะไร`, title: `${e.term} คืออะไร` }, "?");
+  return h("a", { class: "gl", href: `glossary.html#${id}`, "data-gl": id, "aria-haspopup": "dialog",
+    "aria-label": `${e.term} คืออะไร`, title: `${e.term} คืออะไร` }, "?");
 }
+
+let glDialog = null;
+let glOpener = null;   // ปุ่ม "?" ที่เปิดหน้าต่าง ปิดแล้วย้ายโฟกัสกลับไปที่ปุ่มนี้
+function glPopup(id, opener) {
+  const e = GLOSSARY_BY_ID[id];
+  if (!e) return;
+  if (!glDialog) {
+    glDialog = h("dialog", { class: "gl-pop", "aria-labelledby": "gl-pop-title" });
+    // กดพื้นมืดรอบหน้าต่าง = ปิด (คลิกในเนื้อหาจะโดน .gl-pop-inner ไม่ใช่ตัว dialog)
+    glDialog.addEventListener("click", (ev) => { if (ev.target === glDialog) glDialog.close(); });
+    glDialog.addEventListener("close", () => {
+      const back = glOpener;
+      glOpener = null;
+      if (back && back.isConnected) back.focus();
+    });
+    document.body.append(glDialog);
+  }
+  const close = h("button", { type: "button", class: "gl-pop-close", "aria-label": "ปิด" }, "×");
+  close.addEventListener("click", () => glDialog.close());
+  const related = e.see.filter((x) => GLOSSARY_BY_ID[x]).map((x) => {
+    const b = h("button", { type: "button", class: "chip gl-pop-see" }, GLOSSARY_BY_ID[x].term);
+    b.addEventListener("click", () => glPopup(x));
+    return b;
+  });
+  glDialog.replaceChildren(h("div", { class: "gl-pop-inner" },
+    h("div", { class: "gl-pop-head" }, h("h2", { id: "gl-pop-title" }, e.term), close),
+    e.aka ? h("p", { class: "note gl-aka" }, e.aka) : null,
+    h("div", { class: "gl-pop-body" }, e.body.map((t) => h("p", null, t))),
+    related.length ? h("div", { class: "gl-pop-related" }, h("span", { class: "small muted" }, "คำที่เกี่ยวข้อง:"), related) : null,
+    h("a", { class: "gl-pop-more", href: `glossary.html#${id}` }, "เปิดหน้าคำอธิบายศัพท์ทั้งหมด →")));
+  if (opener) glOpener = opener;
+  if (!glDialog.open) glDialog.showModal();
+  close.focus();
+}
+// ใช้ตัวดักคลิกตัวเดียวทั้งหน้า ปุ่ม "?" ที่สร้างทีหลัง (เปลี่ยนแท็บ/ช่วงเวลา) จึงใช้ได้ทันที
+document.addEventListener("click", (ev) => {
+  const a = ev.target instanceof Element ? ev.target.closest("a.gl[data-gl]") : null;
+  if (!a || ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
+  if (typeof HTMLDialogElement !== "function") return;   // เบราว์เซอร์เก่า: ไปหน้าคำอธิบายศัพท์ตามเดิม
+  ev.preventDefault();
+  glPopup(a.dataset.gl, a);
+});
 // คำศัพท์ + ปุ่ม "?" (ใช้ในหัวตาราง ป้ายสถิติ ฯลฯ)
 function term(text, id) {
   return h("span", { class: "term" }, text, gl(id));

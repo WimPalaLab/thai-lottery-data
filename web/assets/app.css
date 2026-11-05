@@ -358,6 +358,33 @@ footer a[href="glossary.html"] { display: inline-flex; align-items: center; min-
 .gl::before { content: ""; position: absolute; inset: -14px; }
 .gl:hover { color: var(--accent); border-color: var(--accent); }
 .term { white-space: nowrap; }
+/* หน้าต่างคำอธิบายศัพท์ (กดปุ่ม "?") — จอกว้างอยู่กลางจอ, มือถือเลื่อนขึ้นจากขอบล่าง */
+.gl-pop {
+  border: 0; padding: 0; width: min(92vw, 480px); max-height: 82vh; overflow: auto;
+  border-radius: 16px; background: var(--card); color: var(--text);
+  box-shadow: 0 18px 50px rgba(10, 22, 51, .28);
+}
+.gl-pop::backdrop { background: rgba(10, 22, 51, .45); }
+.gl-pop-inner { padding: 6px 20px 20px; }
+.gl-pop-head {
+  position: sticky; top: 0; display: flex; gap: 8px; align-items: center; justify-content: space-between;
+  background: var(--card); padding-top: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px;
+}
+.gl-pop-head h2 { margin: 0; font-size: 1.15rem; }
+.gl-pop-close {
+  flex: none; width: 48px; height: 48px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--text-2); font-size: 1.6rem; line-height: 1; cursor: pointer; margin-right: -10px;
+}
+.gl-pop-close:hover { background: var(--bg-2); color: var(--text); }
+.gl-pop .gl-aka { margin-top: 0; }
+.gl-pop-body p { margin: 0 0 .7em; line-height: 1.65; }
+.gl-pop-related { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 4px 0 8px; }
+.gl-pop-see { cursor: pointer; min-height: 36px; font-family: inherit; }
+.gl-pop-see:hover { color: var(--accent); border-color: var(--accent); }
+.gl-pop-more { display: inline-flex; align-items: center; min-height: 48px; font-size: .92rem; }
+@media (max-width: 599px) {
+  .gl-pop { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 16px 16px 0 0; max-height: 78vh; }
+}
 .gl-index { display: grid; gap: 4px 24px; }
 @media (min-width: 760px) { .gl-index { grid-template-columns: 1fr 1fr; } }
 .gl-index h2 { font-size: .95rem; color: var(--text-2); margin: 8px 0 2px; }

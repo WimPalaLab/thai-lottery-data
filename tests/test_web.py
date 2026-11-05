@@ -94,6 +94,16 @@ class WebSecurityTest(unittest.TestCase):
         safe = re.search(r"if \(/(\^\(.+?)/\.test\(str\)\) return str;", js).group(1)
         self.assertRegex("glossary.html#p-value", safe.replace("\/", "/"))
 
+    def test_glossary_button_opens_popup_and_keeps_link(self):
+        """ปุ่ม "?" เปิดหน้าต่างบนหน้าเดิม แต่ยังเป็นลิงก์ไปหน้าคำอธิบายศัพท์ (เปิดแท็บใหม่/เบราว์เซอร์เก่า)"""
+        js = read(os.path.join(WEB, "assets", "app.js"))
+        fn = re.search(r"\nfunction gl\(id\) \{(.*?)\n\}", js, re.S).group(1)
+        self.assertIn("href: `glossary.html#${id}`", fn)
+        self.assertIn('"data-gl": id', fn)
+        self.assertIn("showModal()", js)
+        self.assertIn('closest("a.gl[data-gl]")', js)
+        self.assertIn("ev.ctrlKey || ev.metaKey", js)   # กด Ctrl/Cmd = เปิดหน้าคำอธิบายศัพท์ในแท็บใหม่ตามปกติ
+
     def test_prohibited_wording(self):
         for p in files(".html") + files(".js"):
             text = read(p).lower()
