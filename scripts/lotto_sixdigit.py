@@ -159,4 +159,6 @@ def build(draws, period_draws, periods):
             nums = numbers_for(sub, prize)
             info = (len(sub), sub[0]["draw_date"] if sub else None, sub[-1]["draw_date"] if sub else None)
             data[key][prize] = six_digit_stats(nums, info)
-    return {"periods": keys, "prizes": SIX_PRIZES + ["all"], "patterns": PATTERNS, "data": data}
+    return {"periods": keys, "prizes": SIX_PRIZES + ["all"], "patterns": PATTERNS, "data": data,
+            # ใช้คำนวณช่วงปีที่ผู้ใช้เลือกเองในหน้าเว็บ
+            "theory": {"pattern": PATTERN_P, "dsum": DSUM_P, "binom6": BINOM6}}

@@ -138,6 +138,54 @@ def frequency(draws, prize):
     return out
 
 
+GAP_BINS = [(1, 10), (11, 25), (26, 50), (51, 100), (101, 150), (151, 200), (201, 300), (301, None)]
+
+
+def _gap_list(seq):
+    last, gaps = {}, []
+    for t, v in enumerate(seq):
+        if v in last:
+            gaps.append(t - last[v])
+        last[v] = t
+    return gaps, last
+
+
+def _bin_counts(gaps):
+    return [sum(1 for g in gaps if g >= lo and (hi is None or g <= hi)) for lo, hi in GAP_BINS]
+
+
+def gaps_last2(draws, sims=2000, seed=1323):
+    """ระยะห่าง (จำนวนงวด) ระหว่างการออกซ้ำของเลขท้าย 2 ตัวเดียวกัน
+    ค่าที่คาดไว้มาจากการจำลองลำดับเลขสุ่ม 00–99 ที่ยาวเท่าข้อมูลจริง (seed คงที่) แทนสูตรเรขาคณิต
+    เพราะข้อมูลมีจำกัด ระยะห่างยาว ๆ ใกล้ท้ายข้อมูลจึงสังเกตไม่ได้ (สูตรตรง ๆ จะเอียง)
+    current_gap: แต่ละเลขไม่ออกมาแล้วกี่งวด (นับถึงงวดล่าสุด)"""
+    import random
+    seq = [d["prizes"]["last2"][0] for d in draws if d["prizes"]["last2"]]
+    gaps, last = _gap_list(seq)
+    observed = _bin_counts(gaps)
+    rng = random.Random(seed)
+    sums = [0.0] * len(GAP_BINS)
+    mean_sum = 0.0
+    for _ in range(sims if seq else 0):
+        g, _ = _gap_list([rng.randrange(100) for _ in seq])
+        for i, c in enumerate(_bin_counts(g)):
+            sums[i] += c
+        mean_sum += sum(g) / len(g) if g else 0
+    expected = [x / sims for x in sums]
+    chi2 = sum((o - e) ** 2 / e for o, e in zip(observed, expected) if e > 0)
+    df = len(GAP_BINS) - 1
+    keys = [f"{i:02d}" for i in range(100)]
+    return {
+        "draws": len(seq), "gaps": len(gaps), "sims": sims, "seed": seed,
+        "bins": [[lo, hi] for lo, hi in GAP_BINS],
+        "observed": observed, "expected": [round(e, 3) for e in expected],
+        "mean_gap": round(sum(gaps) / len(gaps), 2) if gaps else None,
+        "expected_mean_gap": round(mean_sum / sims, 2) if seq else None,
+        "chi_square": {"chi2": round(chi2, 3), "df": df, "p": gammq(df / 2, chi2 / 2)} if gaps else None,
+        "current_gap": [len(seq) - 1 - last[k] if k in last else None for k in keys],
+    }
+
+
 def digit_counts(numbers, position):
     c = [0] * 10
     for v in numbers:

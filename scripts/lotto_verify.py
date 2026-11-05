@@ -94,7 +94,11 @@ def month_gaps(draws):
     while cur <= last:
         key = cur.strftime("%Y-%m")
         c = per.get(key, 0)
-        if c != 2 and cur != last:
+        dates = [d["draw_date"] for d in draws if d["draw_date"].startswith(key)]
+        # ปกติ: ธ.ค. มี 3 งวด (1, 16, 30) และ ม.ค. มีงวดเดียว (16/17) เพราะไม่มีงวดวันที่ 1 ม.ค.
+        normal = (c == 2 or (cur.month == 12 and c == 3 and any(x.endswith("-30") for x in dates))
+                  or (cur.month == 1 and c == 1 and dates[0][8:] in ("16", "17")))
+        if not normal and cur != last:
             out.append({"month": key, "draws": c, "dates": sorted(d["draw_date"] for d in draws if d["draw_date"].startswith(key))})
         cur = (cur + datetime.timedelta(days=32)).replace(day=1)
     return out

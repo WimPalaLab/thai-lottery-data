@@ -45,6 +45,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -113,7 +114,12 @@ p { margin: 0 0 .8em; }
 .bottomnav svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
 .bottomnav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
 
-@media (min-width: 980px) {
+@media (min-width: 760px) and (max-width: 979px) {
+  .nav { gap: 0; }
+  .nav a { padding: 8px 7px; font-size: .88rem; }
+  .brand { font-size: .95rem; }
+}
+@media (min-width: 760px) {
   .nav { display: flex; }
   .bottomnav { display: none; }
   body { padding-bottom: 0; }
@@ -303,3 +309,7 @@ tr.tuned td, tr.tuned th { background: var(--accent-soft); }
 .kv dt { color: var(--text-2); }
 .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
 .next-card .num-list span { font-size: 1.2rem; font-weight: 700; letter-spacing: .06em; padding: 4px 10px; }
+.heat1000 { display: grid; grid-template-columns: repeat(40, 1fr); gap: 1px; max-width: 760px; }
+.heat1000 button { aspect-ratio: 1; border: 0; padding: 0; border-radius: 2px; cursor: pointer; position: relative; min-width: 0; }
+.heat1000 button.out { outline: 1.5px solid var(--text); outline-offset: -1.5px; }
+.respond { border-left: 4px solid var(--text-2); background: var(--bg-2); padding: 12px 14px; border-radius: 0 12px 12px 0; font-size: .9rem; }

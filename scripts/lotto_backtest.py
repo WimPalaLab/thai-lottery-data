@@ -76,6 +76,15 @@ def eval_indices(prep, cfg):
     return [t for t in range(prep["n"]) if avail[t] and before[t] >= need]
 
 
+FREQ_ONLY = "freq"   # baseline: ความถี่ตามตำแหน่งของรางวัลนั้นอย่างเดียว (ไม่ใช้ feature อื่น ไม่ผสม Global)
+
+
+def frequency_model(prize_model):
+    """โมเดลที่ใช้เฉพาะ feature ความถี่ตามตำแหน่งของรางวัลนั้น ใช้เป็น baseline เทียบกับ hybrid"""
+    pos = [f for f in prize_model.features if f.name == "position"]
+    return M.Model(pos, {g: (1.0 if g == "position" else 0.0) for g in M.GROUPS}, "freq")
+
+
 def config_list(cfg):
     out = [("global", 1.0), ("prize", 0.0)]
     out += [(k, float(v)) for k, v in sorted(cfg["hybrid_experiments"].items())]
@@ -138,6 +147,9 @@ def evaluate_draw(t, prep=None, cfg=None):
         for name, w in config_list(cfg):
             hits, h = _topk_threshold_hits(zg, zp, w, K, cand, winners)
             res[name] = (hits, _percentiles(h, sub, winners).astype(np.float32))
+        zf = frequency_model(pms[k]).scores
+        top = M.top_k(zf, K)
+        res[FREQ_ONLY] = (int(np.isin(winners, top).sum()), _percentiles(zf, sub, winners).astype(np.float32))
         out[k] = res
     return out
 
@@ -229,7 +241,7 @@ def summarize(prep, idxs, records, cfg):
     split_of = lambda t: "validation" if dates[t] < bt["holdout_start"] else "holdout"  # noqa: E731
     chosen, tune_scores = tune(records, idxs, prep, cfg, split_of)
     configs = config_list(cfg)
-    names = [c for c, _ in configs]
+    names = [c for c, _ in configs] + [FREQ_ONLY]
     by_split = {s: [i for i, t in enumerate(idxs) if s == "all" or split_of(t) == s] for s in SPLITS}
 
     results, rand = {}, {}
@@ -292,7 +304,7 @@ def summarize(prep, idxs, records, cfg):
                        "training_min_draws": bt["min_training_draws"], "holdout_start": bt["holdout_start"],
                        "validation": span(val_ids), "holdout": span(hold_ids), "subsample": SUBSAMPLE},
         "candidate_counts": cfg["candidate_counts"],
-        "configs": [{"id": c, "w_global": w} for c, w in configs],
+        "configs": [{"id": c, "w_global": w} for c, w in configs] + [{"id": FREQ_ONLY, "w_global": None}],
         "tuning": {"metric": "mean_pct", "split": "validation", "chosen": chosen, "scores": tune_scores},
         "results": results,
         "random": rand,

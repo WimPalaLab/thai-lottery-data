@@ -123,6 +123,7 @@ function cfgLabel(id, w) {
   if (id === "global") return "Global อย่างเดียว";
   if (id === "prize") return "เฉพาะรางวัลอย่างเดียว";
   if (id === "tuned") return "ชุดที่เลือกจาก validation";
+  if (id === "freq") return "ความถี่ตามตำแหน่งอย่างเดียว (baseline)";
   return `ชุด ${id} (Global ${Math.round(w * 100)}% / เฉพาะรางวัล ${Math.round((1 - w) * 100)}%)`;
 }
 function thDateTime(iso) {
@@ -507,7 +508,7 @@ async function statsShort(modeSeg) {
       onclick: () => { state.prize = k; state.selected = null; draw(); },
     }, label)));
     const f = freq.data[state.period][state.prize];
-    body.replaceChildren(...statsBody(f, state, idx, draw));
+    body.replaceChildren(...statsBody(f, state, idx, draw, freq.gaps_last2));
   }
   periodSel.addEventListener("change", () => { state.period = periodSel.value; state.selected = null; draw(); });
   render(
@@ -520,7 +521,7 @@ async function statsShort(modeSeg) {
   draw();
 }
 
-function statsBody(f, state, idx, redraw) {
+function statsBody(f, state, idx, redraw, gaps) {
   const width = state.prize === "last2" ? 2 : 3;
   const keyOf = (i) => String(i).padStart(width, "0");
   const outside = f.counts.filter((c) => c < f.range95[0] || c > f.range95[1]).length;
@@ -549,9 +550,21 @@ function statsBody(f, state, idx, redraw) {
     const i = Number(num);
     const dates = idx.filter((r) => (state.prize === "last2" ? r.last2 === num : r[state.prize].includes(num))
       && periodHas(state.period, r, idx)).map((r) => r.draw_date).reverse();
+    // จำนวนครั้งรายปี เทียบค่าที่คาดไว้ (จำนวนหมายเลขที่ออกในปีนั้น ÷ จำนวนเลขที่เป็นไปได้)
+    const space = state.prize === "last2" ? 100 : 1000;
+    const rowsIn = idx.filter((r) => periodHas(state.period, r, idx) && (state.prize === "last2" ? r.last2 : r[state.prize].length));
+    const years = [...new Set(rowsIn.map((r) => r.draw_date.slice(0, 4)))];
+    const perYear = years.map((y) => rowsIn.filter((r) => r.draw_date.startsWith(y)).reduce((a, r) => {
+      const v = state.prize === "last2" ? [r.last2] : r[state.prize];
+      return [a[0] + v.filter((x) => x === num).length, a[1] + v.length / space];
+    }, [0, 0]));
+    const cur = state.prize === "last2" && gaps ? gaps.current_gap[i] : null;
     detail.replaceChildren(
       h("h3", null, `เลข ${num}`),
       h("p", null, `ออก ${fmt.format(f.counts[i])} ครั้ง (คาดไว้ ${fmt2.format(f.expected)}, ช่วงปกติ ${f.range95[0]}–${f.range95[1]})`),
+      cur !== null && cur !== undefined ? h("p", { class: "note" }, `ไม่ออกเป็นเลขท้าย 2 ตัวมาแล้ว ${fmt.format(cur)} งวด (นับทุกงวด) · ถ้าสุ่มจริง การไม่ออกนานไม่ทำให้งวดหน้ามีโอกาสมากขึ้น (ยังเป็น 1 ใน 100)`) : null,
+      years.length > 1 ? h("div", { class: "stack" }, h("h3", null, "จำนวนครั้งรายปี"),
+        barChart({ labels: years.map((y) => String(Number(y) + 543).slice(2)), values: perYear.map((x) => x[0]), expected: perYear.map((x) => x[1]), ariaLabel: `เลข ${num} ออกกี่ครั้งในแต่ละปี`, xTitle: "ปี พ.ศ. (2 หลักท้าย)" })) : null,
       dates.length
         ? h("div", { class: "num-grid" }, dates.map((dt) => h("a", { href: `results.html?d=${dt}`, class: "small" }, thShort(dt))))
         : h("p", { class: "empty" }, "ไม่เคยออกในช่วงนี้"));
@@ -580,6 +593,14 @@ function statsBody(f, state, idx, redraw) {
       h("p", { class: "small muted" }, "สีแสดงระยะห่างจากค่าที่คาดไว้ ไม่ใช่โอกาสของงวดหน้า เลขที่ออกบ่อยหรือน้อยในอดีตมีโอกาสออกงวดหน้าเท่ากับเลขอื่น (1 ใน 100)"),
       detail,
       freqTable(f, keyOf)));
+    if (gaps && gaps.gaps) {
+      const labels = gaps.bins.map(([lo, hi]) => (hi === null ? `> ${lo - 1}` : `${lo}–${hi}`));
+      parts.push(h("section", { class: "card section stack" },
+        h("h2", null, "ระยะห่างระหว่างการออกซ้ำ"),
+        barChart({ labels, values: gaps.observed, expected: gaps.expected, ariaLabel: "ระยะห่างระหว่างการออกซ้ำของเลขท้าย 2 ตัว", xTitle: "ห่างกี่งวด" }),
+        chiLine(gaps.chi_square),
+        h("p", { class: "note" }, `เลขท้าย 2 ตัวเดียวกันออกซ้ำห่างกันเฉลี่ย ${fmt2.format(gaps.mean_gap)} งวด (ถ้าสุ่มจริงคาดไว้ ${fmt2.format(gaps.expected_mean_gap)}) · จาก ${fmt.format(gaps.gaps)} ครั้งที่ออกซ้ำใน ${fmt.format(gaps.draws)} งวด (ทุกงวด ไม่ขึ้นกับช่วงเวลาที่เลือก) · ค่าที่คาดไว้มาจากการจำลองลำดับสุ่มยาวเท่าข้อมูลจริง ${fmt.format(gaps.sims)} รอบ เพราะข้อมูลมีจำกัด ระยะห่างยาว ๆ จึงสังเกตได้น้อยกว่าทฤษฎี`)));
+    }
   } else {
     const input = h("input", { id: "lookup", type: "text", inputmode: "numeric", maxlength: "3", autocomplete: "off", placeholder: "000–999" });
     const err = h("p", { class: "error-text", role: "alert" });
@@ -593,10 +614,28 @@ function statsBody(f, state, idx, redraw) {
         h("h2", null, "มีกี่เลขที่ออก 0, 1, 2, … ครั้ง"),
         h("p", { class: "small muted" }, `เลข 3 ตัวมี 1,000 แบบ แต่แต่ละเลขออกเฉลี่ยเพียง ${fmt2.format(f.expected)} ครั้ง ความถี่รายเลขจึงเป็นสัญญาณรบกวนเกือบทั้งหมด กราฟนี้เทียบรูปแบบรวมกับที่คาดไว้แทน`),
         histogram(f.count_histogram)),
+      heat1000(f, showDetail),
       h("section", { class: "card section stack" },
         h("div", { class: "field" }, h("label", { for: "lookup" }, "ดูเลข 3 ตัว"), input), err, detail));
   }
   return parts;
+}
+
+// แผนที่ 000–999: สีตามระยะห่างจากค่าที่คาด แต่ข้อมูลน้อยมากต่อเลข จึงเป็นสัญญาณรบกวนเป็นหลัก
+function heat1000(f, onPick) {
+  const grid = h("div", { class: "heat1000", role: "group", "aria-label": "แผนที่ความถี่เลข 3 ตัว 000–999" });
+  f.counts.forEach((c, i) => {
+    const num = String(i).padStart(3, "0");
+    const out = c < f.range95[0] || c > f.range95[1];
+    const cell = h("button", { type: "button", class: out ? "out" : null, title: `${num}: ${c} ครั้ง`, "aria-label": `เลข ${num} ออก ${c} ครั้ง`, onclick: () => onPick(num) });
+    cell.style.background = zColor(c, f.expected);
+    grid.append(cell);
+  });
+  return h("section", { class: "card section stack" },
+    h("h2", null, "แผนที่ความถี่ 000–999"),
+    h("div", { class: "callout warn" }, `ข้อมูลน้อย: แต่ละเลขคาดไว้เพียง ${fmt2.format(f.expected)} ครั้ง สีจึงเป็นสัญญาณรบกวนเกือบทั้งหมด ถ้าสุ่มจริงจะมีราว 50 เลขอยู่นอกช่วงปกติ (กรอบ) โดยบังเอิญ`),
+    grid,
+    h("p", { class: "note" }, "แต่ละแถวคือ 40 เลขเรียงกัน (แถวแรก 000–039) · แตะช่องเพื่อดูรายละเอียด · สีส้ม = มากกว่าที่คาด, น้ำเงิน = น้อยกว่า"));
 }
 
 function periodHas(period, row, idx) {
@@ -663,7 +702,7 @@ function barChart({ labels, values, expected, band, ariaLabel, xTitle, every }) 
   for (let t = 0; t <= 4; t++) {
     const v = (max * t) / 4;
     svg.append(s("line", { x1: padL, x2: W - padR, y1: y(v), y2: y(v), stroke: "currentColor", "stroke-opacity": 0.1 }));
-    svg.append(s("text", { x: padL - 6, y: y(v) + 4, "text-anchor": "end" }, fmt.format(Math.round(v))));
+    svg.append(s("text", { x: padL - 6, y: y(v) + 4, "text-anchor": "end" }, max < 5 ? fmt1.format(v) : fmt.format(Math.round(v))));
   }
   if (band) {
     svg.append(s("rect", { x: padL, width: W - padL - padR, y: y(band[1]), height: Math.max(1, y(band[0]) - y(band[1])), fill: "var(--ok)", "fill-opacity": 0.13 }));
@@ -728,6 +767,108 @@ function chiLine(chi) {
     chi.p >= 0.05 ? "ไม่ต่างจากการสุ่มอย่างมีนัยสำคัญ" : "ต่างจากการสุ่มที่ระดับ 5% (ทดสอบหลายแบบ ย่อมเจอบางแบบโดยบังเอิญ)");
 }
 
+// ---------- six-digit stats for a custom year range (วิธีเดียวกับ scripts/lotto_sixdigit.py) ----------
+const LANCZOS = [676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+  12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+function lgamma(x) {
+  if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lgamma(1 - x);
+  x -= 1;
+  let a = 0.99999999999980993;
+  const t = x + 7.5;
+  for (let i = 0; i < 8; i++) a += LANCZOS[i] / (x + i + 1);
+  return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+function gammq(a, x) {
+  if (x <= 0) return 1;
+  const gln = lgamma(a);
+  if (x < a + 1) {
+    let ap = a, sum = 1 / a, del = 1 / a;
+    for (let i = 0; i < 10000; i++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-15) break; }
+    return Math.max(0, 1 - sum * Math.exp(-x + a * Math.log(x) - gln));
+  }
+  const tiny = 1e-300;
+  let b = x + 1 - a, c = 1 / tiny, d = 1 / b, hh = d;
+  for (let i = 1; i < 10000; i++) {
+    const an = -i * (i - a);
+    b += 2;
+    d = an * d + b; if (Math.abs(d) < tiny) d = tiny;
+    c = b + an / c; if (Math.abs(c) < tiny) c = tiny;
+    d = 1 / d;
+    const del = d * c;
+    hh *= del;
+    if (Math.abs(del - 1) < 1e-15) break;
+  }
+  return Math.exp(-x + a * Math.log(x) - gln) * hh;
+}
+const binomPmf = (n, p, k) => Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log1p(-p));
+function binomInterval(n, p) {
+  if (!n) return [0, 0];
+  const mean = n * p, sd = Math.sqrt(n * p * (1 - p));
+  const k0 = Math.max(0, Math.floor(mean - 12 * sd - 5));   // ส่วนก่อน k0 น้อยจนตัดได้
+  let cum = 0, lo = null;
+  for (let k = k0; k <= n; k++) {
+    cum += binomPmf(n, p, k);
+    if (lo === null && cum >= 0.025) lo = k;
+    if (cum >= 0.975) return [lo, k];
+  }
+  return [lo ?? 0, n];
+}
+function chiUniform(counts) {
+  const n = counts.reduce((a, b) => a + b, 0);
+  if (!n) return null;
+  const e = n / counts.length;
+  const chi2 = counts.reduce((a, c) => a + (c - e) ** 2 / e, 0);
+  const df = counts.length - 1;
+  return { chi2, df, p: gammq(df / 2, chi2 / 2) };
+}
+function chiExpected(observed, probs) {
+  const n = observed.reduce((a, b) => a + b, 0);
+  if (!n) return null;
+  const bins = [];
+  let co = 0, ce = 0;
+  observed.forEach((o, i) => { co += o; ce += probs[i] * n; if (ce >= 5) { bins.push([co, ce]); co = 0; ce = 0; } });
+  if (ce > 0) { if (bins.length) { const [o, e] = bins.pop(); bins.push([o + co, e + ce]); } else bins.push([co, ce]); }
+  if (bins.length < 2) return null;
+  const chi2 = bins.reduce((a, [o, e]) => a + (o - e) ** 2 / e, 0);
+  const df = bins.length - 1;
+  return { chi2, df, p: gammq(df / 2, chi2 / 2) };
+}
+function computeSix(numbers, info, six) {
+  const n = numbers.length;
+  const digit = Array(10).fill(0), pos = [...Array(6)].map(() => Array(10).fill(0)), pair = Array(100).fill(0);
+  const odd = Array(7).fill(0), high = Array(7).fill(0), dsum = Array(55).fill(0), pat = Array(six.patterns.length).fill(0);
+  const pre = new Uint32Array(1000), suf = new Uint32Array(1000);
+  for (const v of numbers) {
+    const ds = [...v].map(Number);
+    const cnt = Array(10).fill(0);
+    ds.forEach((d, i) => { pos[i][d]++; digit[d]++; cnt[d]++; });
+    for (let i = 0; i < 5; i++) pair[ds[i] * 10 + ds[i + 1]]++;
+    odd[ds.filter((d) => d % 2).length]++;
+    high[ds.filter((d) => d >= 5).length]++;
+    dsum[ds.reduce((a, b) => a + b, 0)]++;
+    pat[six.patterns.indexOf(cnt.filter((c) => c).sort((a, b) => b - a).join(""))]++;
+    pre[Number(v.slice(0, 3))]++;
+    suf[Number(v.slice(3))]++;
+  }
+  const uni = (counts, trials, space) => ({ counts, expected: trials / space, range95: binomInterval(trials, 1 / space), chi_square: chiUniform(counts) });
+  const dist = (obs, probs) => ({ observed: obs, expected: probs.map((p) => p * n), chi_square: chiExpected(obs, probs) });
+  const halfHist = (arr) => {
+    const hist = new Map();
+    let kmax = 0;
+    arr.forEach((c) => { hist.set(c, (hist.get(c) || 0) + 1); kmax = Math.max(kmax, c); });
+    kmax = Math.max(kmax, (n ? binomInterval(n, 0.001)[1] : 0) + 2);
+    const ks = [...Array(kmax + 1).keys()];
+    return { observed: ks.map((k) => hist.get(k) || 0), expected: ks.map((k) => (n ? 1000 * binomPmf(n, 0.001, k) : (k === 0 ? 1000 : 0))) };
+  };
+  const th = six.theory;
+  return {
+    numbers: n, draws: info[0], first_draw: info[1], last_draw: info[2],
+    digit: uni(digit, 6 * n, 10), position: pos.map((c) => uni(c, n, 10)), pair: uni(pair, 5 * n, 100),
+    prefix_hist: halfHist(pre), suffix_hist: halfHist(suf),
+    odd: dist(odd, th.binom6), high: dist(high, th.binom6), dsum: dist(dsum, th.dsum), pattern: dist(pat, th.pattern),
+  };
+}
+
 // ---------- stats: six-digit ----------
 async function statsSix(modeSeg) {
   const six = await getData("stats/sixdigit.json");
@@ -736,28 +877,57 @@ async function statsSix(modeSeg) {
     prize: six.prizes.includes(params.get("p")) ? params.get("p") : "all",
     period: six.periods.includes(params.get("t")) ? params.get("t") : "all",
   };
+  const m = await manifest();
+  const yearOpt = (y, sel) => h("option", { value: y, selected: y === sel }, `พ.ศ. ${Number(y) + 543}`);
+  const fromSel = h("select", { id: "y-from", "aria-label": "ตั้งแต่ปี" }, m.years.map((y) => yearOpt(y, m.years[0])));
+  const toSel = h("select", { id: "y-to", "aria-label": "ถึงปี" }, m.years.map((y) => yearOpt(y, m.years[m.years.length - 1])));
+  const customRow = h("div", { class: "row", hidden: true },
+    h("label", { for: "y-from", class: "small muted" }, "ตั้งแต่"), fromSel, h("label", { for: "y-to", class: "small muted" }, "ถึง"), toSel);
+  let allD = null;
+  async function customStats() {
+    allD = allD || (await allDraws()).sort((a, b) => (a.draw_date < b.draw_date ? -1 : 1));
+    let [a, b] = [fromSel.value, toSel.value];
+    if (a > b) [a, b] = [b, a];
+    const keys = state.prize === "all" ? SIX : [state.prize];
+    const sub = allD.filter((d) => d.draw_date.slice(0, 4) >= a && d.draw_date.slice(0, 4) <= b && keys.some((k) => d.prizes[k].length));
+    const nums = sub.flatMap((d) => keys.flatMap((k) => d.prizes[k])).filter((v) => RE_SIX.test(v));
+    return computeSix(nums, [sub.length, sub.length ? sub[0].draw_date : null, sub.length ? sub[sub.length - 1].draw_date : null], six);
+  }
   const seg = h("div", { class: "seg", role: "group", "aria-label": "เลือกรางวัล" });
   const periodSel = h("select", { id: "period", "aria-label": "ช่วงเวลา" },
-    six.periods.map((k) => h("option", { value: k, selected: k === state.period }, six.data[k].label)));
+    six.periods.map((k) => h("option", { value: k, selected: k === state.period }, six.data[k].label)),
+    h("option", { value: "custom" }, "กำหนดช่วงปีเอง…"));
   const body = h("div");
-  function draw() {
+  async function draw() {
     seg.replaceChildren(...six.prizes.map((k) => h("button", {
       type: "button", "aria-pressed": String(state.prize === k),
       onclick: () => { state.prize = k; draw(); },
     }, SIX_LABEL[k])));
-    body.replaceChildren(...sixBody(six, state));
+    customRow.hidden = state.period !== "custom";
+    if (state.period === "custom") {
+      body.replaceChildren(h("p", { class: "loading" }, "กำลังคำนวณ…"));
+      try {
+        body.replaceChildren(...sixBody(six, state, await customStats()));
+      } catch (e) {
+        body.replaceChildren(h("p", { class: "error-text" }, String(e.message || e)));
+      }
+    } else {
+      body.replaceChildren(...sixBody(six, state));
+    }
   }
   periodSel.addEventListener("change", () => { state.period = periodSel.value; draw(); });
+  fromSel.addEventListener("change", draw);
+  toSel.addEventListener("change", draw);
   render(
     pageHead("สถิติเลข 6 หลัก", "ตัวเลขในรางวัลที่ 1–5 เทียบกับค่าที่คาดไว้ถ้าทุกเลข 000000–999999 มีโอกาสเท่ากัน"),
     h("section", { class: "card stack" }, modeSeg, seg,
-      h("div", { class: "row" }, h("label", { for: "period", class: "small muted" }, "ช่วงเวลา"), periodSel)),
+      h("div", { class: "row" }, h("label", { for: "period", class: "small muted" }, "ช่วงเวลา"), periodSel), customRow),
     body);
   draw();
 }
 
-function sixBody(six, state) {
-  const f = six.data[state.period][state.prize];
+function sixBody(six, state, custom) {
+  const f = custom || six.data[state.period][state.prize];
   if (!f.numbers) return [h("section", { class: "card section" }, h("p", { class: "empty" }, "ไม่มีข้อมูลรางวัลนี้ในช่วงเวลาที่เลือก"))];
   const sample = `จาก ${fmt.format(f.numbers)} เลข ใน ${fmt.format(f.draws)} งวด (${thShort(f.first_draw)} – ${thShort(f.last_draw)})`;
   const digits = [...Array(10).keys()].map(String);
@@ -854,6 +1024,12 @@ function sixBody(six, state) {
   return parts;
 }
 
+function responsibleBox() {
+  return h("aside", { class: "respond section" },
+    "สลากเป็นการเสี่ยงโชค ได้คืนเฉลี่ยราว 60% ของราคา ไม่มีสถิติหรือโมเดลใดทำให้ถูกบ่อยขึ้น ",
+    "ถ้าการซื้อสลากเริ่มกระทบเงินหรือความสัมพันธ์ ปรึกษาสายด่วนสุขภาพจิต 1323 ได้ฟรี ตลอด 24 ชั่วโมง");
+}
+
 // ---------- page: analysis ----------
 async function pageAnalysis() {
   const params = new URLSearchParams(location.search);
@@ -869,7 +1045,7 @@ async function pageAnalysis() {
     bt ? `ผล backtest ช่วง holdout ${fmt.format(bt.evaluation.holdout ? bt.evaluation.holdout.draws : 0)} งวด: ไม่มีชุดน้ำหนักใดดีกว่าการสุ่มอย่างมีนัยสำคัญ` : "");
   const head = pageHead("วิเคราะห์ Hybrid", "Global Score + Prize-Specific Score จัดอันดับเลข 000000–999999 แยกตามรางวัลที่ 1–5");
   if (tab === "backtest") {
-    render(head, h("section", { class: "card stack" }, tabs), backtestView(bt, params));
+    render(head, h("section", { class: "card stack" }, tabs), backtestView(bt, params), responsibleBox());
     return;
   }
   if (!pidx || !pidx.snapshots.length) {
@@ -915,7 +1091,7 @@ async function pageAnalysis() {
     h("section", { class: "card section stack" }, seg,
       h("div", { class: "row" }, h("label", { for: "count", class: "small muted" }, "แสดง"), countSel,
         h("span", { class: "note" }, "จำนวนที่ใช้ประเมินจริง: ", SIX.map((k) => `${SIX_LABEL[k].replace("รางวัลที่ ", "ที่ ")} = ${snap.candidate_counts[k]}`).join(", ")))),
-    body);
+    body, responsibleBox());
   draw();
 }
 
@@ -1072,7 +1248,8 @@ async function pageHistory() {
           h("a", { href: `results.html?d=${r.draw_date}` }, thShort(r.draw_date)), statusChip(r.status),
           r.status === "evaluated" ? h("span", { class: "small muted" }, `ถูก ${r.exact_hits_total} (สุ่มคาดไว้ ${r.random_expected_total.toFixed(4)})`) : null,
           r.status === "no_snapshot" ? h("span", { class: "small muted" }, "ไม่มี snapshot ก่อนออกรางวัล — ไม่สร้างย้อนหลัง") : null)))
-        : h("p", { class: "empty" }, "ยังไม่มีงวดที่ออกหลังเริ่มบันทึก")));
+        : h("p", { class: "empty" }, "ยังไม่มีงวดที่ออกหลังเริ่มบันทึก")),
+    responsibleBox());
   if (detailDate) {
     const pd = await getData(`predictions/${detailDate}.json`);
     detail.replaceChildren(evaluationDetail(pd.snapshot, pd.evaluation));
@@ -1185,7 +1362,8 @@ async function pageRandom() {
       h("h2", null, "ผลการทดสอบทั้งหมด"),
       h("p", { class: "small muted" }, `p คือโอกาสที่การสุ่มจริงจะให้ผลเบี้ยวอย่างน้อยเท่านี้ ถ้าทดสอบหลายแบบ ย่อมมีบางแบบที่ p < 0.05 โดยบังเอิญ (ทดสอบ ${r.test_count} แบบ คาดว่าจะเจอราว ${fmt1.format(r.test_count * 0.05)} แบบ เจอจริง ${rawFlag.length} แบบ) จึงปรับด้วยวิธี Bonferroni (คูณ p ด้วยจำนวนการทดสอบ)`),
       testTable,
-      h("p", { class: "small muted" }, "ตัวอย่าง: หลักหน่วยของรางวัลที่ 1 มี p ต่ำ แต่หลังปรับแล้วไม่ผิดปกติ · ตัวเลขในรางวัลที่ 2–5 ผิดปกติเล็กน้อยเฉพาะข้อมูลแหล่งเดียวที่ยังไม่ได้ตรวจทาน ส่วนข้อมูลทางการกระจายเท่ากัน แสดงว่าคุณภาพข้อมูลมีผลต่อสถิติ")));
+      h("p", { class: "small muted" }, "ตัวอย่าง: หลักหน่วยของรางวัลที่ 1 มี p ต่ำ แต่หลังปรับแล้วไม่ผิดปกติ · ตัวเลขในรางวัลที่ 2–5 ผิดปกติเล็กน้อยเฉพาะข้อมูลแหล่งเดียวที่ยังไม่ได้ตรวจทาน ส่วนข้อมูลทางการกระจายเท่ากัน แสดงว่าคุณภาพข้อมูลมีผลต่อสถิติ")),
+    responsibleBox());
 }
 
 // ---------- page: data ----------
@@ -1194,7 +1372,6 @@ async function pageData() {
   const t = m.by_trust;
   render(
     pageHead("ข้อมูลและแหล่งที่มา", `อัปเดตล่าสุด: งวด ${m.latest_draw_th}${ver.last_import ? ` · ดึงจาก GLO เมื่อ ${thDateTime(ver.last_import.retrieved_at)}` : ""}`),
-    verificationView(ver),
     h("div", { class: "grid grid-2e" },
       h("section", { class: "card stack" },
         h("h2", null, "แหล่งข้อมูล"),
@@ -1230,7 +1407,8 @@ async function pageData() {
         h("li", null, "ค่าที่คาดไว้ = จำนวนหมายเลขที่ออก ÷ จำนวนเลขที่เป็นไปได้ (100 หรือ 1,000)"),
         h("li", null, "ช่วงปกติ 95% มาจากการแจกแจงทวินาม: ถ้าสุ่มจริง แต่ละเลขจะอยู่ในช่วงนี้ 95% ของเวลา"),
         h("li", null, "Chi-square ทดสอบว่าทุกเลขออกเท่า ๆ กันหรือไม่ · ปรับ Bonferroni เมื่อทดสอบหลายแบบ"),
-        h("li", null, "Backtest ใช้เฉพาะข้อมูลก่อนหน้าแต่ละงวด (ไม่มีการใช้ข้อมูลอนาคต)"))));
+        h("li", null, "Backtest ใช้เฉพาะข้อมูลก่อนหน้าแต่ละงวด (ไม่มีการใช้ข้อมูลอนาคต)"))),
+    h("div", { class: "section" }, verificationView(ver)));
 }
 
 function verificationView(v) {
@@ -1257,12 +1435,12 @@ function verificationView(v) {
         h("ul", null,
           h("li", null, `รางวัลข้างเคียงและรางวัลที่ 2–5: ไม่มี ${fmt.format(miss.prizes_2_to_5.count)} งวด (${thShort(miss.prizes_2_to_5.from)} – ${thShort(miss.prizes_2_to_5.to)}) ไม่มีแหล่งที่ดึงได้`),
           miss.known_exceptions.map((e) => h("li", null, `${thShort(e.date)}: ${e.note}`))),
-        h("details", null, h("summary", null, `เดือนที่จำนวนงวดไม่ใช่ 2 (${miss.month_irregular.length} เดือน)`),
+        h("details", null, h("summary", null, `เดือนที่จำนวนงวดผิดปกติ (${miss.month_irregular.length} เดือน)`),
           h("div", { class: "table-wrap" }, h("table", null,
             h("thead", null, h("tr", null, h("th", null, "เดือน"), h("th", { class: "n" }, "งวด"), h("th", null, "วันที่"))),
             h("tbody", null, miss.month_irregular.map((x) => h("tr", null, h("td", null, `${MONTHS_SHORT[Number(x.month.slice(5)) - 1]} ${Number(x.month.slice(0, 4)) + 543}`),
               h("td", { class: "n" }, x.draws), h("td", null, x.dates.map(thShort).join(", ") || "–"))))))),
-        h("p", { class: "note" }, "ส่วนใหญ่เป็นงวดสิ้นปี (16 และ 30 ธ.ค.) หรืองวดที่เลื่อนวัน ไม่ได้แปลว่าข้อมูลหาย · ไม่เติมข้อมูลที่หาไม่ได้")),
+        h("p", { class: "note" }, "ไม่นับ ธ.ค. ที่มี 3 งวด (1, 16, 30) และ ม.ค. ที่มีงวดเดียว (ไม่มีงวด 1 ม.ค.) ซึ่งเป็นเรื่องปกติ · ที่เหลือคืองวดที่เลื่อนวันข้ามเดือน ไม่ได้แปลว่าข้อมูลหาย · ไม่เติมข้อมูลที่หาไม่ได้")),
       h("section", { class: "card stack" },
         h("h2", null, "ปัญหาการนำเข้า"),
         h("dl", { class: "kv" },

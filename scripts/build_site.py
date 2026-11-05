@@ -166,7 +166,8 @@ def build_data(draws, csv_hash, generated_at, warnings=(), data_dir=DATA_DIR):
     for key, label in PERIODS:
         sub = period_draws(draws, key)
         freq[key] = {"label": label, **{p: S.frequency(sub, p) for p in ("last2", "back3", "front3")}}
-    files["stats/frequency.json"] = {**meta, "periods": [k for k, _ in PERIODS], "data": freq}
+    files["stats/frequency.json"] = {**meta, "periods": [k for k, _ in PERIODS], "data": freq,
+                                     "gaps_last2": S.gaps_last2(draws)}
     files["stats/randomness.json"] = {**meta, **S.randomness(draws)}
     files["stats/sixdigit.json"] = {**meta, **SIX.build(draws, period_draws, PERIODS)}
     files["verification.json"] = {**meta, **V.build(draws, list(warnings), data_dir)}

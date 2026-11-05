@@ -115,6 +115,15 @@ class WalkForwardTest(unittest.TestCase):
             self.assertAlmostEqual(s["random"][k]["all"]["expected"], round(n * m * K / M.N, 5))
             self.assertEqual(s["results"][k]["global"]["all"]["numbers"], n * m)
 
+    def test_frequency_only_baseline_reported(self):
+        s = B.summarize(self.prep, self.idxs, self.recs, self.cfg)
+        self.assertIn(B.FREQ_ONLY, [c["id"] for c in s["configs"]])
+        for k in COUNTS:
+            r = s["results"][k][B.FREQ_ONLY]["all"]
+            self.assertEqual(r["draws"], len(self.idxs))
+            self.assertEqual(r["numbers"], len(self.idxs) * COUNTS[k])
+        self.assertNotIn(B.FREQ_ONLY, s["tuning"]["scores"]["first"])   # baseline ไม่ถูกเลือกเป็นชุดใช้งาน
+
     def test_exact_match_counting(self):
         # ถ้าเลขที่ออกจริงคือ top-1 ของ global model ต้องนับว่าถูก 1 เลข
         t = self.idxs[0]
