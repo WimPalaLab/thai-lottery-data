@@ -54,6 +54,7 @@ const app = () => document.getElementById("app");
 function render(...nodes) {
   const root = app();
   root.replaceChildren(...nodes.flat());
+  root.removeAttribute("aria-busy");   // กล่องเทาระหว่างโหลดถูกแทนที่แล้ว
 }
 
 // ---------- formatting ----------

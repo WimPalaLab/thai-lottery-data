@@ -22,6 +22,7 @@
   --hi: #ea7a2a;            /* ออกบ่อยกว่าที่ควร */
   --lo: #2e9a63;            /* ออกน้อยกว่าที่ควร */
   --bar: #6b7078;           /* แท่งกราฟ */
+  --skel-shine: rgba(255, 255, 255, .65);   /* แสงวิ่งบนกล่องระหว่างโหลด */
   --radius: 12px;
   --font: "IBM Plex Sans Thai", "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Sukhumvit Set", "Thonburi", system-ui, sans-serif;
   color-scheme: light;
@@ -46,6 +47,7 @@
   --hi: #fb923c;
   --lo: #4ade80;
   --bar: #9aa0a8;
+  --skel-shine: rgba(255, 255, 255, .05);
   color-scheme: dark;
 }
 
@@ -299,6 +301,24 @@ details summary { cursor: pointer; color: var(--text); font-weight: 600; padding
 .bars .mark { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); }
 
 .loading { color: var(--text-2); padding: 24px 0; text-align: center; }
+/* กล่องเทาแทนเนื้อหาระหว่างโหลด (อยู่ใน HTML ของแต่ละหน้า ถูกแทนที่ทันทีเมื่อข้อมูลมาถึง)
+   ขนาดใกล้เคียงของจริง หน้าจึงไม่กระโดดตอนแสดงผล */
+.skel {
+  position: relative; overflow: hidden;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.skel::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--skel-shine), transparent);
+  animation: skel-shine 1.4s ease-in-out infinite;
+}
+@keyframes skel-shine { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { .skel::after { animation: none; display: none; } }
+.skel-hero { height: 200px; border-radius: 16px; margin-bottom: 16px; }
+.skel-kpi { height: 100px; }
+.skel-card { height: 350px; }
+.skel-title { height: 44px; width: min(60%, 360px); margin-bottom: 16px; }
+@media (min-width: 760px) { .skel-hero { height: 270px; } .skel-kpi { height: 112px; } }
 .empty { color: var(--text-2); padding: 12px 0; }
 
 /* ---------- footer ---------- */

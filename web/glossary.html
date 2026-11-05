@@ -32,7 +32,11 @@
   </header>
   <main id="main" tabindex="-1">
     <noscript><p>หน้านี้ต้องเปิด JavaScript</p></noscript>
-    <div id="app" aria-live="polite"><p class="loading">กำลังโหลดข้อมูล…</p></div>
+    <div id="app" aria-live="polite" aria-busy="true">
+      <p class="sr-only">กำลังโหลดข้อมูล…</p>
+      <div class="skel skel-title" aria-hidden="true"></div>
+      <div class="skel skel-card" aria-hidden="true"></div>
+    </div>
   </main>
   <footer>
     <p>ผลรางวัลและอันดับเลขบนเว็บไซต์นี้ใช้เพื่ออ้างอิงทางสถิติเท่านั้น คะแนนของโมเดลไม่ใช่โอกาสถูกรางวัล โปรดตรวจสอบกับสำนักงานสลากกินแบ่งรัฐบาล (glo.or.th) ก่อนขึ้นเงินรางวัล</p>
