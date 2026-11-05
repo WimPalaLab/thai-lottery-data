@@ -86,5 +86,75 @@ class CustomRangeJsTest(unittest.TestCase):
             self.assertAlmostEqual(x, y, places=6)
 
 
+
+def js_region():
+    src = open(APP_JS, encoding="utf-8").read()
+    a = src.index("// ---------- six-digit stats for a custom year range")
+    b = src.index("// ---------- stats: six-digit ----------")
+    return src[a:b]
+
+
+def run_js(body):
+    # ส่งสคริปต์ทาง stdin (ข้อมูลยาวเกินกว่าจะใส่ใน command line บน Windows)
+    out = subprocess.run([NODE, "-"], input=js_region() + "\n" + body, capture_output=True, text=True,
+                         encoding="utf-8", timeout=120, check=True).stdout
+    return json.loads(out)
+
+
+@unittest.skipIf(NODE is None, "ไม่มี node")
+class ClientRangeJsTest(unittest.TestCase):
+    """ช่วงเวลาที่เลือกเอง, ความถี่เลขท้าย และเลขที่ออกซ้ำ คำนวณในเบราว์เซอร์ต้องตรงกับ Python"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.draws, _ = L.load(CSV)
+        files = build_site.build_data(cls.draws, "x", "t", [], os.path.join(ROOT, "data"))
+        idx = files["index.json"]
+        cls.rows = [dict(zip(idx["fields"], r)) for r in idx["rows"]]
+        cls.freq = files["stats/frequency.json"]
+
+    def test_range_and_frequency_match_python(self):
+        latest = self.draws[-1]["draw_date"]
+        js = run_js("const rows = " + json.dumps(self.rows) + ";\n"
+                    "const out = {};\n"
+                    "for (const key of ['all', 'e3', 'official', 'y5']) for (const p of ['last2', 'back3', 'front3']) {\n"
+                    "  const has = (r) => p === 'last2' ? !!r.last2 : r[p].length > 0;\n"
+                    "  out[key + p] = computeFreq(applyRange(rows, { key }, has, " + json.dumps(latest) + "), p);\n"
+                    "}\n"
+                    "out.n50 = computeFreq(applyRange(rows, { key: 'n50' }, (r) => r.front3.length > 0, 'x'), 'front3');\n"
+                    "out.y10 = applyRange(rows, { key: 'y10' }, () => true, " + json.dumps(latest) + ").length;\n"
+                    "process.stdout.write(JSON.stringify(out));")
+        names = {"all": "all", "e3": "e3", "official": "official", "y5": "last5y"}
+        for key, pkey in names.items():
+            for p in ("last2", "back3", "front3"):
+                a, b = js[key + p], self.freq["data"][pkey][p]
+                for f in ("eligible_draws", "slots", "first_draw", "last_draw", "range95", "counts", "draws_containing"):
+                    self.assertEqual(a[f], b[f], (key, p, f))
+                self.assertAlmostEqual(a["chi_square"]["p"], b["chi_square"]["p"], places=6)
+                if p != "last2":
+                    self.assertEqual(a["count_histogram"]["observed"], b["count_histogram"]["observed"])
+                    for x, y in zip(a["count_histogram"]["expected"], b["count_histogram"]["expected"]):
+                        self.assertAlmostEqual(x, y, places=6)
+        el = [d for d in self.draws if d["prizes"]["front3"]][-50:]
+        want = S.frequency(el, "front3")
+        for f in ("eligible_draws", "slots", "first_draw", "range95", "counts"):
+            self.assertEqual(js["n50"][f], want[f], f)
+        self.assertEqual(js["n50"]["count_histogram"]["observed"], want["count_histogram"]["observed"])
+        cut = f"{int(latest[:4]) - 10}{latest[4:]}"
+        self.assertEqual(js["y10"], sum(1 for d in self.draws if d["draw_date"] > cut))
+
+    def test_repeats_match_python(self):
+        sub = [d for d in self.draws if d["draw_date"] >= "2006-01-01"]
+        js = run_js("const draws = " + json.dumps([{"draw_date": d["draw_date"], "prizes": d["prizes"]} for d in sub]) + ";\n"
+                    "process.stdout.write(JSON.stringify([computeRepeats(draws, ['first','second','third','fourth','fifth']),"
+                    " computeRepeats(draws, ['fifth'], 20)]));")
+        for got, prizes in zip(js, (SIX.SIX_PRIZES, ["fifth"])):
+            want = SIX.repeats(sub, prizes=prizes)
+            for f in ("draws", "first_draw", "last_draw", "numbers_total", "distinct", "repeated", "by_count", "top"):
+                self.assertEqual(got[f], want[f], f)
+            self.assertAlmostEqual(got["expected_repeated"], want["expected_repeated"], delta=0.11)
+            self.assertAlmostEqual(got["expected_ge3"], want["expected_ge3"], delta=0.11)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,1219 @@
+{
+ "schema_version": 2,
+ "kind": "small_prediction_snapshot",
+ "target_draw_date": "2026-11-16",
+ "target_is_estimate": true,
+ "created_at": "2026-11-05T10:45:14Z",
+ "training_data_through": "2026-11-01",
+ "training_draw_count": 761,
+ "csv_sha256": "435af755512db45d9863f073fb20ae6fb081fcc8600427127216baa3191f7877",
+ "small_predictions": {
+  "model_version": "small-v1",
+  "config_sha": "767b4dc0f9700d0f7550ad99713356ab991cf356e6ba36fe3d830d56e4faab12",
+  "code_sha": "5a9e840dc8eecd271783c99b994c5b48ffadff661aed7a9998d90fe344e5fdb0",
+  "candidate_counts": {
+   "last2": 5,
+   "back3": 10,
+   "front3": 10
+  },
+  "feature_weights": {
+   "position": 0.35,
+   "digit": 0.15,
+   "number": 0.25,
+   "recent": 0.25
+  },
+  "recent_draws": 24,
+  "backtest": {
+   "generated_at": "2026-11-05T10:35:04Z",
+   "data_through": "2026-11-01",
+   "holdout": {
+    "last2": {
+     "draws": 233,
+     "hits": 11,
+     "mean_pct": 0.49191
+    },
+    "back3": {
+     "draws": 233,
+     "hits": 7,
+     "mean_pct": 0.48392
+    },
+    "front3": {
+     "draws": 166,
+     "hits": 1,
+     "mean_pct": 0.50964
+    }
+   }
+  },
+  "predictions": {
+   "last2": {
+    "rows": [
+     {
+      "number": "65",
+      "rank": 1,
+      "score": 100.0,
+      "z": 2.2832,
+      "times_drawn": 12,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.188,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 5: 11.6% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.5535,
+        "detail": "เลขนี้เคยออก 12 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "69",
+      "rank": 2,
+      "score": 91.618,
+      "z": 1.9081,
+      "times_drawn": 13,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.9668,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 9: 10.8% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.6458,
+        "detail": "เลขนี้เคยออก 13 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "62",
+      "rank": 3,
+      "score": 91.479,
+      "z": 1.9018,
+      "times_drawn": 10,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.8507,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 2: 10.4% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.4535,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักสิบ 6: 16.7%, หลักหน่วย 2: 16.7% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "67",
+      "rank": 4,
+      "score": 88.605,
+      "z": 1.7732,
+      "times_drawn": 10,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.8111,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 7: 10.2% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.4603,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักสิบ 6: 16.7%, หลักหน่วย 7: 16.7% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "66",
+      "rank": 5,
+      "score": 88.007,
+      "z": 1.7465,
+      "times_drawn": 9,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.9668,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 6: 10.8% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.4506,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 6: 11.6% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "52",
+      "rank": 6,
+      "score": 84.636,
+      "z": 1.5956,
+      "times_drawn": 11,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.7147,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 5: 12.0%, หลักหน่วย 2: 10.4% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.4543,
+        "detail": "เลขนี้เคยออก 11 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "58",
+      "rank": 7,
+      "score": 82.034,
+      "z": 1.4792,
+      "times_drawn": 10,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.7147,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 5: 12.0%, หลักหน่วย 8: 10.4% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.3472,
+        "detail": "เลขนี้เคยออก 10 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "57",
+      "rank": 8,
+      "score": 81.762,
+      "z": 1.467,
+      "times_drawn": 11,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.6751,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 5: 12.0%, หลักหน่วย 7: 10.2% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.4543,
+        "detail": "เลขนี้เคยออก 11 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "92",
+      "rank": 9,
+      "score": 81.74,
+      "z": 1.466,
+      "times_drawn": 13,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.6458,
+        "detail": "เลขนี้เคยออก 13 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.6446,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 9: 11.7%, หลักหน่วย 2: 10.4% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "98",
+      "rank": 10,
+      "score": 81.532,
+      "z": 1.4567,
+      "times_drawn": 13,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.6458,
+        "detail": "เลขนี้เคยออก 13 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.6446,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 9: 11.7%, หลักหน่วย 8: 10.4% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "95",
+      "rank": 11,
+      "score": 78.981,
+      "z": 1.3425,
+      "times_drawn": 10,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.982,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 9: 11.7%, หลักหน่วย 5: 11.6% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.4171,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 5: 11.8%, 9: 11.2% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "64",
+      "rank": 12,
+      "score": 78.077,
+      "z": 1.302,
+      "times_drawn": 12,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.5535,
+        "detail": "เลขนี้เคยออก 12 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.3776,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักสิบ 6: 16.7%, หลักหน่วย 4: 12.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "55",
+      "rank": 13,
+      "score": 77.554,
+      "z": 1.2787,
+      "times_drawn": 7,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.052,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 5: 12.0%, หลักหน่วย 5: 11.6% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.483,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 5: 11.8% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "56",
+      "rank": 14,
+      "score": 75.922,
+      "z": 1.2056,
+      "times_drawn": 8,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.8308,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 5: 12.0%, หลักหน่วย 6: 10.8% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.4668,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 5: 11.8%, 6: 11.6% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "59",
+      "rank": 15,
+      "score": 75.711,
+      "z": 1.1961,
+      "times_drawn": 10,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.8308,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 5: 12.0%, หลักหน่วย 9: 10.8% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.4171,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 5: 11.8%, 9: 11.2% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "68",
+      "rank": 16,
+      "score": 75.156,
+      "z": 1.1713,
+      "times_drawn": 5,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.8507,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 8: 10.4% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.4535,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักสิบ 6: 16.7%, หลักหน่วย 8: 16.7% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "85",
+      "rank": 17,
+      "score": 73.784,
+      "z": 1.1099,
+      "times_drawn": 15,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.8133,
+        "detail": "เลขนี้เคยออก 15 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.4066,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 8: 9.7%, หลักหน่วย 5: 11.6% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "61",
+      "rank": 18,
+      "score": 73.653,
+      "z": 1.104,
+      "times_drawn": 10,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.6897,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 6: 12.5%, หลักหน่วย 1: 9.9% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.3472,
+        "detail": "เลขนี้เคยออก 10 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "06",
+      "rank": 19,
+      "score": 70.326,
+      "z": 0.9551,
+      "times_drawn": 11,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.4543,
+        "detail": "เลขนี้เคยออก 11 ครั้ง (ถ้าสุ่ม คาดไว้ราว 7.6 ครั้ง)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.413,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักสิบ 0: 20.8%, หลักหน่วย 6: 8.3% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "05",
+      "rank": 20,
+      "score": 70.114,
+      "z": 0.9457,
+      "times_drawn": 9,
+      "contributions": [
+       {
+        "group": "recent",
+        "contribution": 0.3896,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักสิบ 0: 20.8%, หลักหน่วย 5: 8.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.2358,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักสิบ 0: 9.2%, หลักหน่วย 5: 11.6% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     }
+    ],
+    "training_draws": 761,
+    "training_numbers": 761,
+    "first_draw": "1995-01-16",
+    "last_draw": "2026-11-01",
+    "space": 100
+   },
+   "back3": {
+    "rows": [
+     {
+      "number": "094",
+      "rank": 1,
+      "score": 100.0,
+      "z": 3.2896,
+      "times_drawn": 9,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 1.1628,
+        "detail": "เลขนี้เคยออก 9 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 1.1627,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 9: 10.4%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "044",
+      "rank": 2,
+      "score": 94.407,
+      "z": 2.936,
+      "times_drawn": 8,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 1.0465,
+        "detail": "เลขนี้เคยออก 8 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.7628,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 4: 9.6%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "064",
+      "rank": 3,
+      "score": 92.865,
+      "z": 2.8386,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "recent",
+        "contribution": 1.0198,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 0: 20.8%, หลักสิบ 6: 16.7%, หลักหน่วย 4: 14.6% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.9348,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 6: 10.0%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "004",
+      "rank": 4,
+      "score": 92.261,
+      "z": 2.8004,
+      "times_drawn": 3,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.5355,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 0: 11.1%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.6537,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 0: 20.8%, หลักสิบ 0: 10.4%, หลักหน่วย 4: 14.6% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "006",
+      "rank": 5,
+      "score": 92.122,
+      "z": 2.7917,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.424,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 0: 11.1%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.4774,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 0: 10.3%, 6: 10.4% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "008",
+      "rank": 6,
+      "score": 90.088,
+      "z": 2.6631,
+      "times_drawn": 7,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.9181,
+        "detail": "เลขนี้เคยออก 7 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.8608,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 0: 20.8%, หลักสิบ 0: 10.4%, หลักหน่วย 8: 16.7% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "074",
+      "rank": 7,
+      "score": 89.192,
+      "z": 2.6064,
+      "times_drawn": 6,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.2233,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 7: 10.5%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.7744,
+        "detail": "เลขนี้เคยออก 6 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "606",
+      "rank": 8,
+      "score": 89.044,
+      "z": 2.5971,
+      "times_drawn": 9,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.3004,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 6: 10.1%, หลักสิบ 0: 11.1%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 1.1628,
+        "detail": "เลขนี้เคยออก 9 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "664",
+      "rank": 9,
+      "score": 87.947,
+      "z": 2.5278,
+      "times_drawn": 8,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 1.0465,
+        "detail": "เลขนี้เคยออก 8 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.8111,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 6: 10.1%, หลักสิบ 6: 10.0%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "304",
+      "rank": 10,
+      "score": 85.801,
+      "z": 2.3921,
+      "times_drawn": 6,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.37,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 10.0%, หลักสิบ 0: 11.1%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.7744,
+        "detail": "เลขนี้เคยออก 6 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "066",
+      "rank": 11,
+      "score": 85.69,
+      "z": 2.3851,
+      "times_drawn": 3,
+      "contributions": [
+       {
+        "group": "recent",
+        "contribution": 0.8327,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 0: 20.8%, หลักสิบ 6: 16.7%, หลักหน่วย 6: 10.4% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.8233,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 6: 10.0%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "904",
+      "rank": 12,
+      "score": 85.281,
+      "z": 2.3592,
+      "times_drawn": 5,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.391,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 9: 10.1%, หลักสิบ 0: 11.1%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.6116,
+        "detail": "เลขนี้เคยออก 5 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "084",
+      "rank": 13,
+      "score": 84.805,
+      "z": 2.3291,
+      "times_drawn": 3,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.5921,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 8: 11.3%, หลักหน่วย 4: 11.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.2725,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 0: 10.3%, 4: 10.3%, 8: 10.0% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "086",
+      "rank": 14,
+      "score": 84.666,
+      "z": 2.3203,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.4806,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 8: 11.3%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.4236,
+        "detail": "เลขนี้เคยออก 4 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "906",
+      "rank": 15,
+      "score": 84.201,
+      "z": 2.2909,
+      "times_drawn": 6,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.2795,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 9: 10.1%, หลักสิบ 0: 11.1%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.7744,
+        "detail": "เลขนี้เคยออก 6 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "007",
+      "rank": 16,
+      "score": 83.911,
+      "z": 2.2726,
+      "times_drawn": 5,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.7878,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 0: 11.1%, หลักหน่วย 7: 10.0% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.6116,
+        "detail": "เลขนี้เคยออก 5 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "206",
+      "rank": 17,
+      "score": 83.234,
+      "z": 2.2298,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.6241,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 2: 10.7%, หลักสิบ 0: 11.1%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.4236,
+        "detail": "เลขนี้เคยออก 4 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "005",
+      "rank": 18,
+      "score": 82.481,
+      "z": 2.1822,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.0552,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 0: 11.1%, หลักหน่วย 5: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.4236,
+        "detail": "เลขนี้เคยออก 4 ครั้ง (ถ้าสุ่ม คาดไว้ราว 2.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "046",
+      "rank": 19,
+      "score": 80.895,
+      "z": 2.082,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.6513,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 4: 9.6%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.5466,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 0: 20.8%, หลักสิบ 4: 10.4%, หลักหน่วย 6: 10.4% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "056",
+      "rank": 20,
+      "score": 80.61,
+      "z": 2.064,
+      "times_drawn": 4,
+      "contributions": [
+       {
+        "group": "recent",
+        "contribution": 0.664,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 0: 20.8%, หลักสิบ 5: 12.5%, หลักหน่วย 6: 10.4% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.6075,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 0: 10.4%, หลักสิบ 5: 9.6%, หลักหน่วย 6: 11.3% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     }
+    ],
+    "training_draws": 761,
+    "training_numbers": 2512,
+    "first_draw": "1995-01-16",
+    "last_draw": "2026-11-01",
+    "space": 1000
+   },
+   "front3": {
+    "rows": [
+     {
+      "number": "318",
+      "rank": 1,
+      "score": 100.0,
+      "z": 3.088,
+      "times_drawn": 3,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 1.1638,
+        "detail": "เลขนี้เคยออก 3 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 1.0294,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 1: 11.5%, หลักหน่วย 8: 10.3% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "331",
+      "rank": 2,
+      "score": 91.639,
+      "z": 2.6197,
+      "times_drawn": 1,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.4647,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 3: 13.0%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.7318,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 1: 10.9%, 3: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "111",
+      "rank": 3,
+      "score": 91.428,
+      "z": 2.6078,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.8272,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 1: 10.7%, หลักสิบ 1: 11.5%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "310",
+      "rank": 4,
+      "score": 89.557,
+      "z": 2.5031,
+      "times_drawn": 1,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.1904,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 1: 11.5%, หลักหน่วย 0: 10.9% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.5138,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 3: 14.6%, หลักสิบ 1: 16.7%, หลักหน่วย 0: 10.4% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "300",
+      "rank": 5,
+      "score": 89.38,
+      "z": 2.4932,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 0.9299,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 0: 10.5%, หลักหน่วย 0: 10.9% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "335",
+      "rank": 6,
+      "score": 88.86,
+      "z": 2.464,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.355,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 3: 13.0%, หลักหน่วย 5: 10.2% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "912",
+      "rank": 7,
+      "score": 88.509,
+      "z": 2.4444,
+      "times_drawn": 3,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 1.1638,
+        "detail": "เลขนี้เคยออก 3 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.5594,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 9: 10.4%, หลักสิบ 1: 16.7%, หลักหน่วย 2: 12.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "131",
+      "rank": 8,
+      "score": 87.549,
+      "z": 2.3906,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.208,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 1: 10.7%, หลักสิบ 3: 13.0%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "931",
+      "rank": 9,
+      "score": 87.153,
+      "z": 2.3684,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.208,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 9: 10.7%, หลักสิบ 3: 13.0%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "312",
+      "rank": 10,
+      "score": 86.526,
+      "z": 2.3333,
+      "times_drawn": 1,
+      "contributions": [
+       {
+        "group": "recent",
+        "contribution": 0.7536,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 3: 14.6%, หลักสิบ 1: 16.7%, หลักหน่วย 2: 12.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.684,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 1: 11.5%, หลักหน่วย 2: 9.2% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "231",
+      "rank": 11,
+      "score": 86.521,
+      "z": 2.333,
+      "times_drawn": 1,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.4647,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 2: 11.7%, หลักสิบ 3: 13.0%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.5613,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 1: 10.9%, 2: 10.5%, 3: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "302",
+      "rank": 12,
+      "score": 86.35,
+      "z": 2.3234,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.7039,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 3: 14.6%, หลักสิบ 0: 14.6%, หลักหน่วย 2: 12.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "330",
+      "rank": 13,
+      "score": 85.679,
+      "z": 2.2858,
+      "times_drawn": 1,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.5712,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 3: 13.0%, หลักหน่วย 0: 10.9% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "digit",
+        "contribution": 0.565,
+        "detail": "ตัวเลขนี้ทุกหลักรวมกัน — 0: 10.0%, 3: 11.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "238",
+      "rank": 14,
+      "score": 84.535,
+      "z": 2.2218,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.4103,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 2: 11.7%, หลักสิบ 3: 13.0%, หลักหน่วย 8: 10.3% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       }
+      ]
+     },
+     {
+      "number": "210",
+      "rank": 15,
+      "score": 84.439,
+      "z": 2.2164,
+      "times_drawn": 1,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.1904,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 2: 11.7%, หลักสิบ 1: 11.5%, หลักหน่วย 0: 10.9% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.3977,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 2: 12.5%, หลักสิบ 1: 16.7%, หลักหน่วย 0: 10.4% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "431",
+      "rank": 16,
+      "score": 84.275,
+      "z": 2.2072,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.6314,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 4: 8.8%, หลักสิบ 3: 13.0%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "392",
+      "rank": 17,
+      "score": 83.948,
+      "z": 2.1889,
+      "times_drawn": 3,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 1.1638,
+        "detail": "เลขนี้เคยออก 3 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.8574,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 3: 14.6%, หลักสิบ 9: 14.6%, หลักหน่วย 2: 12.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "311",
+      "rank": 18,
+      "score": 83.764,
+      "z": 2.1786,
+      "times_drawn": 0,
+      "contributions": [
+       {
+        "group": "position",
+        "contribution": 1.0839,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 3: 11.7%, หลักสิบ 1: 11.5%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       },
+       {
+        "group": "recent",
+        "contribution": 0.7874,
+        "detail": "ช่วง 24 งวดล่าสุด — หลักร้อย 3: 14.6%, หลักสิบ 1: 16.7%, หลักหน่วย 1: 14.6% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "241",
+      "rank": 19,
+      "score": 83.34,
+      "z": 2.1549,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.769,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 2: 11.7%, หลักสิบ 4: 10.3%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     },
+     {
+      "number": "901",
+      "rank": 20,
+      "score": 82.516,
+      "z": 2.1087,
+      "times_drawn": 2,
+      "contributions": [
+       {
+        "group": "number",
+        "contribution": 0.8015,
+        "detail": "เลขนี้เคยออก 2 ครั้ง (ถ้าสุ่ม คาดไว้ราว 0.5 ครั้ง)"
+       },
+       {
+        "group": "position",
+        "contribution": 0.5667,
+        "detail": "พบบ่อยแค่ไหนในแต่ละหลัก — หลักร้อย 9: 10.7%, หลักสิบ 0: 10.5%, หลักหน่วย 1: 10.5% (ถ้าสุ่ม 10%)"
+       }
+      ]
+     }
+    ],
+    "training_draws": 266,
+    "training_numbers": 532,
+    "first_draw": "2015-09-01",
+    "last_draw": "2026-11-01",
+    "space": 1000
+   }
+  }
+ },
+ "evaluation_status": "pending",
+ "content_sha256": "805f38d2ac7d252f0d790d6b08847e138dd40cfe10f05eb3e82e8016bcade1a4"
+}

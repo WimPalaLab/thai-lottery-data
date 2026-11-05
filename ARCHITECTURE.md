@@ -27,13 +27,15 @@ GLO API ──(update_from_glo.py, วันละ 3 รอบ)──▶ data/th
 | `scripts/lotto_stats.py` | ความถี่ + ค่าคาดหวัง + ช่วง 95%, chi-square, autocorrelation, backtest (ไลบรารีมาตรฐานเท่านั้น) |
 | `scripts/build_site.py` | ตรวจ → คำนวณ → เขียน JSON → คัดลอกหน้าเว็บ (เฉพาะนามสกุลที่อนุญาต) |
 | `scripts/validate_csv.py` | ตัวตรวจ CSV แบบ command line สำหรับ GitHub Actions |
-| `scripts/lotto_sixdigit.py` | สถิติเลข 6 หลักรางวัลที่ 1–5 (ไลบรารีมาตรฐาน) |
+| `scripts/lotto_sixdigit.py` | สถิติเลข 6 หลักรางวัลที่ 1–5 และเลขที่ออกซ้ำ (ไลบรารีมาตรฐาน) |
+| `scripts/lotto_small.py` | โมเดลเลขท้าย 2 ตัว / ท้าย 3 ตัว / หน้า 3 ตัว (small-v1) และ backtest (ไลบรารีมาตรฐาน) — ดู MODEL.md |
 | `scripts/lotto_verify.py` | รายงานตรวจสอบข้อมูลจาก CSV, `reconciliation_log.txt`, `github_crosscheck.txt`, `metadata/import_log.json` |
 | `scripts/lotto_meta.py` | config + hash ของโมเดล (ไลบรารีมาตรฐาน ให้ build ตรวจความสดของ backtest ได้) |
 | `scripts/lotto_model.py`, `lotto_backtest.py`, `lotto_predict.py` | Hybrid model, walk-forward backtest, snapshot/ประเมินผล (numpy) — ดู MODEL.md |
 | `config/model.json` | น้ำหนักและการตั้งค่าโมเดล |
 | `web/*.html` | 7 หน้า: หน้าแรก, ผลย้อนหลัง, สถิติ, วิเคราะห์, ประวัติทำนาย, สุ่มจริงไหม, ข้อมูล |
 | `web/assets/app.js`, `app.css` | โค้ดหน้าเว็บทั้งหมด (ไฟล์เดียวต่อชนิด) |
+| `web/assets/theme.js` | สคริปต์เล็ก ๆ ใน `<head>` ใส่โหมดสีที่ผู้ใช้เลือกไว้ (สว่างเป็นค่าเริ่มต้น) ก่อนแสดงหน้า |
 | `tests/` | unittest ของข้อมูล สถิติ และความปลอดภัยของหน้าเว็บ |
 
 ## ไฟล์ข้อมูลที่สร้าง (`_site/data/`)
@@ -47,10 +49,12 @@ GLO API ──(update_from_glo.py, วันละ 3 รอบ)──▶ data/th
 | `stats/frequency.json` | ความถี่ last2/back3/front3 × 4 ช่วงเวลา | หน้าสถิติ |
 | `stats/randomness.json` | ผลทดสอบความสุ่มทั้งหมด | หน้าสุ่มจริงไหม |
 | `stats/sixdigit.json` | สถิติเลข 6 หลัก × รางวัล (1–5, รวม) × ช่วงเวลา | หน้าสถิติ `?m=six` |
+| `stats/repeats.json` | เลข 6 หลักที่ออกซ้ำ 20 อันดับ (รางวัลที่ 1–5 รวม, ทุกงวด) + จำนวนที่การสุ่มให้ได้ | หน้าสถิติ `?m=six` (ช่วงอื่นคำนวณในเบราว์เซอร์) |
 | `verification.json` | รายงานตรวจสอบข้อมูล | หน้าข้อมูล, หน้ารายงวด |
 | `predictions/index.json` | สรุป snapshot + สถานะทุกงวดตั้งแต่เริ่มบันทึก | หน้าแรก, วิเคราะห์, ประวัติ |
-| `predictions/<วันที่>.json` | snapshot + ผลประเมิน (ตรวจโครงสร้างก่อนขึ้นเว็บ) | หน้าวิเคราะห์, ประวัติ |
-| `analysis/backtest.json` | ผล backtest + `fresh` (ตรงกับข้อมูล/config/โค้ดปัจจุบันไหม) | หน้าวิเคราะห์ แท็บ Backtest |
+| `predictions/<วันที่>.json` | snapshot + ผลประเมิน + `small` (อันดับเลขท้าย/หน้าจาก snapshot เองหรือไฟล์เสริม พร้อมผลประเมิน) (ตรวจโครงสร้างก่อนขึ้นเว็บ) | หน้าแรก, วิเคราะห์, ประวัติ |
+| `analysis/backtest.json` | ผล backtest + `fresh` (ตรงกับข้อมูล/config/โค้ดปัจจุบันไหม) | หน้าวิเคราะห์ แท็บทดสอบย้อนหลัง |
+| `analysis/backtest_small.json` | ผล backtest ของเลขท้าย/หน้า + `fresh` | หน้าวิเคราะห์ แท็บทดสอบย้อนหลัง |
 | `thai_lottery.csv` | สำเนา CSV สำหรับดาวน์โหลด | หน้าข้อมูล |
 
 Cache: ทุกไฟล์ข้อมูลโหลดด้วย `?v=<version>` (hash ของ CSV + โค้ดหน้าเว็บ) ส่วน `manifest.json` โหลดแบบ `no-cache` ทุกครั้ง ผลงวดใหม่จึงขึ้นทันทีหลัง deploy

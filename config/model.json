@@ -42,5 +42,33 @@
     "random_trials": 2000,
     "random_seed": 20261105,
     "stability_blocks": 4
+  },
+  "small_numbers": {
+    "model_version": "small-v1",
+    "kinds": ["last2", "back3", "front3"],
+    "feature_weights": {
+      "position": 0.35,
+      "digit": 0.15,
+      "number": 0.25,
+      "recent": 0.25
+    },
+    "smoothing": {
+      "position_alpha": 10,
+      "digit_alpha": 10,
+      "number_alpha": 2,
+      "recent_strength": 50
+    },
+    "recent_draws": 24,
+    "candidate_counts": {
+      "last2": 5,
+      "back3": 10,
+      "front3": 10
+    },
+    "report_top_n": 20,
+    "backtest": {
+      "min_training_draws": 100,
+      "holdout_start": "2017-01-01",
+      "stability_blocks": 4
+    }
   }
 }

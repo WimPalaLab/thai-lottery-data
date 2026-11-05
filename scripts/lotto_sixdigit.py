@@ -162,3 +162,39 @@ def build(draws, period_draws, periods):
     return {"periods": keys, "prizes": SIX_PRIZES + ["all"], "patterns": PATTERNS, "data": data,
             # ใช้คำนวณช่วงปีที่ผู้ใช้เลือกเองในหน้าเว็บ
             "theory": {"pattern": PATTERN_P, "dsum": DSUM_P, "binom6": BINOM6}}
+
+
+def repeats(draws, prizes=SIX_PRIZES, top=20):
+    """เลข 6 หลักที่ออกมากกว่า 1 ครั้งในรางวัลที่เลือก (ค่าเริ่มต้น: รางวัลที่ 1–5 รวมกัน ไม่รวมข้างเคียง)
+    เรียง: จำนวนครั้งมาก→น้อย, ออกล่าสุดใหม่→เก่า, เลขน้อย→มาก (ผลเหมือนเดิมทุกครั้ง)"""
+    occ = {}
+    used = 0
+    first = last = None
+    for d in draws:
+        nums = [(k, v) for k in prizes for v in d["prizes"][k]]
+        if not nums:
+            continue
+        used += 1
+        first = first or d["draw_date"]
+        last = d["draw_date"]
+        for k, v in nums:
+            occ.setdefault(v, []).append([d["draw_date"], k])
+    total = sum(len(v) for v in occ.values())
+    rep = [(n, o) for n, o in occ.items() if len(o) >= 2]
+    rep.sort(key=lambda t: t[0])
+    rep.sort(key=lambda t: t[1][-1][0], reverse=True)
+    rep.sort(key=lambda t: len(t[1]), reverse=True)
+    by_count = Counter(len(o) for _, o in rep)
+    p = 1 / 1_000_000
+    q0 = (1 - p) ** total
+    q1 = total * p * (1 - p) ** (total - 1) if total else 0.0
+    q2 = math.comb(total, 2) * p ** 2 * (1 - p) ** (total - 2) if total >= 2 else 0.0
+    return {
+        "prizes": list(prizes), "draws": used, "first_draw": first, "last_draw": last,
+        "numbers_total": total, "distinct": len(occ), "repeated": len(rep),
+        "by_count": {str(c): by_count[c] for c in sorted(by_count)},
+        # ถ้าทุกเลขมีโอกาสเท่ากัน (ประมาณด้วยการแจกแจงทวินาม)
+        "expected_repeated": round(1_000_000 * (1 - q0 - q1), 1),
+        "expected_ge3": round(1_000_000 * (1 - q0 - q1 - q2), 1),
+        "top": [{"number": n, "count": len(o), "last": o[-1][0], "hits": o} for n, o in rep[:top]],
+    }

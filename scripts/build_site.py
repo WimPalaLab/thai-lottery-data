@@ -18,10 +18,12 @@ import lotto_sixdigit as SIX  # noqa: E402
 import lotto_stats as S  # noqa: E402
 import lotto_verify as V  # noqa: E402
 
-SCHEMA_VERSION = 2   # 2: เพิ่ม stats/sixdigit.json, verification.json, predictions/, analysis/
+SCHEMA_VERSION = 3   # 2: เพิ่ม stats/sixdigit.json, verification.json, predictions/, analysis/
+                     # 3: เพิ่ม stats/repeats.json, analysis/backtest_small.json, อันดับเลขท้าย (small) ใน predictions/
 DATA_DIR = os.path.join(META.ROOT, "data")
 RE_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 RE_SIX = re.compile(r"^\d{6}$")
+RE_SMALL = {"last2": re.compile(r"^\d{2}$"), "back3": re.compile(r"^\d{3}$"), "front3": re.compile(r"^\d{3}$")}
 EVAL_STATUS = {"evaluated", "not_evaluable", "invalid"}
 # ไฟล์หน้าเว็บที่อนุญาตให้คัดลอก (กันไฟล์แปลก ๆ หลุดขึ้นเว็บ)
 ALLOWED_EXT = {".html", ".css", ".js", ".svg", ".ico", ".txt", ".woff2"}
@@ -65,12 +67,37 @@ def read_json(path):
         return json.load(f)
 
 
+def check_small(small, need):
+    need(isinstance(small, dict) and set(small.get("predictions", {})) == set(META.SMALL_KINDS), "small_predictions")
+    for k, block in small["predictions"].items():
+        need(isinstance(block.get("space"), int) and block["rows"], f"small_predictions.{k}")
+        for r in block["rows"]:
+            need(RE_SMALL[k].match(str(r.get("number", ""))), f"small_predictions.{k}.number")
+            for c in r.get("contributions", []):
+                need(c.get("group") in META.SMALL_GROUPS, "small contributions")
+                need(isinstance(c.get("detail"), str) and len(c["detail"]) <= 300, "small contributions.detail")
+        need(1 <= small["candidate_counts"][k] <= len(block["rows"]), f"small candidate_counts.{k}")
+
+
+def check_small_addon(s, path):
+    def need(cond, what):
+        if not cond:
+            raise SystemExit(f"snapshot เสริมไม่ถูกต้อง ({os.path.basename(path)}): {what}")
+    need(s.get("kind") == "small_prediction_snapshot", "kind")
+    need(L.RE_DATE.match(str(s.get("target_draw_date", ""))), "target_draw_date")
+    need(RE_ISO.match(str(s.get("created_at", ""))), "created_at")
+    need(os.path.basename(path) == f"{s['target_draw_date']}.json", "ชื่อไฟล์ไม่ตรงกับ target_draw_date")
+    check_small(s.get("small_predictions"), need)
+
+
 def check_snapshot(s, path):
     """ตรวจโครงสร้าง snapshot ก่อนขึ้นเว็บ (ไฟล์เสียหรือถูกแก้ผิดรูปแบบ = หยุดสร้างเว็บ)"""
     def need(cond, what):
         if not cond:
             raise SystemExit(f"snapshot ไม่ถูกต้อง ({os.path.basename(path)}): {what}")
     need(s.get("kind") == "prediction_snapshot", "kind")
+    if "small_predictions" in s:
+        check_small(s["small_predictions"], need)
     for k in ("target_draw_date", "training_data_through"):
         need(L.RE_DATE.match(str(s.get(k, ""))), k)
     need(RE_ISO.match(str(s.get("created_at", ""))), "created_at")
@@ -87,8 +114,8 @@ def check_snapshot(s, path):
             need(isinstance(name, str) and name.isalnum() and all(RE_SIX.match(str(n)) for n in nums), "alternatives")
 
 
-def check_evaluation(e, path):
-    if e.get("kind") != "prediction_evaluation" or e.get("status") not in EVAL_STATUS \
+def check_evaluation(e, path, kind="prediction_evaluation"):
+    if e.get("kind") != kind or e.get("status") not in EVAL_STATUS \
             or not L.RE_DATE.match(str(e.get("actual_draw_date", ""))):
         raise SystemExit(f"ผลประเมินไม่ถูกต้อง: {os.path.basename(path)}")
 
@@ -105,11 +132,34 @@ def analysis_files(draws, csv_hash, data_dir, meta):
         e = read_json(p)
         check_evaluation(e, p)
         evals[os.path.basename(p)] = e
+    addons, addon_evals = {}, {}
+    for p in json_files(os.path.join(data_dir, "evaluations", "small")):
+        e = read_json(p)
+        check_evaluation(e, p, "small_prediction_evaluation")
+        addon_evals[os.path.basename(p)] = e
+    for p in json_files(os.path.join(data_dir, "predictions", "small")):
+        a = read_json(p)
+        check_small_addon(a, p)
+        addons[os.path.basename(p)] = a
     for p in json_files(os.path.join(data_dir, "predictions")):
         s = read_json(p)
         check_snapshot(s, p)
-        e = evals.get(os.path.basename(p))
-        files[f"predictions/{s['target_draw_date']}.json"] = {**meta, "snapshot": s, "evaluation": e}
+        name = os.path.basename(p)
+        e = evals.get(name)
+        # อันดับเลขท้าย: อยู่ใน snapshot เอง (schema 2) หรือในไฟล์เสริมที่สร้างทีหลังแต่ก่อนออกรางวัล
+        small = None
+        if "small_predictions" in s:
+            small = {"source": "snapshot", "created_at": s["created_at"], "content_sha256": s["content_sha256"],
+                     **s["small_predictions"], "evaluation": e and {
+                         "status": e["status"], "results": e.get("small_results"), "reason": e.get("reason")}}
+        elif name in addons:
+            a, ae = addons[name], addon_evals.get(name)
+            small = {"source": "addon", "created_at": a["created_at"], "content_sha256": a["content_sha256"],
+                     "training_data_through": a["training_data_through"], **a["small_predictions"],
+                     "evaluation": ae and {"status": ae["status"], "results": ae.get("small_results"),
+                                           "reason": ae.get("reason"), "lead_time_hours": ae.get("lead_time_hours")}}
+        files[f"predictions/{s['target_draw_date']}.json"] = {**meta, "snapshot": s, "evaluation": e, "small": small}
+        sres = small and small["evaluation"] and small["evaluation"].get("results")
         snaps.append({
             "target_draw_date": s["target_draw_date"], "created_at": s["created_at"],
             "training_data_through": s["training_data_through"], "model_version": s["model_version"],
@@ -119,6 +169,9 @@ def analysis_files(draws, csv_hash, data_dir, meta):
             "exact_hits_total": e.get("exact_hits_total") if e else None,
             "random_expected_total": e.get("random_expected_total") if e else None,
             "ticket_wins": len(e.get("ticket_wins", [])) if e else None,
+            "small": bool(small),
+            "small_hits": {k: r.get("hits") for k, r in sres.items() if r.get("available")} if sres else None,
+            "small_expected": {k: r.get("random_expected") for k, r in sres.items() if r.get("available")} if sres else None,
         })
     history = []
     if snaps:
@@ -144,6 +197,15 @@ def analysis_files(draws, csv_hash, data_dir, meta):
         stale = [k for k, v in want.items() if bt.get(k) != v]
         files["analysis/backtest.json"] = {**bt, **meta, "backtest_generated_at": bt.get("generated_at"),
                                            "fresh": not stale, "stale_reasons": stale}
+    sb_path = os.path.join(data_dir, "analysis", "backtest_small.json")
+    if os.path.exists(sb_path):
+        sb = read_json(sb_path)
+        cfg = META.load_config()
+        want = {"csv_sha256": csv_hash, "config_sha": META.small_config_sha(cfg), "code_sha": META.small_code_sha(),
+                "model_version": cfg[META.SMALL_KEY]["model_version"]}
+        stale = [k for k, v in want.items() if sb.get(k) != v]
+        files["analysis/backtest_small.json"] = {**sb, **meta, "backtest_generated_at": sb.get("generated_at"),
+                                                 "fresh": not stale, "stale_reasons": stale}
     return files
 
 
@@ -170,6 +232,7 @@ def build_data(draws, csv_hash, generated_at, warnings=(), data_dir=DATA_DIR):
                                      "gaps_last2": S.gaps_last2(draws)}
     files["stats/randomness.json"] = {**meta, **S.randomness(draws)}
     files["stats/sixdigit.json"] = {**meta, **SIX.build(draws, period_draws, PERIODS)}
+    files["stats/repeats.json"] = {**meta, **SIX.repeats(draws)}
     files["verification.json"] = {**meta, **V.build(draws, list(warnings), data_dir)}
     files.update(analysis_files(draws, csv_hash, data_dir, meta))
     pred_index = files["predictions/index.json"]
@@ -193,6 +256,8 @@ def build_data(draws, csv_hash, generated_at, warnings=(), data_dir=DATA_DIR):
         "run_id": os.environ.get("GITHUB_RUN_ID"),
         "latest_snapshot": pred_index["snapshots"][0]["target_draw_date"] if pred_index["snapshots"] else None,
         "backtest": {"available": bt is not None, "fresh": bool(bt and bt["fresh"])},
+        "backtest_small": {"available": "analysis/backtest_small.json" in files,
+                           "fresh": bool(files.get("analysis/backtest_small.json", {}).get("fresh"))},
         "last_import": files["verification.json"]["last_import"],
     }
     return files

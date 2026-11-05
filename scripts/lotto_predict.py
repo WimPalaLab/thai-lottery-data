@@ -9,6 +9,9 @@
 - snapshot สร้างครั้งเดียวและห้ามแก้ (มี content_sha256 กำกับ) สคริปต์นี้ไม่เขียนทับไฟล์ที่มีอยู่แล้ว
 - snapshot ต้องสร้างก่อนเวลาออกรางวัล (14:00 น. เวลาไทยของวันออกรางวัล) ไม่อย่างนั้นจะไม่ถูกนับผล
 - ไม่มีการสร้าง snapshot ย้อนหลัง งวดที่ไม่มี snapshot = ประเมินไม่ได้
+- ตั้งแต่ schema 2 snapshot มีอันดับเลขท้าย 2 ตัว/ท้าย 3 ตัว/หน้า 3 ตัว (small_predictions) ด้วย
+  snapshot ที่สร้างก่อนหน้านั้น (schema 1) จะได้ไฟล์เสริม data/predictions/small/<วันที่>.json
+  แยกต่างหาก (สร้างใหม่ ไม่แก้ไฟล์เดิม) เฉพาะเมื่อยังไม่ถึงเวลาออกรางวัล
 """
 import argparse
 import datetime
@@ -26,7 +29,9 @@ CSV = os.path.join(ROOT, "data", "thai_lottery.csv")
 PRED_DIR = os.path.join(ROOT, "data", "predictions")
 EVAL_DIR = os.path.join(ROOT, "data", "evaluations")
 BACKTEST = os.path.join(ROOT, "data", "analysis", "backtest.json")
-SCHEMA_VERSION = 1
+BACKTEST_SMALL = os.path.join(ROOT, "data", "analysis", "backtest_small.json")
+SMALL_SUBDIR = "small"   # ไฟล์เสริมของ snapshot เดิมที่ยังไม่มีอันดับเลขท้าย
+SCHEMA_VERSION = 2       # 2: เพิ่ม small_predictions (เลขท้าย 2 ตัว, ท้าย 3 ตัว, หน้า 3 ตัว)
 DRAW_CUTOFF_UTC = datetime.time(7, 0)   # 14:00 น. เวลาไทย (UTC+7) ก่อนเริ่มถ่ายทอดการออกรางวัล
 SIX_PRIZES = ["first", "second", "third", "fourth", "fifth"]
 
@@ -116,13 +121,33 @@ def backtest_is_fresh(path, inputs):
     return all(old.get(k) == v for k, v in inputs.items())
 
 
+def cmd_backtest_small(args, cfg):
+    import lotto_small as SM
+    inputs = meta.small_backtest_inputs(args.csv, cfg)
+    if not args.force and backtest_is_fresh(args.small_out, inputs):
+        print("backtest (small): up to date")
+        return
+    draws, _ = L.load(args.csv)
+    sc = cfg[meta.SMALL_KEY]
+    out = {"schema_version": SCHEMA_VERSION, "kind": "small_backtest", **inputs,
+           "data_through": draws[-1]["draw_date"], "draw_count": len(draws), "generated_at": iso(utcnow()),
+           "candidate_counts": sc["candidate_counts"], "results": SM.summarize_all(draws, sc)}
+    os.makedirs(os.path.dirname(args.small_out), exist_ok=True)
+    with open(args.small_out, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    print("backtest (small): " + ", ".join(f"{k} {v['all']['draws']} draws, hits {v['all']['hits']}"
+                                           for k, v in out["results"].items()))
+
+
 def cmd_backtest(args):
-    import lotto_backtest as B
     cfg = meta.load_config()
+    if meta.SMALL_KEY in cfg:
+        cmd_backtest_small(args, cfg)
     inputs = backtest_inputs(args.csv, cfg)
     if not args.force and backtest_is_fresh(args.out, inputs):
         print("backtest: up to date")
         return 0
+    import lotto_backtest as B
     draws, _ = L.load(args.csv)
     t0 = datetime.datetime.now()
     prep, idxs, recs = B.run_walk_forward(draws, cfg, workers=args.workers)
@@ -143,7 +168,42 @@ def existing_snapshots(pred_dir):
     return [read_json(p) for p in list_json(pred_dir)]
 
 
-def build_snapshot(draws, cfg, chosen, now, csv_sha, backtest_ref):
+def build_small(draws, cfg, small_ref):
+    """ส่วนเลขท้าย 2 ตัว / ท้าย 3 ตัว / หน้า 3 ตัว ของ snapshot (ไลบรารีมาตรฐาน)"""
+    import lotto_small as SM
+    sc = cfg[meta.SMALL_KEY]
+    return {"model_version": sc["model_version"], "config_sha": meta.small_config_sha(cfg),
+            "code_sha": meta.small_code_sha(), "candidate_counts": sc["candidate_counts"],
+            "feature_weights": sc["feature_weights"], "recent_draws": sc["recent_draws"],
+            "backtest": small_ref, "predictions": SM.build_predictions(draws, sc)}
+
+
+def small_ref_of(path):
+    bt = read_json(path)
+    return {"generated_at": bt["generated_at"], "data_through": bt["data_through"],
+            "holdout": {k: {x: v["holdout"].get(x) for x in ("draws", "hits", "mean_pct")}
+                        for k, v in bt["results"].items()}}
+
+
+def build_small_addon(draws, cfg, now, csv_sha, target, small_ref):
+    """ไฟล์เสริมสำหรับ snapshot เดิม (schema 1) ที่ยังไม่มีอันดับเลขท้าย — เป็นไฟล์ใหม่ ไม่แตะไฟล์เดิม"""
+    snap = {
+        "schema_version": SCHEMA_VERSION,
+        "kind": "small_prediction_snapshot",
+        "target_draw_date": target,
+        "target_is_estimate": True,
+        "created_at": iso(now),
+        "training_data_through": draws[-1]["draw_date"],
+        "training_draw_count": len(draws),
+        "csv_sha256": csv_sha,
+        "small_predictions": build_small(draws, cfg, small_ref),
+        "evaluation_status": "pending",
+    }
+    snap["content_sha256"] = content_sha(snap)
+    return snap
+
+
+def build_snapshot(draws, cfg, chosen, now, csv_sha, backtest_ref, small_ref=None):
     import numpy as np
     import lotto_backtest as B
     import lotto_model as M
@@ -201,8 +261,36 @@ def build_snapshot(draws, cfg, chosen, now, csv_sha, backtest_ref):
         "random_seed": None,
         "evaluation_status": "pending",
     }
+    if meta.SMALL_KEY in cfg:
+        snap["small_predictions"] = build_small(draws, cfg, small_ref)
     snap["content_sha256"] = content_sha(snap)
     return snap
+
+
+def small_backtest_ref(args, cfg):
+    if not backtest_is_fresh(args.small_backtest, meta.small_backtest_inputs(args.csv, cfg)):
+        print("snapshot: backtest_small.json is missing or out of date — run `lotto_predict.py backtest` first",
+              file=sys.stderr)
+        return None
+    return small_ref_of(args.small_backtest)
+
+
+def maybe_small_addon(args, cfg, draws, existing, now):
+    """snapshot ของข้อมูลชุดนี้มีอยู่แล้วแต่ยังไม่มีอันดับเลขท้าย: สร้างไฟล์เสริมถ้ายังไม่ถึงเวลาออกรางวัล"""
+    target = existing["target_draw_date"]
+    path = os.path.join(args.pred_dir, SMALL_SUBDIR, f"{target}.json")
+    if "small_predictions" in existing or meta.SMALL_KEY not in cfg or os.path.exists(path):
+        return 0
+    if now >= draw_cutoff(target):
+        print(f"snapshot (small): skipped — draw {target} has started")
+        return 0
+    ref = small_backtest_ref(args, cfg)
+    if ref is None:
+        return 1
+    addon = build_small_addon(draws, cfg, now, file_sha256(args.csv), target, ref)
+    write_new(path, addon)
+    print(f"snapshot (small): wrote {os.path.relpath(path, ROOT)} (add-on for {target}, created {addon['created_at']})")
+    return 0
 
 
 def cmd_snapshot(args):
@@ -213,7 +301,7 @@ def cmd_snapshot(args):
     for s in existing_snapshots(args.pred_dir):
         if s.get("training_data_through") == latest:
             print(f"snapshot: already exists for data through {latest} (target {s['target_draw_date']})")
-            return 0
+            return maybe_small_addon(args, cfg, draws, s, now)
     target = next_draw_date(latest)
     if now >= draw_cutoff(target):
         print(f"snapshot: skipped — next draw ({target}) has started or passed but its result is not in the data yet; "
@@ -227,6 +315,11 @@ def cmd_snapshot(args):
     if not backtest_is_fresh(args.backtest, inputs):
         print("snapshot: backtest.json is missing or out of date — run `lotto_predict.py backtest` first", file=sys.stderr)
         return 1
+    small_ref = None
+    if meta.SMALL_KEY in cfg:
+        small_ref = small_backtest_ref(args, cfg)
+        if small_ref is None:
+            return 1
     bt = read_json(args.backtest)
     if cfg.get("use_tuned_experiment", True):
         chosen = bt["tuning"]["chosen"]
@@ -234,13 +327,34 @@ def cmd_snapshot(args):
         chosen = {k: cfg["default_experiment"] for k in SIX_PRIZES}
     ref = {"source": "backtest validation" if cfg.get("use_tuned_experiment", True) else "default",
            "validation": bt["evaluation"]["validation"], "metric": bt["tuning"]["metric"], "chosen": chosen}
-    snap = build_snapshot(draws, cfg, chosen, now, inputs["csv_sha256"], ref)
+    snap = build_snapshot(draws, cfg, chosen, now, inputs["csv_sha256"], ref, small_ref)
     write_new(path, snap)
     print(f"snapshot: wrote {os.path.relpath(path, ROOT)} (data through {latest}, created {snap['created_at']})")
     return 0
 
 
 # ---------- evaluation ----------
+def evaluate_small(small, d):
+    """เทียบอันดับเลขท้าย/หน้ากับผลจริงของงวด d (นับเฉพาะ K อันดับแรกที่ตั้งไว้ใน snapshot)"""
+    out = {}
+    for kind, block in small["predictions"].items():
+        K = small["candidate_counts"][kind]
+        rows = block["rows"]
+        cands = [r["number"] for r in rows[:K]]
+        winners = list(d["prizes"][kind])
+        if not winners:
+            out[kind] = {"count": K, "candidates": cands, "winners": [], "available": False}
+            continue
+        out[kind] = {
+            "count": K, "candidates": cands, "winners": winners, "available": True,
+            "hits": sum(1 for w in winners if w in cands),
+            "exact_hits": [n for n in cands if n in winners],
+            "hits_in_top_n": [n for n in (r["number"] for r in rows) if n in winners],
+            "random_expected": round(K * len(winners) / block["space"], 6),
+        }
+    return out
+
+
 def evaluate_snapshot(snap, draws, now):
     """สร้างบันทึกผลประเมินของ snapshot หนึ่งชุด หรือ None ถ้ายังไม่มีผลรางวัล"""
     through = snap["training_data_through"]
@@ -253,10 +367,10 @@ def evaluate_snapshot(snap, draws, now):
     created = parse_iso(snap["created_at"])
     rec = {
         "schema_version": SCHEMA_VERSION,
-        "kind": "prediction_evaluation",
+        "kind": "small_prediction_evaluation" if snap.get("kind") == "small_prediction_snapshot" else "prediction_evaluation",
         "snapshot": f"{snap['target_draw_date']}.json",
         "snapshot_sha256": snap.get("content_sha256"),
-        "model_version": snap["model_version"],
+        "model_version": snap.get("model_version") or snap["small_predictions"]["model_version"],
         "target_draw_date": snap["target_draw_date"],
         "actual_draw_date": d["draw_date"],
         "actual_trust_level": d["trust_level"],
@@ -270,6 +384,9 @@ def evaluate_snapshot(snap, draws, now):
         return rec
     if created >= cutoff:
         rec.update(status="not_evaluable", reason="snapshot สร้างหลังเวลาเริ่มออกรางวัล")
+        return rec
+    if rec["kind"] == "small_prediction_evaluation":
+        rec.update(status="evaluated", small_results=evaluate_small(snap["small_predictions"], d))
         return rec
     results, tickets = {}, []
     for k in SIX_PRIZES:
@@ -294,6 +411,8 @@ def evaluate_snapshot(snap, draws, now):
     rec.update(status="evaluated", results=results, ticket_wins=tickets,
                exact_hits_total=sum(len(r["exact_hits"]) for r in results.values()),
                random_expected_total=round(sum(r.get("random_expected", 0) for r in results.values()), 8))
+    if "small_predictions" in snap:
+        rec["small_results"] = evaluate_small(snap["small_predictions"], d)
     return rec
 
 
@@ -301,8 +420,10 @@ def cmd_evaluate(args):
     draws, _ = L.load(args.csv)
     now = parse_iso(args.now) if args.now else utcnow()
     done = 0
-    for p in list_json(args.pred_dir):
-        out = os.path.join(args.eval_dir, os.path.basename(p))
+    pairs = [(p, os.path.join(args.eval_dir, os.path.basename(p))) for p in list_json(args.pred_dir)]
+    pairs += [(p, os.path.join(args.eval_dir, SMALL_SUBDIR, os.path.basename(p)))
+              for p in list_json(os.path.join(args.pred_dir, SMALL_SUBDIR))]
+    for p, out in pairs:
         if os.path.exists(out):
             continue
         rec = evaluate_snapshot(read_json(p), draws, now)
@@ -324,6 +445,8 @@ def main(argv=None):
     ap.add_argument("--eval-dir", default=EVAL_DIR)
     ap.add_argument("--backtest", default=BACKTEST)
     ap.add_argument("--out", default=BACKTEST)
+    ap.add_argument("--small-backtest", default=BACKTEST_SMALL)
+    ap.add_argument("--small-out", default=BACKTEST_SMALL)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--now", default=None, help="เวลาปัจจุบันแบบ YYYY-MM-DDTHH:MM:SSZ (ใช้ทดสอบ)")
