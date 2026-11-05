@@ -473,7 +473,7 @@ function heroBalls() {
 }
 
 function kpi(iconName, k, v, unit, sub) {
-  return h("div", { class: "kpi" }, h("div", { class: "kpi-ico" }, icon(iconName)),
+  return h("div", { class: "kpi" }, h("div", { class: `kpi-ico i-${iconName}` }, icon(iconName)),
     h("div", null, h("div", { class: "k" }, k), h("div", { class: "v" }, v, unit ? h("span", { class: "unit" }, ` ${unit}`) : null), h("div", { class: "sub" }, sub)));
 }
 
@@ -492,7 +492,7 @@ function ring(value, label) {
 const PRIZE_BADGE = { first: "1", second: "2", third: "3", fourth: "4", fifth: "5", last2: "2ต", back3: "3ต", front3: "3ห" };
 
 function predCard(k, label, count, rows, extraCls) {
-  return h("div", { class: `pred-card ${extraCls || ""}` },
+  return h("div", { class: `pred-card p-${k} ${extraCls || ""}` },
     h("div", { class: "pred-head" }, h("span", { class: "badge", "aria-hidden": "true" }, PRIZE_BADGE[k]),
       h("h3", null, label, h("span", { class: "muted" }, ` (${count} เลข)`))),
     h("div", { class: "num-list pred-nums" }, rows.slice(0, count).map((r) => h("span", null, r.number))),
@@ -639,7 +639,7 @@ async function pageHome() {
     kpis,
     h("div", { class: "grid grid-2 section" }, latestCard, ticketCard({ initial: q })),
     predSection,
-    h("div", { class: "grid grid-3 section" }, digitMini(six), backtestMini(bt), updatesMini(m, pidx, bt, bts)));
+    h("div", { class: "grid grid-3 section home-minis" }, digitMini(six), backtestMini(bt), updatesMini(m, pidx, bt, bts)));
 }
 
 // ---------- page: results ----------

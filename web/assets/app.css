@@ -23,6 +23,21 @@
   --lo: #2e9a63;            /* ออกน้อยกว่าที่ควร */
   --bar: #6b7078;           /* แท่งกราฟ */
   --skel-shine: rgba(255, 255, 255, .65);   /* แสงวิ่งบนกล่องระหว่างโหลด */
+  /* สีประจำของหน้าแรก (แถบหัวเรื่องกรมท่า + สีประจำรางวัล) ใช้คู่กับ color-mix ให้เป็นพื้นอ่อนตามธีม */
+  --navy-1: #0a1633;
+  --navy-2: #12306b;
+  --navy-3: #1d4fb8;
+  --gold: #f6b919;
+  --c-gold: #d99a06;
+  --c-blue: #2563eb;
+  --c-green: #15803d;
+  --c-purple: #7c3aed;
+  --c-cyan: #0e7490;
+  --c-red: #e11d48;
+  --c-orange: #c2410c;
+  --c-teal: #0f766e;
+  --c-pink: #be185d;
+  --tint: 13%;              /* ความเข้มของพื้นสีอ่อน */
   --radius: 12px;
   --font: "IBM Plex Sans Thai", "Sarabun", "Noto Sans Thai", "Leelawadee UI", "Sukhumvit Set", "Thonburi", system-ui, sans-serif;
   color-scheme: light;
@@ -48,6 +63,7 @@
   --lo: #4ade80;
   --bar: #9aa0a8;
   --skel-shine: rgba(255, 255, 255, .05);
+  --tint: 20%;
   color-scheme: dark;
 }
 
@@ -314,7 +330,7 @@ details summary { cursor: pointer; color: var(--text); font-weight: 600; padding
 }
 @keyframes skel-shine { to { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { .skel::after { animation: none; display: none; } }
-.skel-hero { height: 200px; border-radius: 16px; margin-bottom: 16px; }
+.skel-hero { height: 200px; border-radius: 16px; margin-bottom: 16px; background: linear-gradient(120deg, var(--navy-1), var(--navy-2)); border-color: transparent; }
 .skel-kpi { height: 100px; }
 .skel-card { height: 350px; }
 .skel-title { height: 44px; width: min(60%, 360px); margin-bottom: 16px; }
@@ -492,6 +508,70 @@ h2 > .ico { vertical-align: -3px; margin-right: 6px; color: var(--text-2); }
 .updates li { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
 .updates li:last-child { border-bottom: 0; }
 .updates .d { color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* ---------- หน้าแรก: สี (โครงหน้าเหมือนเดิม) ----------
+   แถบหัวเรื่องพื้นกรมท่าไล่สี, ไอคอน/การ์ดรางวัลมีสีประจำ, หัวการ์ดใหญ่เป็นแถบน้ำเงิน
+   พื้นสีอ่อนผสมจาก --c กับสีการ์ด จึงใช้ได้ทั้งโหมดสว่างและโหมดมืด */
+.hero {
+  color: #fff; border-color: transparent;
+  background:
+    radial-gradient(circle at 62% 45%, rgba(80, 140, 255, .45), transparent 42%),
+    radial-gradient(circle at 10% 110%, rgba(40, 90, 220, .35), transparent 50%),
+    linear-gradient(120deg, var(--navy-1), var(--navy-2) 60%, var(--navy-3));
+}
+.hero h1 { color: #fff; }
+.hero h1 .hl { color: var(--gold); }
+.hero p { color: #d6e0f5; }
+.hero .chip { background: rgba(255, 255, 255, .12); color: #fff; border-color: rgba(255, 255, 255, .25); }
+.hero-side { background: rgba(8, 20, 50, .55); border-color: rgba(255, 255, 255, .18); }
+.hero-side h2 { color: var(--gold); }
+.hero .checks li { color: #eef2fb; }
+.hero .ico.ok { color: #4ade80; }
+.hero-balls .ball { fill: #fff; stroke: rgba(255, 255, 255, .6); }
+.hero-balls .ball-in { fill: #eef2fb; }
+.hero-balls text { fill: var(--navy-1); }
+.hero-balls g:first-child .ball { fill: var(--gold); stroke: #ffe08a; }
+.hero-balls g:first-child .ball-in { fill: #fff; }
+
+.kpi { box-shadow: 0 1px 2px rgba(16, 24, 40, .04); }
+.kpi-ico { --c: var(--c-blue); background: var(--bg-2); background: color-mix(in srgb, var(--c) var(--tint), var(--card)); color: var(--c); border-radius: 999px; }
+.kpi-ico.i-target { --c: var(--c-red); }
+.kpi-ico.i-grid { --c: var(--c-cyan); }
+.kpi-ico.i-shield { --c: var(--c-green); }
+
+.pred-bar, .score-panel > h2:first-child {
+  background: linear-gradient(90deg, var(--navy-2), var(--navy-3)); color: #fff; border-bottom: 0;
+}
+.pred-bar h2 { color: #fff; }
+.score-panel > h2:first-child { margin: -18px -18px 0; padding: 14px 18px; border-radius: var(--radius) var(--radius) 0 0; font-size: 1.05rem; }
+.score-panel > h2:first-child .ico { color: #cfe0ff; }
+.pred-card { --c: var(--text-2); background: var(--bg-2); background: color-mix(in srgb, var(--c) var(--tint), var(--card)); }
+.pred-card .badge { background: var(--c); color: #fff; }
+.pred-card.p-first { --c: var(--c-gold); }
+.pred-card.p-first .badge { color: var(--navy-1); background: var(--gold); }
+.pred-card.p-second { --c: var(--c-blue); }
+.pred-card.p-third { --c: var(--c-green); }
+.pred-card.p-fourth { --c: var(--c-purple); }
+.pred-card.p-fifth { --c: var(--c-cyan); }
+.pred-card.p-last2 { --c: var(--c-orange); }
+.pred-card.p-back3 { --c: var(--c-teal); }
+.pred-card.p-front3 { --c: var(--c-pink); }
+.pred-nums span { border-color: transparent; box-shadow: 0 1px 2px rgba(16, 24, 40, .08); }
+.pred-card .more { color: #1d4ed8; }   /* น้ำเงินเข้มขึ้น อ่านชัดบนพื้นสีอ่อน (≥ 4.5:1) */
+:root[data-theme="dark"] .pred-card .more { color: var(--accent); }
+
+.ring-fg { stroke: var(--c-green); }
+.ring-bg { stroke: color-mix(in srgb, var(--c-green) var(--tint), var(--card)); }
+.home-minis .chart .bar { fill: var(--c-blue); }
+.home-minis .legend .key.bar { background: var(--c-blue); }
+:root[data-theme="dark"] .home-minis .legend .key.bar { background: #6f9bff; }
+.home-minis .chart .line { stroke: var(--c-blue); stroke-width: 2.4; }
+.home-minis .card > .row:first-child h2, .home-minis .card > h2:first-child { color: var(--navy-2); }
+:root[data-theme="dark"] .home-minis .card > .row:first-child h2,
+:root[data-theme="dark"] .home-minis .card > h2:first-child { color: var(--text); }
+:root[data-theme="dark"] .home-minis .chart .bar,
+:root[data-theme="dark"] .home-minis .chart .line { fill: #6f9bff; }
+:root[data-theme="dark"] .home-minis .chart .line { fill: none; stroke: #6f9bff; }
 /* ตารางตัวเลขหลายคอลัมน์: ไม่ตัดบรรทัดในช่อง เลื่อนซ้าย-ขวาในกรอบแทน (มือถือ) */
 table.tight th, table.tight td { white-space: nowrap; }
 table.tight th .note { white-space: normal; }
