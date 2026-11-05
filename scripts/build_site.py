@@ -260,7 +260,57 @@ def build_data(draws, csv_hash, generated_at, warnings=(), data_dir=DATA_DIR):
                            "fresh": bool(files.get("analysis/backtest_small.json", {}).get("fresh"))},
         "last_import": files["verification.json"]["last_import"],
     }
+    files["home.json"] = home_summary(files)
     return files
+
+
+HOME_PRED_FIELDS = ("number", "hybrid_score", "global_score", "prize_score")
+
+
+def home_summary(files):
+    """ข้อมูลเฉพาะที่หน้าแรกใช้ รวมไว้ไฟล์เดียว (โครงสร้างเหมือนไฟล์เต็ม แต่ตัดส่วนที่ไม่ใช้ออก)
+    หน้าแรกจึงโหลดไฟล์เล็กไฟล์เดียวแทน latest/backtest/sixdigit/ไฟล์ทำนาย"""
+    m = files["manifest.json"]
+    home = {k: m[k] for k in ("schema_version", "generated_at", "draw_count", "first_draw", "latest_draw",
+                              "latest_draw_th", "latest_snapshot")}
+    home["draw"] = files["latest.json"]["draw"]
+    snaps = files["predictions/index.json"]["snapshots"]
+    home["pred_index"] = {"snapshots": [{k: snaps[0][k] for k in ("created_at", "target_draw_date")}] if snaps else []}
+
+    bt = files.get("analysis/backtest.json")
+    home["backtest"] = bt and {
+        "backtest_generated_at": bt["backtest_generated_at"],
+        "evaluation": {"draws": bt["evaluation"]["draws"]},
+        "overall": {"tuned": {"all": bt["overall"]["tuned"]["all"]}},
+        "timeline": {"dates": bt["timeline"]["dates"],
+                     **{k: {f: v[f] for f in ("mean_pct", "numbers_per_draw")}
+                        for k, v in bt["timeline"].items() if k != "dates"}},
+    }
+    bts = files.get("analysis/backtest_small.json")
+    home["backtest_small"] = bts and {"backtest_generated_at": bts["backtest_generated_at"]}
+
+    rec = files["stats/sixdigit.json"]["data"]["recent"]
+    home["sixdigit"] = {"data": {"recent": {"label": rec["label"], "all": {
+        "numbers": rec["all"]["numbers"],
+        **({"digit": {"counts": rec["all"]["digit"]["counts"]}} if rec["all"]["numbers"] else {})}}}}
+
+    pd = files.get(f"predictions/{m['latest_snapshot']}.json") if m["latest_snapshot"] else None
+    if pd:
+        sn, sm, ev = pd["snapshot"], pd["small"], pd["evaluation"]
+        cc = sn["candidate_counts"]
+        home["prediction"] = {
+            "snapshot": {"target_draw_date": sn["target_draw_date"], "training_data_through": sn["training_data_through"],
+                         "candidate_counts": cc, "hybrid_weights": sn["hybrid_weights"],
+                         "predictions": {k: [{f: r[f] for f in HOME_PRED_FIELDS} for r in rows[:cc[k]]]
+                                         for k, rows in sn["predictions"].items()}},
+            "evaluation": ev and {"status": ev["status"]},
+            "small": sm and {"candidate_counts": sm["candidate_counts"],
+                             "predictions": {k: {"rows": [{"number": r["number"]} for r in v["rows"][:sm["candidate_counts"][k]]]}
+                                             for k, v in sm["predictions"].items()}},
+        }
+    else:
+        home["prediction"] = None
+    return home
 
 
 def copy_web(web_dir, out_dir, version):

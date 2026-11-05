@@ -574,9 +574,12 @@ function updatesMini(m, pidx, bt, bts) {
 }
 
 async function pageHome() {
-  const [m, latest, pidx, bt, bts, six] = await Promise.all([manifest(), getData("latest.json"), optionalData("predictions/index.json"),
-    optionalData("analysis/backtest.json"), optionalData("analysis/backtest_small.json"), optionalData("stats/sixdigit.json")]);
-  const d = latest.draw;
+  // ไฟล์สรุปเล็ก ๆ ไฟล์เดียว (สร้างตอนบิลด์จาก latest/backtest/sixdigit/ไฟล์ทำนาย) → โหลดรอบเดียว ไม่ต้องรอ manifest
+  manifest().catch(() => {});
+  const home = await fetch("data/home.json", { cache: "no-cache", credentials: "omit" }).then(checkResponse);
+  if (!home || !home.draw || !RE_DATE.test(home.latest_draw)) throw new Error("ข้อมูลหน้าแรกไม่ถูกต้อง");
+  const m = home, pidx = home.pred_index, bt = home.backtest, bts = home.backtest_small, six = home.sixdigit;
+  const d = home.draw;
   const p = d.prizes;
   const latestCard = h("section", { class: "card", "aria-labelledby": "latest-h" },
     h("div", { class: "row" }, h("h2", { id: "latest-h" }, "ผลสลากงวดล่าสุด"), h("span", { class: "spacer" }), trustChip(d.trust_level)),
@@ -612,8 +615,8 @@ async function pageHome() {
     kpi("shield", "ความโปร่งใส", "ตรวจสอบได้", "", "ล็อกก่อนออกรางวัล + sha256"));
 
   let predSection = null;
-  if (m.latest_snapshot && RE_DATE.test(m.latest_snapshot)) {
-    const pd = await optionalData(`predictions/${m.latest_snapshot}.json`);
+  {
+    const pd = home.prediction;
     if (pd && pd.snapshot) {
       const sn = pd.snapshot;
       const sm = pd.small;

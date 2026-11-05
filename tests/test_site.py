@@ -138,6 +138,52 @@ class AnalysisFilesTest(unittest.TestCase):
         files = build_site.build_data(self.draws[:3], "x", "t", [], self.tmp)
         self.assertEqual(files["manifest.json"]["draw_count"], 3)
         self.assertEqual(files["stats/sixdigit.json"]["data"]["all"]["second"]["numbers"], 0)   # ปี 2538 ไม่มีรางวัลที่ 2–5
+        home = files["home.json"]
+        self.assertIsNone(home["prediction"])
+        self.assertIsNone(home["backtest"])
+        self.assertEqual(home["pred_index"]["snapshots"], [])
+        self.assertEqual(home["draw"], self.draws[2])
+
+
+class HomeSummaryTest(unittest.TestCase):
+    """home.json ต้องเป็นส่วนย่อยของไฟล์เต็มทุกค่า (หน้าแรกกับหน้าอื่นต้องแสดงตัวเลขเดียวกัน)"""
+
+    def assertSubset(self, part, full, path="home"):
+        if isinstance(part, dict):
+            self.assertIsInstance(full, dict, path)
+            for k, v in part.items():
+                self.assertIn(k, full, f"{path}.{k}")
+                self.assertSubset(v, full[k], f"{path}.{k}")
+        elif isinstance(part, list) and part and isinstance(part[0], dict):
+            self.assertLessEqual(len(part), len(full), path)
+            for i, v in enumerate(part):
+                self.assertSubset(v, full[i], f"{path}[{i}]")
+        else:
+            self.assertEqual(part, full, path)
+
+    def test_matches_full_files_on_real_data(self):
+        draws, _ = L.load(CSV)
+        files = build_site.build_data(draws, "x", "t", [], os.path.join(ROOT, "data"))
+        home, m = files["home.json"], files["manifest.json"]
+        for k in ("draw_count", "first_draw", "latest_draw", "latest_draw_th", "latest_snapshot"):
+            self.assertEqual(home[k], m[k], k)
+        self.assertEqual(home["draw"], files["latest.json"]["draw"])
+        self.assertSubset(home["pred_index"], files["predictions/index.json"], "pred_index")
+        self.assertSubset(home["sixdigit"], files["stats/sixdigit.json"], "sixdigit")
+        if "analysis/backtest.json" in files:
+            self.assertSubset(home["backtest"], files["analysis/backtest.json"], "backtest")
+            self.assertEqual(len(home["backtest"]["timeline"]["first"]["mean_pct"]), len(home["backtest"]["timeline"]["dates"]))
+        if m["latest_snapshot"]:
+            pd = files[f"predictions/{m['latest_snapshot']}.json"]
+            self.assertSubset(home["prediction"], pd, "prediction")
+            sn = home["prediction"]["snapshot"]
+            for k, rows in sn["predictions"].items():
+                self.assertEqual(len(rows), sn["candidate_counts"][k], k)   # ครบตามจำนวนเลขที่แสดง
+            if pd["small"]:
+                for k, v in home["prediction"]["small"]["predictions"].items():
+                    self.assertEqual(len(v["rows"]), pd["small"]["candidate_counts"][k], k)
+        size = len(json.dumps(home, ensure_ascii=False, separators=(",", ":")).encode())
+        self.assertLess(size, 60_000, "home.json ใหญ่เกินไป")
 
 
 class ImportTest(unittest.TestCase):
