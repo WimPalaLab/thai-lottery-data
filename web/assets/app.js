@@ -327,8 +327,133 @@ async function checkShort(n, out) {
 }
 
 // ---------- page: home ----------
+// ไอคอนเส้นเรียบ (SVG ภายใน ไม่มีไฟล์ภายนอก)
+const ICONS = {
+  calendar: ["M4 6h16v14H4z", "M8 3v4M16 3v4M4 10h16"],
+  target: ["M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18", "M12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10", "M12 11a1 1 0 1 0 0 2a1 1 0 1 0 0-2"],
+  grid: ["M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"],
+  shield: ["M12 3l8 3v6c0 4.5-3.4 8.2-8 9c-4.6-.8-8-4.5-8-9V6z", "M8.5 12l2.5 2.5l4.5-5"],
+  check: ["M5 12.5l4.5 4.5L19 7.5"],
+  chart: ["M4 20V10M10 20V4M16 20v-7M22 20H2"],
+  trend: ["M3 17l6-6l4 4l8-8", "M15 7h6v6"],
+  bell: ["M6 16V11a6 6 0 1 1 12 0v5l2 2H4z", "M10 20a2 2 0 0 0 4 0"],
+};
+function icon(name, cls) {
+  return s("svg", { viewBox: "0 0 24 24", class: `ico ${cls || ""}`, "aria-hidden": "true" }, ICONS[name].map((d) => s("path", { d })));
+}
+
+// ลูกบอลตกแต่งในแถบหัวเรื่อง (สีกลาง ๆ ไม่สื่อความหมาย)
+function heroBalls() {
+  const ball = (cx, cy, r, n) => s("g", null, s("circle", { cx, cy, r, class: "ball" }), s("circle", { cx, cy, r: r * 0.58, class: "ball-in" }),
+    s("text", { x: cx, y: cy + r * 0.24, "text-anchor": "middle", "font-size": r * 0.7 }, n));
+  return s("svg", { viewBox: "0 0 220 170", class: "hero-balls", "aria-hidden": "true" }, ball(118, 92, 62, "6"), ball(40, 120, 30, "9"), ball(186, 46, 26, "3"), ball(196, 132, 18, "0"));
+}
+
+function kpi(iconName, k, v, unit, sub) {
+  return h("div", { class: "kpi" }, h("div", { class: "kpi-ico" }, icon(iconName)),
+    h("div", null, h("div", { class: "k" }, k), h("div", { class: "v" }, v, unit ? h("span", { class: "unit" }, ` ${unit}`) : null), h("div", { class: "sub" }, sub)));
+}
+
+// วงแหวนคะแนน 0–100
+function ring(value, label) {
+  const r = 52, c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(100, value));
+  return h("div", { class: "ring" },
+    s("svg", { viewBox: "0 0 128 128", "aria-hidden": "true" },
+      s("circle", { cx: 64, cy: 64, r, class: "ring-bg" }),
+      s("circle", { cx: 64, cy: 64, r, class: "ring-fg", "stroke-dasharray": `${(c * v) / 100} ${c}`, transform: "rotate(-90 64 64)" })),
+    h("div", { class: "ring-text" }, h("div", { class: "rv" }, fmt1.format(v)), h("div", { class: "rs" }, "/ 100")),
+    h("div", { class: "ring-label" }, label));
+}
+
+const PRIZE_BADGE = { first: "1", second: "2", third: "3", fourth: "4", fifth: "5", last2: "2ต", back3: "3ต", front3: "3ห" };
+
+function predCard(k, label, count, rows, extraCls) {
+  return h("div", { class: `pred-card ${extraCls || ""}` },
+    h("div", { class: "pred-head" }, h("span", { class: "badge", "aria-hidden": "true" }, PRIZE_BADGE[k]),
+      h("h3", null, label, h("span", { class: "muted" }, ` (${count} เลข)`))),
+    h("div", { class: "num-list pred-nums" }, rows.slice(0, count).map((r) => h("span", null, r.number))),
+    h("a", { class: "more", href: k === "first" ? "analysis.html" : `analysis.html?p=${k}` }, "ดูเหตุผล →"));
+}
+
+function scorePanel(sn) {
+  const state = { k: "first" };
+  const seg = h("div", { class: "seg", role: "group", "aria-label": "เลือกรางวัล" });
+  const body = h("div", { class: "score-body" });
+  const avg = (rows, f) => rows.reduce((a, r) => a + r[f], 0) / rows.length;
+  function draw() {
+    seg.replaceChildren(...SIX.map((k) => h("button", { type: "button", "aria-pressed": String(state.k === k), onclick: () => { state.k = k; draw(); } }, SIX_LABEL[k].replace("รางวัลที่ ", "ที่ "))));
+    const K = sn.candidate_counts[state.k];
+    const rows = sn.predictions[state.k].slice(0, K);
+    const w = sn.hybrid_weights[state.k];
+    body.replaceChildren(
+      ring(avg(rows, "hybrid_score"), `คะแนนรวมเฉลี่ยของ ${K} เลขที่เลือก`),
+      h("ul", { class: "score-list" },
+        h("li", null, icon("check", "ok"), h("span", null, "ดูทุกรางวัลรวมกัน"), h("b", null, fmt1.format(avg(rows, "global_score")))),
+        h("li", null, icon("check", "ok"), h("span", null, `ดูเฉพาะ${SIX_LABEL[state.k]}`), h("b", null, fmt1.format(avg(rows, "prize_score")))),
+        h("li", null, icon("check", "ok"), h("span", null, "น้ำหนัก (ทุกรางวัล : รางวัลนี้)"), h("b", null, `${Math.round(w.global * 100)} : ${Math.round(w.prize_specific * 100)}`))));
+  }
+  draw();
+  return h("section", { class: "card score-panel stack" },
+    h("h2", null, icon("chart"), "สรุปคะแนน"),
+    seg, body,
+    h("p", { class: "callout small" }, "คะแนนเทียบกับเลขทั้ง 1 ล้านเลข (100 = สูงสุดตามวิธีนี้) ไม่ใช่โอกาสถูกรางวัล · ลองย้อนหลังแล้วไม่ดีกว่าการสุ่ม"));
+}
+
+function backtestMini(bt) {
+  if (!bt) return null;
+  const tl = bt.timeline;
+  const n = tl.dates.length;
+  const avgPct = [...Array(n).keys()].map((i) => {
+    const v = SIX.map((k) => tl[k].mean_pct[i]).filter((x) => x !== null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  });
+  const win = 24;
+  const roll = avgPct.map((_, i) => {
+    if (i + 1 < win) return null;
+    const sl = avgPct.slice(i + 1 - win, i + 1).filter((v) => v !== null);
+    return sl.reduce((a, b) => a + b, 0) / sl.length;
+  });
+  const per = SIX.reduce((a, k) => a + Math.max(1, tl[k].numbers_per_draw), 0);
+  const se = Math.sqrt(1 / 12 / (win * per));
+  const ov = bt.overall.tuned.all;
+  return h("section", { class: "card stack" },
+    h("div", { class: "row" }, h("h2", null, "ทดสอบย้อนหลังเทียบการสุ่ม"), h("span", { class: "spacer" }), h("a", { class: "small", href: "analysis.html?tab=backtest" }, "รายละเอียด →")),
+    lineChart({ values: roll, labels: tl.dates.map((d) => String(Number(d.slice(0, 4)) + 543)), ref: 0.5, band: [0.5 - 1.96 * se, 0.5 + 1.96 * se], yMin: 0.4, yMax: 0.6, ariaLabel: "อันดับเฉลี่ยของเลขที่ออกจริงเทียบกับการสุ่ม", yFmt: (v) => `${Math.round(v * 100)}%`, W: 400 }),
+    h("p", { class: "note" }, `เส้นทึบ = เลขที่ออกจริงอยู่อันดับเฉลี่ยกี่ % จากบนสุด (เฉลี่ยทีละ ${win} งวด) · เส้นประ = 50% ถ้าสุ่มเลือก · ${fmt.format(bt.evaluation.draws)} งวดที่ทดสอบ ถูกตรง 6 หลัก ${ov.hits} เลข (สุ่มคาดไว้ ${fmt2.format(ov.expected)}) → ไม่ดีกว่าการสุ่ม`));
+}
+
+function digitMini(six) {
+  if (!six) return null;
+  const rec = six.data.recent.all;
+  if (!rec.numbers) return null;
+  const digits = [...Array(10).keys()].map(String);
+  const tot = rec.numbers * 6;
+  return h("section", { class: "card stack" },
+    h("div", { class: "row" }, h("h2", null, "ตัวเลข 0–9 ช่วงหลัง ๆ"), h("span", { class: "spacer" }), h("a", { class: "small", href: "stats.html?m=six" }, "ดูเพิ่ม →")),
+    barChart({ labels: digits, values: rec.digit.counts.map((c) => (c / tot) * 100), expected: digits.map(() => 10), ariaLabel: "สัดส่วนตัวเลข 0 ถึง 9 ใน 24 งวดล่าสุด (%)", W: 360 }),
+    h("p", { class: "note" }, `สัดส่วน (%) ของตัวเลขแต่ละตัวในรางวัลที่ 1–5 ${six.data.recent.label} (${fmt.format(rec.numbers)} เลข) · ถ้าสุ่มควรเป็น 10% ทุกตัว ความต่างช่วงสั้นเป็นเรื่องปกติ`));
+}
+
+function updatesMini(m, pidx, bt, bts) {
+  const items = [];
+  items.push([m.latest_draw, `เพิ่มผลงวด ${thShort(m.latest_draw)} จากกองสลากฯ`]);
+  if (pidx && pidx.snapshots.length) {
+    const sn = pidx.snapshots[0];
+    items.push([sn.created_at.slice(0, 10), `บันทึกเลขสำหรับงวด ${thShort(sn.target_draw_date)} (ล็อกแล้ว ไม่แก้ไข)`]);
+  }
+  if (bt && bt.backtest_generated_at) items.push([bt.backtest_generated_at.slice(0, 10), `ทดสอบย้อนหลังเลข 6 หลัก ${fmt.format(bt.evaluation.draws)} งวด`]);
+  if (bts && bts.backtest_generated_at) items.push([bts.backtest_generated_at.slice(0, 10), "ทดสอบย้อนหลังเลขท้าย 2 ตัว / ท้าย 3 ตัว / หน้า 3 ตัว"]);
+  items.sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  return h("section", { class: "card stack" },
+    h("h2", null, icon("bell"), "อัปเดตล่าสุด"),
+    h("ul", { class: "updates" }, items.filter(([d]) => RE_DATE.test(d)).map(([d, t]) => h("li", null, h("span", { class: "d" }, thShort(d)), h("span", null, t)))),
+    h("p", { class: "note" }, "ระบบดึงผลจากกองสลากฯ อัตโนมัติวันละ 3 รอบ ", h("a", { href: "data.html" }, "ดูข้อมูลและแหล่งที่มา →")));
+}
+
 async function pageHome() {
-  const [m, latest] = await Promise.all([manifest(), getData("latest.json")]);
+  const [m, latest, pidx, bt, bts, six] = await Promise.all([manifest(), getData("latest.json"), optionalData("predictions/index.json"),
+    optionalData("analysis/backtest.json"), optionalData("analysis/backtest_small.json"), optionalData("stats/sixdigit.json")]);
   const d = latest.draw;
   const p = d.prizes;
   const latestCard = h("section", { class: "card", "aria-labelledby": "latest-h" },
@@ -343,37 +468,52 @@ async function pageHome() {
     h("p", { class: "muted small section" }, `ข้างเคียงรางวัลที่ 1: ${nums(p.near_first)}`),
     h("a", { href: `results.html?d=${d.draw_date}` }, "ดูผลรางวัลทั้งหมดของงวดนี้ →"));
   const q = new URLSearchParams(location.search).get("n");
-  let nextCard = null;
+
+  const hero = h("section", { class: "hero" },
+    h("div", { class: "hero-main" },
+      h("h1", null, "วิเคราะห์", h("span", { class: "nowrap" }, "สลากกินแบ่งรัฐบาล"), h("br"), h("span", { class: "hl" }, "ด้วยสถิติจริง")),
+      h("p", null, "โปร่งใส ตรวจสอบได้ทุกขั้นตอน และบอกตรง ๆ ว่าทำได้แค่ไหน"),
+      h("span", { class: "chip" }, `ข้อมูลถึงงวด ${thShort(m.latest_draw)}`)),
+    heroBalls(),
+    h("div", { class: "hero-side" },
+      h("h2", null, "แนวทางของเว็บนี้"),
+      h("ul", { class: "checks" },
+        h("li", null, icon("check", "ok"), "จัดอันดับเลข 6 หลักครบ 1,000,000 เลข"),
+        h("li", null, icon("check", "ok"), `ใช้ข้อมูลย้อนหลัง ${fmt.format(m.draw_count)} งวด`),
+        h("li", null, icon("check", "ok"), "ผสมคะแนนจากทุกรางวัลกับเฉพาะรางวัล"),
+        h("li", null, icon("check", "ok"), "ทดสอบย้อนหลังเทียบกับการสุ่มทุกครั้ง"))));
+
+  const kpis = h("div", { class: "kpi-row" },
+    kpi("calendar", "ข้อมูลย้อนหลัง", fmt.format(m.draw_count), "งวด", `ตั้งแต่ ${thShort(m.first_draw)}`),
+    kpi("target", "จัดอันดับ", "8", "ประเภท", "รางวัลที่ 1–5, ท้าย 2, ท้าย 3, หน้า 3"),
+    kpi("grid", "ให้คะแนนทุกเลข", "1,000,000", "เลข", "000000–999999"),
+    kpi("shield", "ความโปร่งใส", "ตรวจสอบได้", "", "ล็อกก่อนออกรางวัล + sha256"));
+
+  let predSection = null;
   if (m.latest_snapshot && RE_DATE.test(m.latest_snapshot)) {
     const pd = await optionalData(`predictions/${m.latest_snapshot}.json`);
     if (pd && pd.snapshot) {
       const sn = pd.snapshot;
       const sm = pd.small;
-      const block = (label, count, list) => h("div", { class: "stack" },
-        h("div", { class: "small muted" }, `${label} · ${count} อันดับแรก`),
-        h("div", { class: "num-list" }, list.slice(0, count).map((r) => h("span", null, r.number))));
-      nextCard = h("section", { class: "card section stack next-card" },
-        h("div", { class: "row" }, h("h2", null, `เลขที่ระบบจัดอันดับไว้: งวด ${thShort(sn.target_draw_date)}`), h("span", { class: "spacer" }), statusChip(pd.evaluation ? pd.evaluation.status : "pending")),
-        h("div", { class: "grid grid-2e" },
-          ["first", "second"].map((k) => block(SIX_LABEL[k], sn.candidate_counts[k], sn.predictions[k])),
-          sm ? ["last2", "back3"].map((k) => block(PRIZE_LABEL[k], sm.candidate_counts[k], sm.predictions[k].rows)) : null),
-        h("p", { class: "note" }, `จัดอันดับจากสถิติที่ผ่านมา (ข้อมูลถึง ${thShort(sn.training_data_through)}) คะแนนไม่ใช่โอกาสถูกรางวัล · ลองย้อนหลังแล้วไม่ดีกว่าการสุ่ม · เลขชุดนี้ล็อกไว้แล้ว รีเฟรชก็ไม่เปลี่ยน · `,
-          h("a", { href: "analysis.html" }, "ดูทุกรางวัลและเหตุผล →")));
+      predSection = h("div", { class: "dash section" },
+        h("section", { class: "card pred-wrap" },
+          h("div", { class: "pred-bar" },
+            h("h2", null, `เลขที่ระบบจัดอันดับไว้ งวดวันที่ ${thShort(sn.target_draw_date)}`),
+            statusChip(pd.evaluation ? pd.evaluation.status : "pending")),
+          h("div", { class: "pred-grid" },
+            ["first", "second", "third", "fourth"].map((k) => predCard(k, SIX_LABEL[k], sn.candidate_counts[k], sn.predictions[k])),
+            predCard("fifth", SIX_LABEL.fifth, sn.candidate_counts.fifth, sn.predictions.fifth, "wide")),
+          sm ? h("div", { class: "pred-grid three" }, SMALL.map((k) => predCard(k, PRIZE_LABEL[k], sm.candidate_counts[k], sm.predictions[k].rows))) : null,
+          h("p", { class: "note" }, `จัดอันดับจากสถิติถึงงวด ${thShort(sn.training_data_through)} · เลขชุดนี้ล็อกไว้แล้ว รีเฟรชก็ไม่เปลี่ยน · คะแนนไม่ใช่โอกาสถูกรางวัล`)),
+        scorePanel(sn));
     }
   }
   render(
-    h("div", { class: "grid grid-2" }, latestCard, ticketCard({ initial: q })),
-    nextCard,
-    h("section", { class: "card section" },
-      h("h2", null, "ข้อมูลในเว็บนี้"),
-      h("div", { class: "stat-row" },
-        stat("จำนวนงวด", fmt.format(m.draw_count)),
-        stat("ตั้งแต่", thShort(m.first_draw)),
-        stat("ถึง", thShort(m.latest_draw)),
-        stat("ข้อมูลทางการ GLO", `${fmt.format(m.by_trust.official)} งวด`)),
-      h("p", { class: "muted small section" },
-        "อยากรู้ว่ามีเลขไหน \"ออกบ่อย\" จริงไหม? ดู ", h("a", { href: "random.html" }, "ผลทดสอบความสุ่ม"),
-        " หรือ ", h("a", { href: "stats.html" }, "ความถี่เทียบกับที่ควรเป็นถ้าสุ่ม"))));
+    hero,
+    kpis,
+    h("div", { class: "grid grid-2 section" }, latestCard, ticketCard({ initial: q })),
+    predSection,
+    h("div", { class: "grid grid-3 section" }, digitMini(six), backtestMini(bt), updatesMini(m, pidx, bt, bts)));
 }
 
 // ---------- page: results ----------
@@ -774,8 +914,8 @@ function histogram(hist) {
   return [h("div", { class: "chart" }, svg), legend, table];
 }
 
-function barChart({ labels, values, expected, band, ariaLabel, xTitle, every }) {
-  const W = 640, H = 220, padL = 48, padB = xTitle ? 40 : 28, padT = 12, padR = 8;
+function barChart({ labels, values, expected, band, ariaLabel, xTitle, every, W = 640 }) {
+  const H = W < 640 ? 230 : 220, padL = 48, padB = xTitle ? 40 : 28, padT = 12, padR = 8;
   const n = values.length;
   const max = Math.max(1, ...values, ...(expected || []), band ? band[1] : 0) * 1.06;
   const bw = (W - padL - padR) / n;
@@ -807,8 +947,8 @@ function barChart({ labels, values, expected, band, ariaLabel, xTitle, every }) 
 }
 
 // เส้นเวลา: values (อาจมี null) เทียบเส้นอ้างอิง (เส้นประ) และแถบช่วงปกติ
-function lineChart({ values, labels, ref, band, ariaLabel, yFmt, yMin, yMax }) {
-  const W = 640, H = 210, padL = 52, padB = 28, padT = 10, padR = 10;
+function lineChart({ values, labels, ref, band, ariaLabel, yFmt, yMin, yMax, W = 640 }) {
+  const H = W < 640 ? 230 : 210, padL = 52, padB = 28, padT = 10, padR = 10;
   const n = values.length;
   const vals = values.filter((v) => v !== null);
   const lo = yMin !== undefined ? yMin : Math.min(...vals, band ? band[0] : Infinity, ref ?? Infinity);
