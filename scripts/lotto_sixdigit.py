@@ -4,6 +4,8 @@
 - ตัวเลข 0–9 (ทุกหลักรวมกัน) และแยก 6 ตำแหน่ง
 - คู่ตัวเลขติดกัน (00–99 รวม 5 ตำแหน่ง), 3 หลักแรก/ท้าย (ฮิสโทแกรม)
 - จำนวนเลขคี่, จำนวนเลขสูง (5–9), ผลรวมหลัก, รูปแบบการซ้ำ
+- เลขเรียงติดกัน: ความยาวช่วงที่ยาวที่สุดที่ตัวเลขถัดไปเพิ่มทีละ 1 (เช่น 345) หรือลดทีละ 1 (เช่น 987)
+  ในทิศเดียวกัน 9→0 และ 0→9 ไม่นับว่าติดกัน; ไม่มีคู่ใดติดกัน = 1, ทั้ง 6 หลัก (เช่น 123456) = 6
 ไม่รวมรางวัลข้างเคียง (ขึ้นกับรางวัลที่ 1) และไม่รวมเลขหน้า/ท้าย 3 ตัว หรือท้าย 2 ตัว (ไม่ใช่เลข 6 หลัก)"""
 import math
 from collections import Counter
@@ -17,6 +19,41 @@ RECENT_DRAWS = 24
 
 def pattern_of(num):
     return "".join(str(c) for c in sorted(Counter(num).values(), reverse=True))
+
+
+def run_of(num):
+    """ความยาวช่วงเรียงติดกันที่ยาวที่สุด (1–6) ดูนิยามด้านบน"""
+    best = cur = 1
+    direction = 0
+    for a, b in zip(num, num[1:]):
+        step = ord(b) - ord(a)
+        if step in (1, -1):
+            cur = cur + 1 if step == direction else 2
+            direction = step
+        else:
+            cur, direction = 1, 0
+        best = max(best, cur)
+    return best
+
+
+def _run_theory():
+    """ความน่าจะเป็นของ run_of = 1..6 ถ้าทุกเลขมีโอกาสเท่ากัน (ไล่สถานะทีละหลัก ไม่ต้องไล่ 1 ล้านเลข)"""
+    states = Counter({(d, 0, 1, 1): 1 for d in range(10)})  # (หลักล่าสุด, ทิศ, ช่วงปัจจุบัน, ยาวสุด) -> จำนวนเลข
+    for _ in range(5):
+        nxt = Counter()
+        for (last, direction, cur, best), c in states.items():
+            for d in range(10):
+                step = d - last
+                if step in (1, -1):
+                    nc, nd = (cur + 1 if step == direction else 2), step
+                else:
+                    nc, nd = 1, 0
+                nxt[(d, nd, nc, max(best, nc))] += c
+        states = nxt
+    out = [0] * 6
+    for (_, _, _, best), c in states.items():
+        out[best - 1] += c
+    return [c / 1_000_000 for c in out]
 
 
 def _pattern_theory():
@@ -46,6 +83,7 @@ def _dsum_theory():
 PATTERN_P = _pattern_theory()
 DSUM_P = _dsum_theory()
 BINOM6 = [math.comb(6, k) / 64 for k in range(7)]
+RUN_P = _run_theory()
 
 
 def chi_square_expected(observed, probs, min_expected=5):
@@ -104,6 +142,7 @@ def six_digit_stats(numbers, draws_info):
     high = [0] * 7
     dsum = [0] * 55
     pat = Counter()
+    run = [0] * 6
     pre, suf = Counter(), Counter()
     for v in numbers:
         ds = [ord(c) - 48 for c in v]
@@ -116,6 +155,7 @@ def six_digit_stats(numbers, draws_info):
         high[sum(d >= 5 for d in ds)] += 1
         dsum[sum(ds)] += 1
         pat[pattern_of(v)] += 1
+        run[run_of(v) - 1] += 1
         pre[v[:3]] += 1
         suf[v[3:]] += 1
     return {
@@ -132,6 +172,7 @@ def six_digit_stats(numbers, draws_info):
         "high": _dist_block(high, BINOM6, n),
         "dsum": _dist_block(dsum, DSUM_P, n),
         "pattern": _dist_block([pat.get(p, 0) for p in PATTERNS], PATTERN_P, n),
+        "run": _dist_block(run, RUN_P, n),
     }
 
 
@@ -161,7 +202,7 @@ def build(draws, period_draws, periods):
             data[key][prize] = six_digit_stats(nums, info)
     return {"periods": keys, "prizes": SIX_PRIZES + ["all"], "patterns": PATTERNS, "data": data,
             # ใช้คำนวณช่วงปีที่ผู้ใช้เลือกเองในหน้าเว็บ
-            "theory": {"pattern": PATTERN_P, "dsum": DSUM_P, "binom6": BINOM6}}
+            "theory": {"pattern": PATTERN_P, "dsum": DSUM_P, "binom6": BINOM6, "run": RUN_P}}
 
 
 def repeats(draws, prizes=SIX_PRIZES, top=20):

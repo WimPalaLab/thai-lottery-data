@@ -44,6 +44,24 @@ class ExtrasTest(unittest.TestCase):
         self.assertIn("2023-07", months)       # งวด 1 ส.ค. 2566 เลื่อนมา 31 ก.ค.
         self.assertIn("2020-05", months)
 
+    def test_run_of_definition(self):
+        self.assertEqual(SIX.run_of("123456"), 6)
+        self.assertEqual(SIX.run_of("987650"), 5)
+        self.assertEqual(SIX.run_of("121212"), 2)  # ขึ้นแล้วลง ไม่ใช่ทิศเดียวกัน
+        self.assertEqual(SIX.run_of("901234"), 5)  # 9→0 ไม่นับว่าติดกัน
+        self.assertEqual(SIX.run_of("135792"), 1)
+        self.assertEqual(SIX.run_of("345111"), 3)
+
+    def test_run_theory_matches_enumeration(self):
+        counts = [0] * 6
+        for i in range(0, 1_000_000, 7):  # ตัวอย่างทุก 7 เลข ใกล้เคียงค่าทฤษฎี
+            counts[SIX.run_of(f"{i:06d}") - 1] += 1
+        n = sum(counts)
+        self.assertAlmostEqual(sum(SIX.RUN_P), 1.0, places=9)
+        for c, p in zip(counts, SIX.RUN_P):
+            self.assertAlmostEqual(c / n, p, delta=0.003)
+        self.assertEqual(round(SIX.RUN_P[5] * 1_000_000), 10)  # 012345…456789 และ 987654…543210
+
     def test_six_digit_period_filter_matches_data(self):
         files = build_site.build_data(self.draws, "x", "t", [], os.path.join(ROOT, "data"))
         six = files["stats/sixdigit.json"]
@@ -65,7 +83,7 @@ class CustomRangeJsTest(unittest.TestCase):
         src = open(APP_JS, encoding="utf-8").read()
         a = src.index("// ---------- six-digit stats for a custom year range")
         b = src.index("// ---------- stats: six-digit ----------")
-        six = {"patterns": SIX.PATTERNS, "theory": {"pattern": SIX.PATTERN_P, "dsum": SIX.DSUM_P, "binom6": SIX.BINOM6}}
+        six = {"patterns": SIX.PATTERNS, "theory": {"pattern": SIX.PATTERN_P, "dsum": SIX.DSUM_P, "binom6": SIX.BINOM6, "run": SIX.RUN_P}}
         script = src[a:b] + "\nconst r = computeSix(" + json.dumps(nums) + ", [1, 'a', 'b'], " + json.dumps(six) + ");\n" \
             "process.stdout.write(JSON.stringify(r));"
         out = subprocess.run([NODE, "-e", script], capture_output=True, text=True, timeout=60, check=True).stdout
@@ -78,7 +96,7 @@ class CustomRangeJsTest(unittest.TestCase):
         for i in range(6):
             self.assertEqual(js["position"][i]["counts"], py["position"][i]["counts"])
             self.assertEqual(js["position"][i]["range95"], py["position"][i]["range95"])
-        for key in ("odd", "high", "dsum", "pattern"):
+        for key in ("odd", "high", "dsum", "pattern", "run"):
             self.assertEqual(js[key]["observed"], py[key]["observed"], key)
             self.assertAlmostEqual(js[key]["chi_square"]["p"], py[key]["chi_square"]["p"], places=6)
         self.assertEqual(js["prefix_hist"]["observed"], py["prefix_hist"]["observed"])
@@ -155,6 +173,52 @@ class ClientRangeJsTest(unittest.TestCase):
             self.assertAlmostEqual(got["expected_repeated"], want["expected_repeated"], delta=0.11)
             self.assertAlmostEqual(got["expected_ge3"], want["expected_ge3"], delta=0.11)
 
+
+
+def js_slice(start, end):
+    with open(APP_JS, encoding="utf-8") as f:
+        src = f.read()
+    return src[src.index(start):src.index(end)]
+
+
+@unittest.skipIf(NODE is None, "ไม่มี node")
+class CsvAndBacktestRangeJsTest(unittest.TestCase):
+    """ปุ่ม CSV และตัวกรองช่วงปีของผลทดสอบย้อนหลัง (คำนวณในเบราว์เซอร์)"""
+
+    def node(self, body):
+        out = subprocess.run([NODE, "-"], input=body, capture_output=True, text=True, encoding="utf-8",
+                             timeout=60, check=True).stdout
+        return json.loads(out)
+
+    def test_csv_cells_are_safe(self):
+        code = js_slice("function csvCell", "function csvButton") + (
+            "process.stdout.write(JSON.stringify([csvCell('=1+1'), csvCell('+66'), csvCell('-5'), csvCell('@x'),"
+            " csvCell('001234'), csvCell('a,b'), csvCell('say \"hi\"'), csvCell(null), csvText(['a','b'], [['1','2']])]));")
+        got = self.node(code)
+        self.assertEqual(got[:8], ["'=1+1", "'+66", "-5", "'@x", "001234", '"a,b"', '"say ""hi"""', ""])
+        self.assertEqual(got[8], "﻿a,b\r\n1,2\r\n")
+
+    def test_year_range_totals_match_backtest(self):
+        bt_path = os.path.join(ROOT, "data", "analysis", "backtest.json")
+        if not os.path.exists(bt_path):
+            self.skipTest("ไม่มี backtest.json")
+        with open(bt_path, encoding="utf-8") as f:
+            bt = json.load(f)
+        code = (js_region() + js_slice("// ผลทดสอบย้อนหลังของชุดที่เลือกใช้", "function yearRangeCard")
+                + "const SIX = ['first','second','third','fourth','fifth'];\nconst bt = " + json.dumps(bt) + ";\n"
+                "process.stdout.write(JSON.stringify([backtestRangeStats(bt, 1900, 2100), backtestRangeStats(bt, 2017, 2100),"
+                " backtestRangeStats(bt, 1800, 1801)]));")
+        whole, late, none = self.node(code)
+        for k in SIX.SIX_PRIZES:
+            tuned = bt["results"][k]["tuned"]
+            self.assertEqual(whole[k]["hits"], tuned["all"]["hits"], k)
+            self.assertEqual(whole[k]["draws"], tuned["all"]["draws"], k)
+            self.assertEqual(whole[k]["withHit"], tuned["all"]["draws_with_hit"], k)
+            self.assertAlmostEqual(whole[k]["mean"], tuned["all"]["mean_pct"], places=3)
+            self.assertEqual(late[k]["draws"], tuned["holdout"]["draws"], k)
+            self.assertEqual(late[k]["hits"], tuned["holdout"]["hits"], k)
+            self.assertEqual(none[k]["draws"], 0)
+            self.assertIsNone(none[k]["mean"])
 
 if __name__ == "__main__":
     unittest.main()

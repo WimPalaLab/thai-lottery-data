@@ -306,6 +306,11 @@ footer { max-width: 1080px; margin: 0 auto; padding: 8px 16px 28px; color: var(-
 footer p { margin: 0 0 4px; }
 footer a[href="glossary.html"] { display: inline-flex; align-items: center; min-height: 48px; color: var(--text); }
 
+.csv-btn { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: .9rem; padding: 8px 14px; }
+.csv-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+.snap-details { border-top: 1px solid var(--border); padding-top: 4px; }
+.snap-details dd { overflow-wrap: anywhere; }
+
 /* ---------- คำอธิบายศัพท์ ---------- */
 /* ปุ่ม "?" ข้างคำศัพท์: ตาเห็น 20px แต่พื้นที่กดขยายเป็น 48px ด้วย ::before */
 .gl {
@@ -467,3 +472,6 @@ h2 > .ico { vertical-align: -3px; margin-right: 6px; color: var(--text-2); }
 .updates li { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: .88rem; }
 .updates li:last-child { border-bottom: 0; }
 .updates .d { color: var(--text-2); font-variant-numeric: tabular-nums; }
+/* ตารางตัวเลขหลายคอลัมน์: ไม่ตัดบรรทัดในช่อง เลื่อนซ้าย-ขวาในกรอบแทน (มือถือ) */
+table.tight th, table.tight td { white-space: nowrap; }
+table.tight th .note { white-space: normal; }
