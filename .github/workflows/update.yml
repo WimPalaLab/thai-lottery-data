@@ -54,7 +54,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install analysis dependency (pinned by hash)
-        run: python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-analysis.txt
+        run: "python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-analysis.txt"
 
       - name: Fetch new draws from glo.or.th
         run: python scripts/update_from_glo.py data/thai_lottery.csv raw/glo
@@ -89,7 +89,9 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/thai_lottery.csv raw/glo data/metadata data/predictions data/evaluations data/analysis
+          for p in data/thai_lottery.csv raw/glo data/metadata data/predictions data/evaluations data/analysis; do
+            if [ -e "$p" ]; then git add -- "$p"; fi
+          done
           latest=$(tail -n 1 data/thai_lottery.csv | cut -d, -f1)
           git commit -m "Update data up to ${latest} (results, evaluations, backtest, snapshot)"
           git push
@@ -118,7 +120,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install analysis dependency (pinned by hash)
-        run: python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-analysis.txt
+        run: "python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-analysis.txt"
 
       - name: Validate data
         run: python scripts/validate_csv.py data/thai_lottery.csv
