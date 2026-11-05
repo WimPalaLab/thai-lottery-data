@@ -6,6 +6,12 @@
 # - สิทธิ์เริ่มต้นเป็นศูนย์ แต่ละ job ขอเท่าที่ต้องใช้ (เขียน repo เฉพาะ job update, deploy เฉพาะ job deploy)
 # - actions ทุกตัวปักไว้ที่ commit SHA (แท็กถูกย้ายได้ SHA ย้ายไม่ได้)
 # - ข้อมูลต้องผ่าน validate_csv.py ก่อน commit และก่อนสร้างเว็บ ถ้าไม่ผ่าน จะไม่ commit/ไม่ deploy
+# - numpy (dependency เดียวของ analysis engine) ติดตั้งแบบ --require-hashes จาก requirements-analysis.txt
+#
+# การทำนาย (ดู MODEL.md):
+# - หลังเพิ่มงวดใหม่: ประเมิน snapshot ที่รอผล → คำนวณ backtest ใหม่ (ถ้าข้อมูล/config/โค้ดเปลี่ยน)
+#   → สร้าง snapshot ของงวดถัดไป (ก่อนวันออกรางวัล) แล้ว commit พร้อมข้อมูล
+# - snapshot/ผลประเมินที่มีอยู่แล้วห้ามถูกแก้หรือลบ ถ้ามีการแก้ job จะล้มและไม่ commit
 # - ตั้งค่า GitHub: Settings → Pages → Source = "GitHub Actions"
 name: Update lottery results and deploy site
 
@@ -22,6 +28,8 @@ on:
       - "scripts/**"
       - "tests/**"
       - "data/**"
+      - "config/**"
+      - "requirements-analysis.txt"
       - ".github/workflows/update.yml"
 
 permissions: {}
@@ -33,7 +41,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: write
     outputs:
@@ -45,28 +53,51 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install analysis dependency (pinned by hash)
+        run: python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-analysis.txt
+
       - name: Fetch new draws from glo.or.th
         run: python scripts/update_from_glo.py data/thai_lottery.csv raw/glo
 
       - name: Validate data before commit
         run: python scripts/validate_csv.py data/thai_lottery.csv
 
+      - name: Evaluate pending prediction snapshots
+        run: python scripts/lotto_predict.py evaluate
+
+      - name: Update backtest (only if data, config or model code changed)
+        run: python scripts/lotto_predict.py backtest
+
+      - name: Create snapshot for the next draw (only if missing and before the draw)
+        run: python scripts/lotto_predict.py snapshot
+
+      - name: Refuse changes to existing snapshots and evaluations
+        run: |
+          changed=$(git diff --name-only --diff-filter=MDR -- data/predictions data/evaluations)
+          if [ -n "$changed" ]; then
+            echo "::error::existing snapshot/evaluation files were modified or deleted: $changed"
+            exit 1
+          fi
+
       - name: Commit if anything changed
         id: commit
         run: |
           if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
-            echo "No new draws."
+            echo "No new draws, snapshots or evaluations."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/thai_lottery.csv raw/glo
+          git add data/thai_lottery.csv raw/glo data/metadata data/predictions data/evaluations data/analysis
           latest=$(tail -n 1 data/thai_lottery.csv | cut -d, -f1)
-          git commit -m "Add draw results up to ${latest}"
+          git commit -m "Update data up to ${latest} (results, evaluations, backtest, snapshot)"
           git push
           echo "changed=true" >> "$GITHUB_OUTPUT"
-          echo "Added draws up to ${latest}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "Data up to ${latest}"
+            git show --stat --format= HEAD
+          } >> "$GITHUB_STEP_SUMMARY"
 
   build:
     needs: update
@@ -85,6 +116,9 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.12"
+
+      - name: Install analysis dependency (pinned by hash)
+        run: python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-analysis.txt
 
       - name: Validate data
         run: python scripts/validate_csv.py data/thai_lottery.csv

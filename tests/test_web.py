@@ -17,8 +17,9 @@ def read(p):
         return f.read()
 
 
-PROHIBITED = ["เลขเด็ด", "เลขมาแรง", "เลขน่าจับตา", "แนวโน้มงวดหน้า", "โอกาสสูง", "ทำนาย", "สูตร",
-              "เลขเด่น", "เลขดับ", "hot number", "lucky number", "prediction", "forecast"]
+# เว็บใช้เองคนเดียว ใช้คำว่า "ทำนาย" ได้ แต่ห้ามอ้างความแน่นอนที่โมเดลไม่ได้ calibrate ไว้ (ดู SPEC.md)
+PROHIBITED = ["โอกาสสูง", "ถูกแน่", "แม่นยำ 100", "รับประกัน", "high chance", "guaranteed"]
+PAGES = ["index", "results", "stats", "analysis", "history", "random", "data"]
 
 
 class WebSecurityTest(unittest.TestCase):
@@ -29,7 +30,7 @@ class WebSecurityTest(unittest.TestCase):
 
     def test_every_page_has_strict_csp(self):
         pages = files(".html")
-        self.assertGreaterEqual(len(pages), 5)
+        self.assertEqual(sorted(os.path.splitext(os.path.basename(p))[0] for p in pages), sorted(PAGES))
         for p in pages:
             html = read(p)
             m = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', html)
@@ -56,6 +57,13 @@ class WebSecurityTest(unittest.TestCase):
             for url in re.findall(r"https?://[^\s\"'`)<>]+", text):
                 self.assertRegex(url, r"^(http://www\.w3\.org/2000/svg|https://www\.glo\.or\.th/|"
                                       r"http://lotto\.join\.in\.th/|https://news\.sanook\.com/)", f"{p}: {url}")
+
+    def test_every_page_has_same_navigation(self):
+        for p in files(".html"):
+            html = read(p)
+            for name in PAGES[1:]:
+                self.assertIn(f'href="{name}.html"', html, p)
+            self.assertEqual(html.count('aria-current="page"'), 2, p)
 
     def test_prohibited_wording(self):
         for p in files(".html") + files(".js"):

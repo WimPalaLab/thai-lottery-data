@@ -1,0 +1,46 @@
+{
+  "model_version": "hybrid-v1",
+  "feature_weights": {
+    "digit": 0.20,
+    "position": 0.20,
+    "pattern": 0.15,
+    "time_window": 0.15,
+    "distribution": 0.10,
+    "statistical": 0.20
+  },
+  "smoothing": {
+    "digit_alpha": 10,
+    "position_alpha": 10,
+    "pair_alpha": 2,
+    "triplet_alpha": 5,
+    "markov_alpha": 5,
+    "class_strength": 50,
+    "time_window_strength": 50
+  },
+  "time_window_draws": 24,
+  "hybrid_experiments": {
+    "A": 0.2,
+    "B": 0.3,
+    "C": 0.4,
+    "D": 0.5,
+    "E": 0.6,
+    "F": 0.7
+  },
+  "default_experiment": "C",
+  "use_tuned_experiment": true,
+  "candidate_counts": {
+    "first": 3,
+    "second": 5,
+    "third": 8,
+    "fourth": 10,
+    "fifth": 10
+  },
+  "report_top_n": 20,
+  "backtest": {
+    "min_training_draws": 100,
+    "holdout_start": "2017-01-01",
+    "random_trials": 2000,
+    "random_seed": 20261105,
+    "stability_blocks": 4
+  }
+}

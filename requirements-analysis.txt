@@ -1,0 +1,4 @@
+# dependency เดียวของ analysis engine (scripts/lotto_model.py, lotto_backtest.py, lotto_predict.py)
+# ปัก version + hash ของ wheel (Linux x86_64, CPython 3.12 ตาม GitHub Actions) — pip จะปฏิเสธไฟล์ที่ hash ไม่ตรง
+# ตัวสร้างเว็บ (build_site.py) และหน้าเว็บไม่ต้องใช้ numpy
+numpy==2.3.5 --hash=sha256:0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28

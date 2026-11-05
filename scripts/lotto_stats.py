@@ -80,6 +80,8 @@ def gammq(a, x):
 def chi_square_uniform(counts):
     """ทดสอบว่า counts (list) กระจายเท่ากันหรือไม่: คืน dict(chi2, df, p)"""
     n, k = sum(counts), len(counts)
+    if n == 0:
+        return None   # ไม่มีข้อมูล ทดสอบไม่ได้
     e = n / k
     chi2 = sum((c - e) ** 2 / e for c in counts)
     df = k - 1
@@ -131,7 +133,7 @@ def frequency(draws, prize):
         kmax = max(max(hist), hi + 2)
         out["count_histogram"] = {
             "observed": [hist.get(k, 0) for k in range(kmax + 1)],
-            "expected": [space * pmf[k] for k in range(kmax + 1)],
+            "expected": [space * (pmf[k] if k < len(pmf) else 0.0) for k in range(kmax + 1)],
         }
     return out
 
@@ -225,6 +227,8 @@ def randomness(draws):
     tests = []
 
     def add(group, label, res, **extra):
+        if res is None:   # ไม่มีข้อมูลรางวัลนี้ในชุดข้อมูล (เช่น ข้อมูลไม่กี่งวด) จึงทดสอบไม่ได้
+            return
         tests.append({"group": group, "label": label, "chi2": res["chi2"], "df": res["df"],
                       "p": res["p"], "n": res["n"], **extra})
 

@@ -43,6 +43,7 @@ def main():
     print(f"last draw in CSV: {last}; new draws listed by GLO: {new or 'none'}")
 
     added = []
+    retrieved = {}
     for d in new:
         y, m, dd = d.split("-")
         res = post("checking/getLotteryResult", {"date": dd, "month": m, "year": y})
@@ -65,6 +66,7 @@ def main():
                    source_url="https://www.glo.or.th/api/checking/getLotteryResult")
         rows.append([row[h] for h in header])
         added.append(date)
+        retrieved[date] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         print(f"{d}: added (first prize {p['first'][0]})")
 
     if added:
@@ -73,7 +75,27 @@ def main():
             w = csv.writer(f)
             w.writerow(header)
             w.writerows(rows)
+        append_import_log(csv_path, added, retrieved)
     print(f"added {len(added)} draw(s)")
+
+
+def append_import_log(csv_path, added, retrieved):
+    """บันทึกเวลาที่ดึงผลแต่ละงวดสำเร็จ (data/metadata/import_log.json) เพื่อแสดงความสดของข้อมูลบนเว็บ"""
+    path = os.path.join(os.path.dirname(os.path.abspath(csv_path)), "metadata", "import_log.json")
+    log = {"schema_version": 1, "entries": []}
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            log = json.load(f)
+    have = {e["draw_date"] for e in log["entries"]}
+    for d in added:
+        if d not in have:
+            log["entries"].append({"draw_date": d, "retrieved_at": retrieved[d], "source": "glo.or.th API",
+                                   "source_url": "https://www.glo.or.th/api/checking/getLotteryResult",
+                                   "status": "added"})
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(log, f, ensure_ascii=False, indent=1)
+        f.write("\n")
 
 
 if __name__ == "__main__":

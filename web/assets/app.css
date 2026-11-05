@@ -102,18 +102,18 @@ p { margin: 0 0 .8em; }
 .bottomnav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
   background: var(--bg); border-top: 1px solid var(--border);
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
 }
 .bottomnav a {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
   min-height: 52px; justify-content: center;
-  text-decoration: none; color: var(--text-2); font-size: .72rem; border-radius: 10px;
+  text-decoration: none; color: var(--text-2); font-size: .68rem; border-radius: 10px; text-align: center; line-height: 1.2;
 }
 .bottomnav svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
 .bottomnav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
 
-@media (min-width: 760px) {
+@media (min-width: 980px) {
   .nav { display: flex; }
   .bottomnav { display: none; }
   body { padding-bottom: 0; }
@@ -160,7 +160,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 32px; }
 select { max-width: 100%; min-width: 0; }
 .row select { flex: 1 1 auto; }
 @media (min-width: 600px) { .row select { flex: 0 1 auto; } }
-input[type="text"], select {
+input[type="text"], input[type="date"], select {
   font: inherit; color: var(--text); background: var(--bg);
   border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; min-height: 48px;
 }
@@ -265,3 +265,41 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 600; paddi
 /* ---------- footer ---------- */
 footer { max-width: 1080px; margin: 0 auto; padding: 8px 16px 28px; color: var(--text-2); font-size: .82rem; }
 footer p { margin: 0 0 4px; }
+
+/* ---------- analysis / history ---------- */
+.callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+.chip.err { background: var(--err-soft); color: var(--err); }
+.tabs { margin-bottom: 4px; }
+.meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.cand-table td.num6 { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .08em; white-space: nowrap; }
+.cand-table td.why { min-width: 220px; }
+.cand-table tr.extra td { color: var(--text-2); }
+.cand-table tr.extra td.num6 { font-weight: 500; }
+.contrib { list-style: none; margin: 0; padding: 0; font-size: .85rem; color: var(--text-2); }
+.contrib li + li { margin-top: 2px; }
+.contrib b { color: var(--text); font-weight: 600; }
+.scorebar { display: inline-block; width: 64px; height: 6px; border-radius: 999px; background: var(--bg-2); vertical-align: middle; margin-left: 6px; overflow: hidden; }
+.scorebar > span { display: block; height: 100%; background: var(--accent); }
+.num-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.num-list span { background: var(--bg-2); border-radius: 8px; padding: 2px 8px; font-variant-numeric: tabular-nums; font-size: .92rem; }
+.num-list span.hit { background: var(--ok-soft); color: var(--ok); font-weight: 700; }
+.num-list span.shared { box-shadow: inset 0 0 0 2px var(--accent-soft); }
+tr.tuned td, tr.tuned th { background: var(--accent-soft); }
+.pos-heat { display: grid; grid-template-columns: 4.2em repeat(10, 1fr); gap: 3px; max-width: 640px; font-size: clamp(.62rem, 2.4vw, .82rem); }
+.pos-heat > div { border-radius: 6px; padding: 4px 0; text-align: center; font-variant-numeric: tabular-nums; position: relative; color: var(--text); }
+.pos-heat > .lab { background: transparent; color: var(--text-2); text-align: left; padding-left: 2px; }
+.pos-heat > div.out::after { content: ""; position: absolute; inset: 1px; border: 2px solid currentColor; border-radius: 5px; opacity: .5; }
+.heatmap.static > div {
+  aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: clamp(.58rem, 2.4vw, .8rem); line-height: 1.1; font-variant-numeric: tabular-nums; position: relative;
+}
+.heatmap.static > div .c { font-size: .8em; opacity: .8; }
+.heatmap.static > div.out::after { content: ""; position: absolute; inset: 2px; border: 2px solid currentColor; border-radius: 5px; opacity: .55; }
+.note { font-size: .82rem; color: var(--text-2); }
+.status-list { list-style: none; margin: 0; padding: 0; }
+.status-list li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.status-list li:last-child { border-bottom: 0; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: .92rem; }
+.kv dt { color: var(--text-2); }
+.kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+.next-card .num-list span { font-size: 1.2rem; font-weight: 700; letter-spacing: .06em; padding: 4px 10px; }

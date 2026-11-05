@@ -2,6 +2,8 @@
 
 ไฟล์หลัก: [`data/thai_lottery.csv`](data/thai_lottery.csv) (UTF-8 with BOM เปิดใน Excel ได้ภาษาไทยไม่เพี้ยน) — 761 งวด, 1 แถวต่องวด
 
+เว็บไซต์ (LOTTO INSIGHT), สถิติ และ Hybrid model: ดู `SPEC.md`, `ARCHITECTURE.md`, `DATA_AND_STATS.md`, `MODEL.md`
+
 ไฟล์ในโฟลเดอร์ `data/` มีชื่อคงที่ เว็บไซต์เรียกใช้ได้จาก
 `https://raw.githubusercontent.com/<owner>/<repo>/main/data/thai_lottery.csv`
 

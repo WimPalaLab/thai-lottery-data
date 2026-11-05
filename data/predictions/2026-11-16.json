@@ -1,0 +1,4123 @@
+{
+ "schema_version": 1,
+ "kind": "prediction_snapshot",
+ "model_version": "hybrid-v1",
+ "target_draw_date": "2026-11-16",
+ "target_is_estimate": true,
+ "created_at": "2026-11-05T08:43:22Z",
+ "training_data_through": "2026-11-01",
+ "training_draw_count": 761,
+ "training_numbers": {
+  "first": 761,
+  "second": 3175,
+  "third": 6350,
+  "fourth": 31750,
+  "fifth": 63500
+ },
+ "csv_sha256": "435af755512db45d9863f073fb20ae6fb081fcc8600427127216baa3191f7877",
+ "config": {
+  "model_version": "hybrid-v1",
+  "feature_weights": {
+   "digit": 0.2,
+   "position": 0.2,
+   "pattern": 0.15,
+   "time_window": 0.15,
+   "distribution": 0.1,
+   "statistical": 0.2
+  },
+  "smoothing": {
+   "digit_alpha": 10,
+   "position_alpha": 10,
+   "pair_alpha": 2,
+   "triplet_alpha": 5,
+   "markov_alpha": 5,
+   "class_strength": 50,
+   "time_window_strength": 50
+  },
+  "time_window_draws": 24,
+  "hybrid_experiments": {
+   "A": 0.2,
+   "B": 0.3,
+   "C": 0.4,
+   "D": 0.5,
+   "E": 0.6,
+   "F": 0.7
+  },
+  "default_experiment": "C",
+  "use_tuned_experiment": true,
+  "candidate_counts": {
+   "first": 3,
+   "second": 5,
+   "third": 8,
+   "fourth": 10,
+   "fifth": 10
+  },
+  "report_top_n": 20,
+  "backtest": {
+   "min_training_draws": 100,
+   "holdout_start": "2017-01-01",
+   "random_trials": 2000,
+   "random_seed": 20261105,
+   "stability_blocks": 4
+  }
+ },
+ "config_sha": "64ff9ea9fe99d8a304da9e21616589e685339f0f48cdc8faab6b780915d0383e",
+ "code_sha": "e174a408cde921d0e1a0d87fe9d4cb459cc997b48d5e0e76d26cafad6c5831a0",
+ "hybrid_weights": {
+  "first": {
+   "experiment": "B",
+   "global": 0.3,
+   "prize_specific": 0.7
+  },
+  "second": {
+   "experiment": "F",
+   "global": 0.7,
+   "prize_specific": 0.3
+  },
+  "third": {
+   "experiment": "A",
+   "global": 0.2,
+   "prize_specific": 0.8
+  },
+  "fourth": {
+   "experiment": "A",
+   "global": 0.2,
+   "prize_specific": 0.8
+  },
+  "fifth": {
+   "experiment": "A",
+   "global": 0.2,
+   "prize_specific": 0.8
+  }
+ },
+ "tuning": {
+  "source": "backtest validation",
+  "validation": {
+   "from": "2004-06-16",
+   "to": "2016-12-30",
+   "draws": 302
+  },
+  "metric": "mean_pct",
+  "chosen": {
+   "first": "B",
+   "second": "F",
+   "third": "A",
+   "fourth": "A",
+   "fifth": "A"
+  }
+ },
+ "candidate_counts": {
+  "first": 3,
+  "second": 5,
+  "third": 8,
+  "fourth": 10,
+  "fifth": 10
+ },
+ "predictions": {
+  "first": [
+   {
+    "number": "811411",
+    "rank": 1,
+    "global_score": 41.778,
+    "prize_score": 100.0,
+    "hybrid_score": 100.0,
+    "global_z": -0.5502,
+    "prize_z": 4.462,
+    "hybrid_z": 2.9584,
+    "global_rank": 696899,
+    "prize_rank": 1,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.269,
+      "contribution": 0.8954,
+      "detail": "หลักที่ 1→2: 8→1 พบ 15.1% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 3.049,
+      "contribution": 0.6262,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.202,
+      "contribution": 0.603,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100704",
+    "rank": 2,
+    "global_score": 78.288,
+    "prize_score": 85.055,
+    "hybrid_score": 99.528,
+    "global_z": 2.6234,
+    "prize_z": 3.058,
+    "hybrid_z": 2.9276,
+    "global_rank": 6411,
+    "prize_rank": 539,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.065,
+      "contribution": 0.5657,
+      "detail": "หลักที่ 4→5: 7→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.599,
+      "contribution": 0.4378,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 1.972,
+      "contribution": 0.4052,
+      "detail": "3 หลักแรก 100 เคยพบ 5 ครั้ง, 3 หลักท้าย 704 เคยพบ 3 ครั้ง"
+     }
+    ]
+   },
+   {
+    "number": "151411",
+    "rank": 3,
+    "global_score": 42.052,
+    "prize_score": 98.965,
+    "hybrid_score": 99.063,
+    "global_z": -0.5264,
+    "prize_z": 4.3648,
+    "hybrid_z": 2.8974,
+    "global_rank": 688144,
+    "prize_rank": 3,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.288,
+      "contribution": 0.9004,
+      "detail": "หลักที่ 3→4: 1→4 พบ 14.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.16,
+      "contribution": 0.8655,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 3.072,
+      "contribution": 0.631,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     }
+    ]
+   },
+   {
+    "number": "100004",
+    "rank": 4,
+    "global_score": 84.431,
+    "prize_score": 81.995,
+    "hybrid_score": 98.897,
+    "global_z": 3.1573,
+    "prize_z": 2.7705,
+    "hybrid_z": 2.8866,
+    "global_rank": 1302,
+    "prize_rank": 1573,
+    "contributions": [
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.72,
+      "contribution": 0.5587,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.599,
+      "contribution": 0.4378,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.476,
+      "contribution": 0.4042,
+      "detail": "หลักที่ 1→2: 1→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "411411",
+    "rank": 5,
+    "global_score": 45.766,
+    "prize_score": 97.326,
+    "hybrid_score": 98.896,
+    "global_z": -0.2036,
+    "prize_z": 4.2108,
+    "hybrid_z": 2.8865,
+    "global_rank": 564860,
+    "prize_rank": 7,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.014,
+      "contribution": 0.8253,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.482,
+      "contribution": 0.6798,
+      "detail": "หลักที่ 3→4: 1→4 พบ 14.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.803,
+      "contribution": 0.5757,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว + คู่\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     }
+    ]
+   },
+   {
+    "number": "100011",
+    "rank": 6,
+    "global_score": 72.311,
+    "prize_score": 86.366,
+    "hybrid_score": 98.457,
+    "global_z": 2.1038,
+    "prize_z": 3.1811,
+    "hybrid_z": 2.8579,
+    "global_rank": 22849,
+    "prize_rank": 328,
+    "contributions": [
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.765,
+      "contribution": 0.5679,
+      "detail": "รูปแบบ \"ตอง 2 ชุด\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.998,
+      "contribution": 0.5473,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.828,
+      "contribution": 0.5007,
+      "detail": "หลักที่ 5→6: 1→1 พบ 14.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100414",
+    "rank": 7,
+    "global_score": 59.61,
+    "prize_score": 91.382,
+    "hybrid_score": 98.436,
+    "global_z": 0.9998,
+    "prize_z": 3.6524,
+    "hybrid_z": 2.8566,
+    "global_rank": 161304,
+    "prize_rank": 41,
+    "contributions": [
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.949,
+      "contribution": 0.6057,
+      "detail": "รูปแบบ \"ซ้ำ 3 คู่\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.134,
+      "contribution": 0.5843,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.922,
+      "contribution": 0.5263,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100005",
+    "rank": 8,
+    "global_score": 84.703,
+    "prize_score": 81.227,
+    "hybrid_score": 98.229,
+    "global_z": 3.1809,
+    "prize_z": 2.6983,
+    "hybrid_z": 2.8431,
+    "global_rank": 1210,
+    "prize_rank": 2015,
+    "contributions": [
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 3.214,
+      "contribution": 0.6601,
+      "detail": "3 หลักแรก 100 เคยพบ 5 ครั้ง, 3 หลักท้าย 005 เคยพบ 2 ครั้ง"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.343,
+      "contribution": 0.368,
+      "detail": "หลักที่ 1→2: 1→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.288,
+      "contribution": 0.3527,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100564",
+    "rank": 9,
+    "global_score": 70.155,
+    "prize_score": 86.894,
+    "hybrid_score": 98.126,
+    "global_z": 1.9164,
+    "prize_z": 3.2307,
+    "hybrid_z": 2.8364,
+    "global_rank": 33838,
+    "prize_rank": 269,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.105,
+      "contribution": 0.5764,
+      "detail": "หลักที่ 1→2: 1→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.897,
+      "contribution": 0.5196,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.358,
+      "contribution": 0.4844,
+      "detail": "3 หลักแรก 100 เคยพบ 5 ครั้ง, 3 หลักท้าย 564 เคยพบ 3 ครั้ง"
+     }
+    ]
+   },
+   {
+    "number": "011411",
+    "rank": 10,
+    "global_score": 48.681,
+    "prize_score": 94.77,
+    "hybrid_score": 97.48,
+    "global_z": 0.0498,
+    "prize_z": 3.9707,
+    "hybrid_z": 2.7944,
+    "global_rank": 464681,
+    "prize_rank": 17,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.779,
+      "contribution": 0.7611,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.634,
+      "contribution": 0.7214,
+      "detail": "หลักที่ 3→4: 1→4 พบ 14.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.918,
+      "contribution": 0.5993,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     }
+    ]
+   },
+   {
+    "number": "111411",
+    "rank": 11,
+    "global_score": 35.647,
+    "prize_score": 99.752,
+    "hybrid_score": 97.292,
+    "global_z": -1.0832,
+    "prize_z": 4.4387,
+    "hybrid_z": 2.7821,
+    "global_rank": 860454,
+    "prize_rank": 2,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.325,
+      "contribution": 0.9106,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.968,
+      "contribution": 0.8129,
+      "detail": "หลักที่ 3→4: 1→4 พบ 14.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.221,
+      "contribution": 0.6081,
+      "detail": "หลักที่ 2 เป็น 1: พบ 11.96% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "156704",
+    "rank": 12,
+    "global_score": 73.176,
+    "prize_score": 84.756,
+    "hybrid_score": 97.176,
+    "global_z": 2.1789,
+    "prize_z": 3.0299,
+    "hybrid_z": 2.7746,
+    "global_rank": 19289,
+    "prize_rank": 601,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.578,
+      "contribution": 0.7062,
+      "detail": "หลักที่ 2→3: 5→6 พบ 15.4% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.779,
+      "contribution": 0.4873,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.53,
+      "contribution": 0.4189,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "430704",
+    "rank": 13,
+    "global_score": 76.202,
+    "prize_score": 83.551,
+    "hybrid_score": 97.172,
+    "global_z": 2.442,
+    "prize_z": 2.9167,
+    "hybrid_z": 2.7743,
+    "global_rank": 10336,
+    "prize_rank": 934,
+    "contributions": [
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.68,
+      "contribution": 0.5504,
+      "detail": "ช่วงล่าสุด หลักที่ 2 เป็น 3 บ่อยกว่าระยะยาว (15.2% เทียบ 10.6%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.558,
+      "contribution": 0.4267,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.511,
+      "contribution": 0.4139,
+      "detail": "หลักที่ 4→5: 7→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100767",
+    "rank": 14,
+    "global_score": 67.374,
+    "prize_score": 86.907,
+    "hybrid_score": 97.025,
+    "global_z": 1.6747,
+    "prize_z": 3.2319,
+    "hybrid_z": 2.7648,
+    "global_rank": 54131,
+    "prize_rank": 267,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.78,
+      "contribution": 0.7613,
+      "detail": "หลักที่ 5→6: 6→7 พบ 15.0% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.84,
+      "contribution": 0.5038,
+      "detail": "หลักที่ 6 เป็น 7: พบ 12.78% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.044,
+      "contribution": 0.4199,
+      "detail": "3 หลักแรก 100 เคยพบ 5 ครั้ง, 3 หลักท้าย 767 เคยพบ 2 ครั้ง"
+     }
+    ]
+   },
+   {
+    "number": "100514",
+    "rank": 15,
+    "global_score": 59.778,
+    "prize_score": 89.817,
+    "hybrid_score": 96.922,
+    "global_z": 1.0144,
+    "prize_z": 3.5053,
+    "hybrid_z": 2.758,
+    "global_rank": 158035,
+    "prize_rank": 79,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.068,
+      "contribution": 0.5664,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.937,
+      "contribution": 0.5304,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.446,
+      "contribution": 0.5025,
+      "detail": "3 หลักแรก 100 เคยพบ 5 ครั้ง, 3 หลักท้าย 514 เคยพบ 2 ครั้ง"
+     }
+    ]
+   },
+   {
+    "number": "411704",
+    "rank": 16,
+    "global_score": 64.544,
+    "prize_score": 87.902,
+    "hybrid_score": 96.897,
+    "global_z": 1.4287,
+    "prize_z": 3.3255,
+    "hybrid_z": 2.7564,
+    "global_rank": 83299,
+    "prize_rank": 182,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.072,
+      "contribution": 0.5674,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.94,
+      "contribution": 0.5314,
+      "detail": "หลักที่ 2 เป็น 1: พบ 11.96% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.76,
+      "contribution": 0.482,
+      "detail": "หลักที่ 4→5: 7→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "151404",
+    "rank": 17,
+    "global_score": 61.334,
+    "prize_score": 89.015,
+    "hybrid_score": 96.735,
+    "global_z": 1.1496,
+    "prize_z": 3.43,
+    "hybrid_z": 2.7459,
+    "global_rank": 129789,
+    "prize_rank": 114,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.303,
+      "contribution": 0.6307,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.268,
+      "contribution": 0.6213,
+      "detail": "หลักที่ 3→4: 1→4 พบ 14.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.268,
+      "contribution": 0.6211,
+      "detail": "หลักที่ 6 เป็น 4: พบ 11.85% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "410704",
+    "rank": 18,
+    "global_score": 73.485,
+    "prize_score": 84.029,
+    "hybrid_score": 96.565,
+    "global_z": 2.2059,
+    "prize_z": 2.9616,
+    "hybrid_z": 2.7349,
+    "global_rank": 18189,
+    "prize_rank": 770,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.018,
+      "contribution": 0.5528,
+      "detail": "หลักที่ 2 เป็น 1: พบ 11.96% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.526,
+      "contribution": 0.4178,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 1.603,
+      "contribution": 0.3292,
+      "detail": "ช่วงล่าสุด หลักที่ 1 เป็น 4 บ่อยกว่าระยะยาว (13.4% เทียบ 9.9%)"
+     }
+    ]
+   },
+   {
+    "number": "100700",
+    "rank": 19,
+    "global_score": 84.046,
+    "prize_score": 79.778,
+    "hybrid_score": 96.502,
+    "global_z": 3.1239,
+    "prize_z": 2.5623,
+    "hybrid_z": 2.7307,
+    "global_rank": 1458,
+    "prize_rank": 3235,
+    "contributions": [
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 3.004,
+      "contribution": 0.617,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.64,
+      "contribution": 0.4491,
+      "detail": "หลักที่ 4→5: 7→0 พบ 12.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.057,
+      "contribution": 0.2894,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100111",
+    "rank": 20,
+    "global_score": 59.318,
+    "prize_score": 89.577,
+    "hybrid_score": 96.495,
+    "global_z": 0.9744,
+    "prize_z": 3.4828,
+    "hybrid_z": 2.7303,
+    "global_rank": 167091,
+    "prize_rank": 90,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.544,
+      "contribution": 0.6968,
+      "detail": "มีเลข 1 ซึ่งพบ 10.61% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.905,
+      "contribution": 0.5967,
+      "detail": "รูปแบบ \"ซ้ำ 4 ตัว + คู่\": กลุ่มนี้พบ 3.0% (ถ้าสุ่ม 2.4%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.152,
+      "contribution": 0.5895,
+      "detail": "หลักที่ 5→6: 1→1 พบ 14.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   }
+  ],
+  "second": [
+   {
+    "number": "200902",
+    "rank": 1,
+    "global_score": 98.145,
+    "prize_score": 87.523,
+    "hybrid_score": 100.0,
+    "global_z": 4.3494,
+    "prize_z": 3.0907,
+    "hybrid_z": 3.9718,
+    "global_rank": 2,
+    "prize_rank": 1227,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.592,
+      "contribution": 0.9007,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.347,
+      "contribution": 0.8392,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.462,
+      "contribution": 0.6173,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200002",
+    "rank": 2,
+    "global_score": 95.843,
+    "prize_score": 92.157,
+    "hybrid_score": 99.786,
+    "global_z": 4.1493,
+    "prize_z": 3.5068,
+    "hybrid_z": 3.9566,
+    "global_rank": 12,
+    "prize_rank": 252,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 4.583,
+      "contribution": 1.1492,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.941,
+      "contribution": 0.9881,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 1.598,
+      "contribution": 0.4006,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200802",
+    "rank": 3,
+    "global_score": 96.902,
+    "prize_score": 89.7,
+    "hybrid_score": 99.761,
+    "global_z": 4.2413,
+    "prize_z": 3.2862,
+    "hybrid_z": 3.9548,
+    "global_rank": 6,
+    "prize_rank": 631,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.642,
+      "contribution": 0.9131,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.493,
+      "contribution": 0.8757,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.721,
+      "contribution": 0.6822,
+      "detail": "หลักที่ 4→5: 8→0 พบ 10.8% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220002",
+    "rank": 4,
+    "global_score": 94.569,
+    "prize_score": 94.511,
+    "hybrid_score": 99.587,
+    "global_z": 4.0385,
+    "prize_z": 3.7182,
+    "hybrid_z": 3.9424,
+    "global_rank": 24,
+    "prize_rank": 90,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 4.227,
+      "contribution": 1.0599,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 4.143,
+      "contribution": 1.0387,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 1.829,
+      "contribution": 0.4586,
+      "detail": "หลักที่ 5→6: 0→2 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220902",
+    "rank": 5,
+    "global_score": 96.62,
+    "prize_score": 89.727,
+    "hybrid_score": 99.53,
+    "global_z": 4.2168,
+    "prize_z": 3.2886,
+    "hybrid_z": 3.9384,
+    "global_rank": 8,
+    "prize_rank": 625,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.549,
+      "contribution": 0.8898,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.236,
+      "contribution": 0.8114,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.693,
+      "contribution": 0.6753,
+      "detail": "หลักที่ 5→6: 0→2 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "800202",
+    "rank": 6,
+    "global_score": 96.104,
+    "prize_score": 89.48,
+    "hybrid_score": 98.995,
+    "global_z": 4.172,
+    "prize_z": 3.2664,
+    "hybrid_z": 3.9003,
+    "global_rank": 11,
+    "prize_rank": 682,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.642,
+      "contribution": 0.9131,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.651,
+      "contribution": 0.6646,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 2.361,
+      "contribution": 0.592,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "226200",
+    "rank": 7,
+    "global_score": 100.0,
+    "prize_score": 80.651,
+    "hybrid_score": 98.984,
+    "global_z": 4.5106,
+    "prize_z": 2.4736,
+    "hybrid_z": 3.8995,
+    "global_rank": 1,
+    "prize_rank": 7822,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.802,
+      "contribution": 0.9532,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.608,
+      "contribution": 0.9046,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.895,
+      "contribution": 0.7259,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.6% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220006",
+    "rank": 8,
+    "global_score": 96.12,
+    "prize_score": 88.816,
+    "hybrid_score": 98.757,
+    "global_z": 4.1734,
+    "prize_z": 3.2068,
+    "hybrid_z": 3.8834,
+    "global_rank": 10,
+    "prize_rank": 841,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 4.001,
+      "contribution": 1.0032,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.964,
+      "contribution": 0.9938,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "global",
+      "z": 2.579,
+      "contribution": 0.4851,
+      "detail": "3 หลักแรก 220 เคยพบ 140 ครั้ง, 3 หลักท้าย 006 เคยพบ 117 ครั้ง"
+     }
+    ]
+   },
+   {
+    "number": "800002",
+    "rank": 9,
+    "global_score": 94.472,
+    "prize_score": 92.296,
+    "hybrid_score": 98.665,
+    "global_z": 4.0301,
+    "prize_z": 3.5193,
+    "hybrid_z": 3.8769,
+    "global_rank": 27,
+    "prize_rank": 241,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.998,
+      "contribution": 1.0024,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.086,
+      "contribution": 0.7737,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.122,
+      "contribution": 0.5322,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "400202",
+    "rank": 10,
+    "global_score": 95.39,
+    "prize_score": 90.222,
+    "hybrid_score": 98.665,
+    "global_z": 4.1099,
+    "prize_z": 3.3331,
+    "hybrid_z": 3.8768,
+    "global_rank": 15,
+    "prize_rank": 519,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.418,
+      "contribution": 0.857,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 2.817,
+      "contribution": 0.7063,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.167,
+      "contribution": 0.5434,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "000002",
+    "rank": 11,
+    "global_score": 94.616,
+    "prize_score": 91.906,
+    "hybrid_score": 98.641,
+    "global_z": 4.0426,
+    "prize_z": 3.4843,
+    "hybrid_z": 3.8751,
+    "global_rank": 22,
+    "prize_rank": 280,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 4.939,
+      "contribution": 1.2385,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 2.992,
+      "contribution": 0.7501,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 1.792,
+      "contribution": 0.4494,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "226002",
+    "rank": 12,
+    "global_score": 96.626,
+    "prize_score": 86.926,
+    "hybrid_score": 98.474,
+    "global_z": 4.2173,
+    "prize_z": 3.0371,
+    "hybrid_z": 3.8633,
+    "global_rank": 7,
+    "prize_rank": 1476,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 4.508,
+      "contribution": 1.1303,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.608,
+      "contribution": 0.9046,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.12,
+      "contribution": 0.5315,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.6% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "400002",
+    "rank": 13,
+    "global_score": 93.757,
+    "prize_score": 93.038,
+    "hybrid_score": 98.335,
+    "global_z": 3.968,
+    "prize_z": 3.586,
+    "hybrid_z": 3.8534,
+    "global_rank": 38,
+    "prize_rank": 173,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.774,
+      "contribution": 0.9463,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.542,
+      "contribution": 0.888,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 1.639,
+      "contribution": 0.411,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "300202",
+    "rank": 14,
+    "global_score": 94.421,
+    "prize_score": 91.378,
+    "hybrid_score": 98.273,
+    "global_z": 4.0257,
+    "prize_z": 3.4369,
+    "hybrid_z": 3.849,
+    "global_rank": 28,
+    "prize_rank": 350,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.558,
+      "contribution": 0.8921,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.39,
+      "contribution": 0.5991,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 2.18,
+      "contribution": 0.5466,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "300002",
+    "rank": 15,
+    "global_score": 92.789,
+    "prize_score": 94.194,
+    "hybrid_score": 97.944,
+    "global_z": 3.8838,
+    "prize_z": 3.6898,
+    "hybrid_z": 3.8256,
+    "global_rank": 67,
+    "prize_rank": 104,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.914,
+      "contribution": 0.9814,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 2.905,
+      "contribution": 0.7284,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 1.861,
+      "contribution": 0.4667,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200702",
+    "rank": 16,
+    "global_score": 92.57,
+    "prize_score": 94.535,
+    "hybrid_score": 97.886,
+    "global_z": 3.8648,
+    "prize_z": 3.7203,
+    "hybrid_z": 3.8215,
+    "global_rank": 75,
+    "prize_rank": 89,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.196,
+      "contribution": 0.8013,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 2.809,
+      "contribution": 0.7043,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.388,
+      "contribution": 0.5987,
+      "detail": "หลักที่ 4→5: 7→0 พบ 10.6% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "260002",
+    "rank": 17,
+    "global_score": 94.592,
+    "prize_score": 89.811,
+    "hybrid_score": 97.826,
+    "global_z": 4.0406,
+    "prize_z": 3.2962,
+    "hybrid_z": 3.8172,
+    "global_rank": 23,
+    "prize_rank": 603,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 4.154,
+      "contribution": 1.0415,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.964,
+      "contribution": 0.9938,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 1.224,
+      "contribution": 0.3068,
+      "detail": "หลักที่ 5→6: 0→2 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200202",
+    "rank": 18,
+    "global_score": 94.369,
+    "prize_score": 90.203,
+    "hybrid_score": 97.784,
+    "global_z": 4.0212,
+    "prize_z": 3.3313,
+    "hybrid_z": 3.8142,
+    "global_rank": 29,
+    "prize_rank": 521,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 4.227,
+      "contribution": 1.0599,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.216,
+      "contribution": 0.8064,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.126,
+      "contribution": 0.533,
+      "detail": "หลักที่ 2→3: 0→0 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220702",
+    "rank": 19,
+    "global_score": 91.296,
+    "prize_score": 96.889,
+    "hybrid_score": 97.687,
+    "global_z": 3.754,
+    "prize_z": 3.9317,
+    "hybrid_z": 3.8073,
+    "global_rank": 118,
+    "prize_rank": 28,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.01,
+      "contribution": 0.7548,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 2.84,
+      "contribution": 0.712,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.619,
+      "contribution": 0.6568,
+      "detail": "หลักที่ 4→5: 7→0 พบ 10.6% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220202",
+    "rank": 20,
+    "global_score": 93.094,
+    "prize_score": 92.556,
+    "hybrid_score": 97.585,
+    "global_z": 3.9104,
+    "prize_z": 3.5427,
+    "hybrid_z": 3.8001,
+    "global_rank": 53,
+    "prize_rank": 217,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "global",
+      "z": 3.871,
+      "contribution": 0.9706,
+      "detail": "มีเลข 0 ซึ่งพบ 10.13% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 3.418,
+      "contribution": 0.8569,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "global",
+      "z": 2.357,
+      "contribution": 0.591,
+      "detail": "หลักที่ 5→6: 0→2 พบ 10.5% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   }
+  ],
+  "third": [
+   {
+    "number": "387558",
+    "rank": 1,
+    "global_score": 46.489,
+    "prize_score": 100.0,
+    "hybrid_score": 100.0,
+    "global_z": -0.1407,
+    "prize_z": 4.5855,
+    "hybrid_z": 3.6402,
+    "global_rank": 539957,
+    "prize_rank": 1,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 4.176,
+      "contribution": 1.3486,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.957,
+      "contribution": 0.9551,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.125,
+      "contribution": 0.6863,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "387550",
+    "rank": 2,
+    "global_score": 53.228,
+    "prize_score": 95.976,
+    "hybrid_score": 97.729,
+    "global_z": 0.445,
+    "prize_z": 4.2437,
+    "hybrid_z": 3.484,
+    "global_rank": 318974,
+    "prize_rank": 22,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.798,
+      "contribution": 1.2268,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.506,
+      "contribution": 0.8093,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.245,
+      "contribution": 0.7249,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "387553",
+    "rank": 3,
+    "global_score": 42.458,
+    "prize_score": 98.624,
+    "hybrid_score": 97.623,
+    "global_z": -0.4912,
+    "prize_z": 4.4686,
+    "hybrid_z": 3.4767,
+    "global_rank": 675224,
+    "prize_rank": 4,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.848,
+      "contribution": 1.2427,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.892,
+      "contribution": 0.9339,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.116,
+      "contribution": 0.6833,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "887550",
+    "rank": 4,
+    "global_score": 59.554,
+    "prize_score": 93.941,
+    "hybrid_score": 97.317,
+    "global_z": 0.9949,
+    "prize_z": 4.0708,
+    "hybrid_z": 3.4556,
+    "global_rank": 162414,
+    "prize_rank": 59,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.546,
+      "contribution": 1.1453,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.254,
+      "contribution": 0.7279,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.642,
+      "contribution": 0.5304,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "087550",
+    "rank": 5,
+    "global_score": 58.42,
+    "prize_score": 94.064,
+    "hybrid_score": 97.153,
+    "global_z": 0.8964,
+    "prize_z": 4.0813,
+    "hybrid_z": 3.4443,
+    "global_rank": 185731,
+    "prize_rank": 56,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.22,
+      "contribution": 1.0401,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.587,
+      "contribution": 0.8355,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.374,
+      "contribution": 0.7666,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "355650",
+    "rank": 6,
+    "global_score": 51.14,
+    "prize_score": 95.855,
+    "hybrid_score": 97.082,
+    "global_z": 0.2636,
+    "prize_z": 4.2334,
+    "hybrid_z": 3.4394,
+    "global_rank": 383522,
+    "prize_rank": 23,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.219,
+      "contribution": 1.0397,
+      "detail": "หลักที่ 4→5: 6→5 พบ 12.7% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.001,
+      "contribution": 0.9691,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.129,
+      "contribution": 0.6875,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "056550",
+    "rank": 7,
+    "global_score": 73.01,
+    "prize_score": 90.259,
+    "hybrid_score": 97.081,
+    "global_z": 2.1646,
+    "prize_z": 3.7581,
+    "hybrid_z": 3.4394,
+    "global_rank": 19958,
+    "prize_rank": 219,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.13,
+      "contribution": 1.0108,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.67,
+      "contribution": 0.8624,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.554,
+      "contribution": 0.8248,
+      "detail": "หลักที่ 3→4: 6→5 พบ 11.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "387551",
+    "rank": 8,
+    "global_score": 39.15,
+    "prize_score": 98.76,
+    "hybrid_score": 96.921,
+    "global_z": -0.7787,
+    "prize_z": 4.4801,
+    "hybrid_z": 3.4284,
+    "global_rank": 774642,
+    "prize_rank": 3,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.798,
+      "contribution": 1.2268,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.974,
+      "contribution": 0.9604,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.576,
+      "contribution": 0.509,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "056551",
+    "rank": 9,
+    "global_score": 56.104,
+    "prize_score": 94.289,
+    "hybrid_score": 96.79,
+    "global_z": 0.695,
+    "prize_z": 4.1004,
+    "hybrid_z": 3.4194,
+    "global_rank": 240193,
+    "prize_rank": 50,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.138,
+      "contribution": 1.0134,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.554,
+      "contribution": 0.8248,
+      "detail": "หลักที่ 3→4: 6→5 พบ 11.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.461,
+      "contribution": 0.7949,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "356550",
+    "rank": 10,
+    "global_score": 63.043,
+    "prize_score": 92.162,
+    "hybrid_score": 96.443,
+    "global_z": 1.2982,
+    "prize_z": 3.9198,
+    "hybrid_z": 3.3955,
+    "global_rank": 103251,
+    "prize_rank": 123,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.001,
+      "contribution": 0.9691,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.929,
+      "contribution": 0.946,
+      "detail": "หลักที่ 1→2: 3→5 พบ 12.4% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.589,
+      "contribution": 0.8362,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "355658",
+    "rank": 11,
+    "global_score": 40.191,
+    "prize_score": 97.503,
+    "hybrid_score": 95.943,
+    "global_z": -0.6882,
+    "prize_z": 4.3734,
+    "hybrid_z": 3.3611,
+    "global_rank": 745093,
+    "prize_rank": 7,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.596,
+      "contribution": 1.1615,
+      "detail": "หลักที่ 4→5: 6→5 พบ 12.7% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.881,
+      "contribution": 0.9304,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.58,
+      "contribution": 0.8333,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "556550",
+    "rank": 12,
+    "global_score": 58.946,
+    "prize_score": 92.661,
+    "hybrid_score": 95.9,
+    "global_z": 0.942,
+    "prize_z": 3.9621,
+    "hybrid_z": 3.3581,
+    "global_rank": 174625,
+    "prize_rank": 108,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.858,
+      "contribution": 1.2459,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.425,
+      "contribution": 0.7832,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.24,
+      "contribution": 0.7233,
+      "detail": "หลักที่ 3→4: 6→5 พบ 11.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "087558",
+    "rank": 13,
+    "global_score": 48.195,
+    "prize_score": 95.385,
+    "hybrid_score": 95.874,
+    "global_z": 0.0075,
+    "prize_z": 4.1935,
+    "hybrid_z": 3.3563,
+    "global_rank": 481040,
+    "prize_rank": 33,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.597,
+      "contribution": 1.1619,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.038,
+      "contribution": 0.9813,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.254,
+      "contribution": 0.7279,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "056558",
+    "rank": 14,
+    "global_score": 60.151,
+    "prize_score": 92.037,
+    "hybrid_score": 95.588,
+    "global_z": 1.0468,
+    "prize_z": 3.9091,
+    "hybrid_z": 3.3366,
+    "global_rank": 150944,
+    "prize_rank": 129,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.121,
+      "contribution": 1.0082,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.01,
+      "contribution": 0.9721,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.931,
+      "contribution": 0.9466,
+      "detail": "หลักที่ 3→4: 6→5 พบ 11.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "357550",
+    "rank": 15,
+    "global_score": 52.132,
+    "prize_score": 94.087,
+    "hybrid_score": 95.586,
+    "global_z": 0.3498,
+    "prize_z": 4.0832,
+    "hybrid_z": 3.3365,
+    "global_rank": 352193,
+    "prize_rank": 55,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.092,
+      "contribution": 0.9988,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.745,
+      "contribution": 0.8865,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.441,
+      "contribution": 0.7884,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "055650",
+    "rank": 16,
+    "global_score": 57.928,
+    "prize_score": 92.482,
+    "hybrid_score": 95.466,
+    "global_z": 0.8536,
+    "prize_z": 3.9469,
+    "hybrid_z": 3.3282,
+    "global_rank": 196624,
+    "prize_rank": 114,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.13,
+      "contribution": 1.0108,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.844,
+      "contribution": 0.9185,
+      "detail": "หลักที่ 4→5: 6→5 พบ 12.7% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.21,
+      "contribution": 0.7137,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "355550",
+    "rank": 17,
+    "global_score": 47.396,
+    "prize_score": 95.09,
+    "hybrid_score": 95.38,
+    "global_z": -0.0619,
+    "prize_z": 4.1684,
+    "hybrid_z": 3.3223,
+    "global_rank": 508607,
+    "prize_rank": 38,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.738,
+      "contribution": 1.2073,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.308,
+      "contribution": 0.7453,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.071,
+      "contribution": 0.669,
+      "detail": "หลักที่ 1→2: 3→5 พบ 12.4% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "355651",
+    "rank": 18,
+    "global_score": 37.932,
+    "prize_score": 97.314,
+    "hybrid_score": 95.185,
+    "global_z": -0.8846,
+    "prize_z": 4.3573,
+    "hybrid_z": 3.3089,
+    "global_rank": 806976,
+    "prize_rank": 8,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.219,
+      "contribution": 1.0397,
+      "detail": "หลักที่ 4→5: 6→5 พบ 12.7% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.596,
+      "contribution": 0.8386,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.332,
+      "contribution": 0.7532,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "055653",
+    "rank": 19,
+    "global_score": 40.165,
+    "prize_score": 96.678,
+    "hybrid_score": 95.121,
+    "global_z": -0.6905,
+    "prize_z": 4.3033,
+    "hybrid_z": 3.3045,
+    "global_rank": 745774,
+    "prize_rank": 11,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.001,
+      "contribution": 0.9691,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.893,
+      "contribution": 0.9344,
+      "detail": "หลักที่ 4→5: 6→5 พบ 12.7% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.595,
+      "contribution": 0.8382,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "387554",
+    "rank": 20,
+    "global_score": 41.879,
+    "prize_score": 96.208,
+    "hybrid_score": 95.091,
+    "global_z": -0.5415,
+    "prize_z": 4.2634,
+    "hybrid_z": 3.3025,
+    "global_rank": 693678,
+    "prize_rank": 20,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 4.038,
+      "contribution": 1.3043,
+      "detail": "หลักที่ 3→4: 7→5 พบ 13.5% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.974,
+      "contribution": 0.9604,
+      "detail": "หลักที่ 5 เป็น 5: พบ 11.05% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.51,
+      "contribution": 0.4878,
+      "detail": "มีเลข 5 ซึ่งพบ 10.25% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   }
+  ],
+  "fourth": [
+   {
+    "number": "200002",
+    "rank": 1,
+    "global_score": 95.843,
+    "prize_score": 100.0,
+    "hybrid_score": 100.0,
+    "global_z": 4.1493,
+    "prize_z": 4.2446,
+    "hybrid_z": 4.2256,
+    "global_rank": 12,
+    "prize_rank": 1,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.2,
+      "contribution": 1.214,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.219,
+      "contribution": 0.9306,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.571,
+      "contribution": 0.7433,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200202",
+    "rank": 2,
+    "global_score": 94.369,
+    "prize_score": 99.524,
+    "hybrid_score": 99.295,
+    "global_z": 4.0212,
+    "prize_z": 4.2042,
+    "hybrid_z": 4.1676,
+    "global_rank": 29,
+    "prize_rank": 2,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.276,
+      "contribution": 1.236,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.789,
+      "contribution": 0.8062,
+      "detail": "หลักที่ 4 เป็น 2: พบ 10.30% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.724,
+      "contribution": 0.7874,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "000002",
+    "rank": 3,
+    "global_score": 94.616,
+    "prize_score": 98.747,
+    "hybrid_score": 98.706,
+    "global_z": 4.0426,
+    "prize_z": 4.1382,
+    "hybrid_z": 4.1191,
+    "global_rank": 22,
+    "prize_rank": 5,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.123,
+      "contribution": 1.1919,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.985,
+      "contribution": 0.863,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.46,
+      "contribution": 0.7112,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "000202",
+    "rank": 4,
+    "global_score": 93.142,
+    "prize_score": 98.271,
+    "hybrid_score": 98.001,
+    "global_z": 3.9145,
+    "prize_z": 4.0977,
+    "hybrid_z": 4.0611,
+    "global_rank": 51,
+    "prize_rank": 6,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.2,
+      "contribution": 1.214,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.138,
+      "contribution": 0.9071,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.03,
+      "contribution": 0.5868,
+      "detail": "หลักที่ 4 เป็น 2: พบ 10.30% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "400002",
+    "rank": 5,
+    "global_score": 93.757,
+    "prize_score": 97.194,
+    "hybrid_score": 97.243,
+    "global_z": 3.968,
+    "prize_z": 4.0063,
+    "hybrid_z": 3.9986,
+    "global_rank": 38,
+    "prize_rank": 8,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.393,
+      "contribution": 0.9807,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.167,
+      "contribution": 0.9156,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.795,
+      "contribution": 0.8079,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "400092",
+    "rank": 6,
+    "global_score": 84.524,
+    "prize_score": 99.014,
+    "hybrid_score": 96.795,
+    "global_z": 3.1654,
+    "prize_z": 4.1609,
+    "hybrid_z": 3.9618,
+    "global_rank": 1282,
+    "prize_rank": 4,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.976,
+      "contribution": 0.8602,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.906,
+      "contribution": 0.8399,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.655,
+      "contribution": 0.7675,
+      "detail": "หลักที่ 2→3: 0→0 พบ 11.0% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "300002",
+    "rank": 7,
+    "global_score": 92.789,
+    "prize_score": 96.645,
+    "hybrid_score": 96.585,
+    "global_z": 3.8838,
+    "prize_z": 3.9596,
+    "hybrid_z": 3.9445,
+    "global_rank": 67,
+    "prize_rank": 10,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.22,
+      "contribution": 0.9309,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.792,
+      "contribution": 0.807,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.506,
+      "contribution": 0.7244,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "249202",
+    "rank": 8,
+    "global_score": 89.961,
+    "prize_score": 96.612,
+    "hybrid_score": 95.96,
+    "global_z": 3.638,
+    "prize_z": 3.9568,
+    "hybrid_z": 3.893,
+    "global_rank": 198,
+    "prize_rank": 11,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.641,
+      "contribution": 1.0526,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.128,
+      "contribution": 0.9043,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.327,
+      "contribution": 0.5044,
+      "detail": "คู่ติดกัน 24 พบ 1.05% (ถ้าสุ่ม 1%)"
+     }
+    ]
+   },
+   {
+    "number": "000092",
+    "rank": 9,
+    "global_score": 85.078,
+    "prize_score": 97.776,
+    "hybrid_score": 95.89,
+    "global_z": 3.2135,
+    "prize_z": 4.0557,
+    "hybrid_z": 3.8873,
+    "global_rank": 1101,
+    "prize_rank": 7,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.707,
+      "contribution": 1.0714,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.846,
+      "contribution": 0.8225,
+      "detail": "หลักที่ 2→3: 0→0 พบ 11.0% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.199,
+      "contribution": 0.6356,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200992",
+    "rank": 10,
+    "global_score": 78.496,
+    "prize_score": 99.426,
+    "hybrid_score": 95.862,
+    "global_z": 2.6414,
+    "prize_z": 4.1959,
+    "hybrid_z": 3.885,
+    "global_rank": 6115,
+    "prize_rank": 3,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.366,
+      "contribution": 0.973,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.097,
+      "contribution": 0.8953,
+      "detail": "หลักที่ 3→4: 0→9 พบ 11.4% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.984,
+      "contribution": 0.5734,
+      "detail": "หลักที่ 1 เป็น 2: พบ 10.25% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "246202",
+    "rank": 11,
+    "global_score": 91.142,
+    "prize_score": 96.097,
+    "hybrid_score": 95.784,
+    "global_z": 3.7407,
+    "prize_z": 3.913,
+    "hybrid_z": 3.8786,
+    "global_rank": 127,
+    "prize_rank": 15,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 4.031,
+      "contribution": 1.1653,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.476,
+      "contribution": 0.7158,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.798,
+      "contribution": 0.5198,
+      "detail": "หลักที่ 4 เป็น 2: พบ 10.30% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "400902",
+    "rank": 12,
+    "global_score": 93.257,
+    "prize_score": 95.343,
+    "hybrid_score": 95.608,
+    "global_z": 3.9245,
+    "prize_z": 3.849,
+    "hybrid_z": 3.8641,
+    "global_rank": 49,
+    "prize_rank": 26,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.976,
+      "contribution": 0.8602,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.725,
+      "contribution": 0.7878,
+      "detail": "หลักที่ 3→4: 0→9 พบ 11.4% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.194,
+      "contribution": 0.6341,
+      "detail": "หลักที่ 1 เป็น 4: พบ 10.23% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100002",
+    "rank": 13,
+    "global_score": 91.687,
+    "prize_score": 95.712,
+    "hybrid_score": 95.581,
+    "global_z": 3.7881,
+    "prize_z": 3.8803,
+    "hybrid_z": 3.8619,
+    "global_rank": 100,
+    "prize_rank": 18,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.456,
+      "contribution": 0.9989,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.824,
+      "contribution": 0.8163,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.443,
+      "contribution": 0.7061,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200200",
+    "rank": 14,
+    "global_score": 94.814,
+    "prize_score": 93.964,
+    "hybrid_score": 94.798,
+    "global_z": 4.0599,
+    "prize_z": 3.7318,
+    "hybrid_z": 3.7974,
+    "global_rank": 21,
+    "prize_rank": 46,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.2,
+      "contribution": 1.214,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.433,
+      "contribution": 0.7032,
+      "detail": "หลักที่ 4 เป็น 2: พบ 10.30% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.688,
+      "contribution": 0.4879,
+      "detail": "หลักที่ 2→3: 0→0 พบ 11.0% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "100092",
+    "rank": 15,
+    "global_score": 82.587,
+    "prize_score": 97.055,
+    "hybrid_score": 94.768,
+    "global_z": 2.9971,
+    "prize_z": 3.9944,
+    "hybrid_z": 3.7949,
+    "global_rank": 2132,
+    "prize_rank": 9,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.039,
+      "contribution": 0.8784,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.562,
+      "contribution": 0.7407,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.303,
+      "contribution": 0.6656,
+      "detail": "หลักที่ 2→3: 0→0 พบ 11.0% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "249002",
+    "rank": 16,
+    "global_score": 86.226,
+    "prize_score": 96.119,
+    "hybrid_score": 94.764,
+    "global_z": 3.3133,
+    "prize_z": 3.9149,
+    "hybrid_z": 3.7946,
+    "global_rank": 761,
+    "prize_rank": 14,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.484,
+      "contribution": 1.0072,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.052,
+      "contribution": 0.8822,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.795,
+      "contribution": 0.519,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "200000",
+    "rank": 17,
+    "global_score": 94.175,
+    "prize_score": 94.081,
+    "hybrid_score": 94.76,
+    "global_z": 4.0043,
+    "prize_z": 3.7417,
+    "hybrid_z": 3.7942,
+    "global_rank": 34,
+    "prize_rank": 41,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.123,
+      "contribution": 1.1919,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.863,
+      "contribution": 0.8276,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.535,
+      "contribution": 0.4438,
+      "detail": "หลักที่ 2→3: 0→0 พบ 11.0% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "800002",
+    "rank": 18,
+    "global_score": 94.472,
+    "prize_score": 93.98,
+    "hybrid_score": 94.739,
+    "global_z": 4.0301,
+    "prize_z": 3.7332,
+    "hybrid_z": 3.7925,
+    "global_rank": 27,
+    "prize_rank": 45,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.245,
+      "contribution": 0.9379,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.764,
+      "contribution": 0.7989,
+      "detail": "หลักที่ 4 เป็น 0: พบ 10.49% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.594,
+      "contribution": 0.75,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "000902",
+    "rank": 19,
+    "global_score": 93.811,
+    "prize_score": 94.105,
+    "hybrid_score": 94.702,
+    "global_z": 3.9727,
+    "prize_z": 3.7438,
+    "hybrid_z": 3.7895,
+    "global_rank": 37,
+    "prize_rank": 40,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.707,
+      "contribution": 1.0714,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.916,
+      "contribution": 0.8429,
+      "detail": "หลักที่ 3→4: 0→9 พบ 11.4% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.487,
+      "contribution": 0.4297,
+      "detail": "หลักที่ 3 เป็น 0: พบ 10.20% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "202202",
+    "rank": 20,
+    "global_score": 89.436,
+    "prize_score": 95.169,
+    "hybrid_score": 94.657,
+    "global_z": 3.5924,
+    "prize_z": 3.8342,
+    "hybrid_z": 3.7858,
+    "global_rank": 244,
+    "prize_rank": 29,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 4.352,
+      "contribution": 1.2581,
+      "detail": "มีเลข 2 ซึ่งพบ 10.16% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.767,
+      "contribution": 0.7997,
+      "detail": "หลักที่ 4 เป็น 2: พบ 10.30% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 1.928,
+      "contribution": 0.5574,
+      "detail": "หลักที่ 5→6: 0→2 พบ 11.2% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   }
+  ],
+  "fifth": [
+   {
+    "number": "220060",
+    "rank": 1,
+    "global_score": 97.963,
+    "prize_score": 100.0,
+    "hybrid_score": 100.0,
+    "global_z": 4.3336,
+    "prize_z": 4.0829,
+    "hybrid_z": 4.133,
+    "global_rank": 3,
+    "prize_rank": 1,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.034,
+      "contribution": 0.8624,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.734,
+      "contribution": 0.7773,
+      "detail": "หลักที่ 6 เป็น 0: พบ 10.25% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.374,
+      "contribution": 0.6749,
+      "detail": "หลักที่ 1→2: 2→2 พบ 10.8% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "266060",
+    "rank": 2,
+    "global_score": 89.509,
+    "prize_score": 99.974,
+    "hybrid_score": 98.13,
+    "global_z": 3.5987,
+    "prize_z": 4.0808,
+    "hybrid_z": 3.9844,
+    "global_rank": 236,
+    "prize_rank": 2,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.603,
+      "contribution": 1.0242,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.517,
+      "contribution": 0.9999,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.087,
+      "contribution": 0.445,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "806060",
+    "rank": 3,
+    "global_score": 90.21,
+    "prize_score": 99.345,
+    "hybrid_score": 97.783,
+    "global_z": 3.6596,
+    "prize_z": 4.0312,
+    "hybrid_z": 3.9569,
+    "global_rank": 180,
+    "prize_rank": 3,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.53,
+      "contribution": 1.0035,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.425,
+      "contribution": 0.6895,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.713,
+      "contribution": 0.5785,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "226200",
+    "rank": 4,
+    "global_score": 100.0,
+    "prize_score": 96.381,
+    "hybrid_score": 97.566,
+    "global_z": 4.5106,
+    "prize_z": 3.7969,
+    "hybrid_z": 3.9396,
+    "global_rank": 1,
+    "prize_rank": 13,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.439,
+      "contribution": 0.9778,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.33% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.505,
+      "contribution": 0.7122,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.489,
+      "contribution": 0.7076,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "466060",
+    "rank": 5,
+    "global_score": 87.481,
+    "prize_score": 98.662,
+    "hybrid_score": 96.643,
+    "global_z": 3.4225,
+    "prize_z": 3.9771,
+    "hybrid_z": 3.8662,
+    "global_rank": 495,
+    "prize_rank": 5,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.397,
+      "contribution": 0.9658,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.058,
+      "contribution": 0.8693,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.573,
+      "contribution": 0.5487,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "226066",
+    "rank": 6,
+    "global_score": 88.189,
+    "prize_score": 97.935,
+    "hybrid_score": 96.219,
+    "global_z": 3.484,
+    "prize_z": 3.9197,
+    "hybrid_z": 3.8326,
+    "global_rank": 391,
+    "prize_rank": 6,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.013,
+      "contribution": 0.8566,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.972,
+      "contribution": 0.8451,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.519,
+      "contribution": 0.7162,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "226060",
+    "rank": 7,
+    "global_score": 92.892,
+    "prize_score": 96.078,
+    "hybrid_score": 95.771,
+    "global_z": 3.8928,
+    "prize_z": 3.7729,
+    "hybrid_z": 3.7969,
+    "global_rank": 62,
+    "prize_rank": 15,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.546,
+      "contribution": 1.0082,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.003,
+      "contribution": 0.8538,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.434,
+      "contribution": 0.6921,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "226660",
+    "rank": 8,
+    "global_score": 86.929,
+    "prize_score": 97.537,
+    "hybrid_score": 95.628,
+    "global_z": 3.3745,
+    "prize_z": 3.8883,
+    "hybrid_z": 3.7855,
+    "global_rank": 604,
+    "prize_rank": 7,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.015,
+      "contribution": 0.857,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.972,
+      "contribution": 0.8451,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.35,
+      "contribution": 0.6681,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "866060",
+    "rank": 9,
+    "global_score": 82.148,
+    "prize_score": 98.757,
+    "hybrid_score": 95.552,
+    "global_z": 2.9589,
+    "prize_z": 3.9847,
+    "hybrid_z": 3.7795,
+    "global_rank": 2434,
+    "prize_rank": 4,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.499,
+      "contribution": 0.9948,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.958,
+      "contribution": 0.841,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.336,
+      "contribution": 0.4981,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "206060",
+    "rank": 10,
+    "global_score": 90.751,
+    "prize_score": 96.34,
+    "hybrid_score": 95.511,
+    "global_z": 3.7067,
+    "prize_z": 3.7936,
+    "hybrid_z": 3.7762,
+    "global_rank": 149,
+    "prize_rank": 14,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.548,
+      "contribution": 1.0086,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.07,
+      "contribution": 0.8727,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.464,
+      "contribution": 0.5254,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "220070",
+    "rank": 11,
+    "global_score": 94.265,
+    "prize_score": 95.231,
+    "hybrid_score": 95.397,
+    "global_z": 4.0122,
+    "prize_z": 3.706,
+    "hybrid_z": 3.7672,
+    "global_rank": 31,
+    "prize_rank": 25,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.827,
+      "contribution": 0.8038,
+      "detail": "หลักที่ 1→2: 2→2 พบ 10.8% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.49,
+      "contribution": 0.7079,
+      "detail": "หลักที่ 6 เป็น 0: พบ 10.25% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 1.78,
+      "contribution": 0.506,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220800",
+    "rank": 12,
+    "global_score": 93.354,
+    "prize_score": 95.48,
+    "hybrid_score": 95.396,
+    "global_z": 3.9329,
+    "prize_z": 3.7257,
+    "hybrid_z": 3.7672,
+    "global_rank": 46,
+    "prize_rank": 21,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.614,
+      "contribution": 1.0275,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.33% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.502,
+      "contribution": 0.7112,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.282,
+      "contribution": 0.6488,
+      "detail": "หลักที่ 4→5: 8→0 พบ 10.9% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "202060",
+    "rank": 13,
+    "global_score": 94.048,
+    "prize_score": 95.21,
+    "hybrid_score": 95.333,
+    "global_z": 3.9933,
+    "prize_z": 3.7043,
+    "hybrid_z": 3.7621,
+    "global_rank": 35,
+    "prize_rank": 26,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.034,
+      "contribution": 0.8624,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.148,
+      "contribution": 0.6108,
+      "detail": "หลักที่ 6 เป็น 0: พบ 10.25% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.827,
+      "contribution": 0.6028,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "226300",
+    "rank": 14,
+    "global_score": 92.03,
+    "prize_score": 95.432,
+    "hybrid_score": 95.069,
+    "global_z": 3.8179,
+    "prize_z": 3.7219,
+    "hybrid_z": 3.7411,
+    "global_rank": 92,
+    "prize_rank": 23,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.769,
+      "contribution": 1.0715,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.33% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.851,
+      "contribution": 0.8106,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.346,
+      "contribution": 0.667,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "406060",
+    "rank": 15,
+    "global_score": 91.069,
+    "prize_score": 95.542,
+    "hybrid_score": 94.946,
+    "global_z": 3.7343,
+    "prize_z": 3.7306,
+    "hybrid_z": 3.7314,
+    "global_rank": 130,
+    "prize_rank": 19,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.088,
+      "contribution": 0.878,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.864,
+      "contribution": 0.8143,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "time_window",
+      "scope": "prize",
+      "z": 2.95,
+      "contribution": 0.6291,
+      "detail": "ช่วงล่าสุด หลักที่ 5 เป็น 6 บ่อยกว่าระยะยาว (11.5% เทียบ 10.2%)"
+     }
+    ]
+   },
+   {
+    "number": "226260",
+    "rank": 16,
+    "global_score": 90.815,
+    "prize_score": 95.533,
+    "hybrid_score": 94.883,
+    "global_z": 3.7122,
+    "prize_z": 3.7298,
+    "hybrid_z": 3.7263,
+    "global_rank": 142,
+    "prize_rank": 20,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.952,
+      "contribution": 0.8393,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.684,
+      "contribution": 0.763,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.458,
+      "contribution": 0.6989,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "220080",
+    "rank": 17,
+    "global_score": 86.257,
+    "prize_score": 96.447,
+    "hybrid_score": 94.613,
+    "global_z": 3.316,
+    "prize_z": 3.8021,
+    "hybrid_z": 3.7049,
+    "global_rank": 748,
+    "prize_rank": 11,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 2.847,
+      "contribution": 0.8095,
+      "detail": "หลักที่ 1→2: 2→2 พบ 10.8% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.502,
+      "contribution": 0.7112,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 2.485,
+      "contribution": 0.7065,
+      "detail": "หลักที่ 6 เป็น 0: พบ 10.25% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "806066",
+    "rank": 18,
+    "global_score": 83.379,
+    "prize_score": 97.075,
+    "hybrid_score": 94.483,
+    "global_z": 3.0659,
+    "prize_z": 3.8517,
+    "hybrid_z": 3.6946,
+    "global_rank": 1730,
+    "prize_rank": 8,
+    "contributions": [
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.499,
+      "contribution": 0.9948,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "pattern",
+      "scope": "prize",
+      "z": 2.737,
+      "contribution": 0.5835,
+      "detail": "รูปแบบ \"ตอง + คู่\": กลุ่มนี้พบ 4.4% (ถ้าสุ่ม 4.3%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 1.892,
+      "contribution": 0.5379,
+      "detail": "หลักที่ 3 เป็น 6: พบ 10.32% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "226306",
+    "rank": 19,
+    "global_score": 88.748,
+    "prize_score": 95.423,
+    "hybrid_score": 94.343,
+    "global_z": 3.5325,
+    "prize_z": 3.7212,
+    "hybrid_z": 3.6834,
+    "global_rank": 328,
+    "prize_rank": 24,
+    "contributions": [
+     {
+      "group": "statistical",
+      "scope": "prize",
+      "z": 3.598,
+      "contribution": 1.0229,
+      "detail": "หลักที่ 2→3: 2→6 พบ 10.9% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 3.235,
+      "contribution": 0.9198,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.33% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 2.315,
+      "contribution": 0.6583,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     }
+    ]
+   },
+   {
+    "number": "226000",
+    "rank": 20,
+    "global_score": 94.958,
+    "prize_score": 93.695,
+    "hybrid_score": 94.327,
+    "global_z": 4.0724,
+    "prize_z": 3.5846,
+    "hybrid_z": 3.6822,
+    "global_rank": 17,
+    "prize_rank": 57,
+    "contributions": [
+     {
+      "group": "position",
+      "scope": "prize",
+      "z": 4.034,
+      "contribution": 1.1467,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.33% (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "digit",
+      "scope": "prize",
+      "z": 3.034,
+      "contribution": 0.8624,
+      "detail": "มีเลข 0 ซึ่งพบ 10.11% ของทุกหลัก (ถ้าสุ่ม 10%)"
+     },
+     {
+      "group": "position",
+      "scope": "global",
+      "z": 4.526,
+      "contribution": 0.3243,
+      "detail": "หลักที่ 5 เป็น 0: พบ 10.31% (ถ้าสุ่ม 10%)"
+     }
+    ]
+   }
+  ]
+ },
+ "alternatives": {
+  "first": {
+   "global": [
+    "226200",
+    "200902",
+    "220060",
+    "206200",
+    "206202",
+    "200802",
+    "226002",
+    "220902",
+    "200060",
+    "220006"
+   ],
+   "prize": [
+    "811411",
+    "111411",
+    "151411",
+    "111414",
+    "111417",
+    "511411",
+    "411411",
+    "111415",
+    "151454",
+    "181411"
+   ],
+   "A": [
+    "811411",
+    "151411",
+    "111411",
+    "411411",
+    "111414",
+    "511411",
+    "011411",
+    "181411",
+    "151454",
+    "411414"
+   ],
+   "B": [
+    "811411",
+    "100704",
+    "151411",
+    "100004",
+    "411411",
+    "100011",
+    "100414",
+    "100005",
+    "100564",
+    "011411"
+   ],
+   "C": [
+    "100004",
+    "100005",
+    "100704",
+    "100070",
+    "100006",
+    "100700",
+    "100002",
+    "100011",
+    "430704",
+    "100564"
+   ],
+   "D": [
+    "100004",
+    "100006",
+    "100070",
+    "100005",
+    "100002",
+    "100060",
+    "100700",
+    "100704",
+    "100000",
+    "100064"
+   ],
+   "E": [
+    "100002",
+    "100006",
+    "100060",
+    "100070",
+    "100004",
+    "100005",
+    "100000",
+    "200002",
+    "200006",
+    "100200"
+   ],
+   "F": [
+    "100002",
+    "100060",
+    "200002",
+    "100006",
+    "200060",
+    "200006",
+    "000002",
+    "800002",
+    "100070",
+    "400002"
+   ]
+  },
+  "second": {
+   "global": [
+    "226200",
+    "200902",
+    "220060",
+    "206200",
+    "206202",
+    "200802",
+    "226002",
+    "220902",
+    "200060",
+    "220006"
+   ],
+   "prize": [
+    "222702",
+    "122222",
+    "272222",
+    "172222",
+    "372222",
+    "372702",
+    "372002",
+    "222222",
+    "270222",
+    "172002"
+   ],
+   "A": [
+    "222702",
+    "220702",
+    "222002",
+    "270002",
+    "122002",
+    "272002",
+    "222202",
+    "120702",
+    "372002",
+    "122202"
+   ],
+   "B": [
+    "220702",
+    "222702",
+    "222002",
+    "220002",
+    "270002",
+    "122002",
+    "200702",
+    "222202",
+    "120002",
+    "300002"
+   ],
+   "C": [
+    "220702",
+    "220002",
+    "200702",
+    "300002",
+    "200002",
+    "222002",
+    "222702",
+    "120002",
+    "400002",
+    "270002"
+   ],
+   "D": [
+    "220002",
+    "220702",
+    "200002",
+    "200702",
+    "300002",
+    "400002",
+    "800002",
+    "200802",
+    "000002",
+    "220902"
+   ],
+   "E": [
+    "220002",
+    "200002",
+    "200802",
+    "200902",
+    "220902",
+    "800002",
+    "220702",
+    "000002",
+    "400002",
+    "800202"
+   ],
+   "F": [
+    "200902",
+    "200002",
+    "200802",
+    "220002",
+    "220902",
+    "800202",
+    "226200",
+    "220006",
+    "800002",
+    "400202"
+   ]
+  },
+  "third": {
+   "global": [
+    "226200",
+    "200902",
+    "220060",
+    "206200",
+    "206202",
+    "200802",
+    "226002",
+    "220902",
+    "200060",
+    "220006"
+   ],
+   "prize": [
+    "387558",
+    "555653",
+    "387551",
+    "387553",
+    "587553",
+    "576551",
+    "355658",
+    "355651",
+    "575658",
+    "555658"
+   ],
+   "A": [
+    "387558",
+    "387550",
+    "387553",
+    "887550",
+    "087550",
+    "355650",
+    "056550",
+    "387551",
+    "056551",
+    "356550"
+   ],
+   "B": [
+    "056550",
+    "387558",
+    "887550",
+    "356550",
+    "087550",
+    "387550",
+    "056551",
+    "556550",
+    "056558",
+    "355650"
+   ],
+   "C": [
+    "056550",
+    "356550",
+    "887550",
+    "087550",
+    "156550",
+    "056650",
+    "056558",
+    "706550",
+    "556550",
+    "056551"
+   ],
+   "D": [
+    "056550",
+    "056200",
+    "220700",
+    "056050",
+    "056700",
+    "000700",
+    "056020",
+    "220702",
+    "056000",
+    "000702"
+   ],
+   "E": [
+    "056200",
+    "226200",
+    "220700",
+    "000200",
+    "220702",
+    "220200",
+    "206200",
+    "000700",
+    "056202",
+    "006200"
+   ],
+   "F": [
+    "226200",
+    "206200",
+    "220060",
+    "056200",
+    "000200",
+    "220200",
+    "006202",
+    "200200",
+    "206202",
+    "209200"
+   ]
+  },
+  "fourth": {
+   "global": [
+    "226200",
+    "200902",
+    "220060",
+    "206200",
+    "206202",
+    "200802",
+    "226002",
+    "220902",
+    "200060",
+    "220006"
+   ],
+   "prize": [
+    "200002",
+    "200202",
+    "200992",
+    "400092",
+    "000002",
+    "000202",
+    "000092",
+    "400002",
+    "100092",
+    "300002"
+   ],
+   "A": [
+    "200002",
+    "200202",
+    "000002",
+    "000202",
+    "400002",
+    "400092",
+    "300002",
+    "249202",
+    "000092",
+    "200992"
+   ],
+   "B": [
+    "200002",
+    "200202",
+    "000002",
+    "000202",
+    "400002",
+    "300002",
+    "400902",
+    "400092",
+    "246202",
+    "249202"
+   ],
+   "C": [
+    "200002",
+    "200202",
+    "000002",
+    "000202",
+    "400002",
+    "300002",
+    "400902",
+    "200200",
+    "800002",
+    "200000"
+   ],
+   "D": [
+    "200002",
+    "200202",
+    "000002",
+    "000202",
+    "400002",
+    "300002",
+    "200902",
+    "200200",
+    "400902",
+    "800002"
+   ],
+   "E": [
+    "200002",
+    "200202",
+    "000002",
+    "200902",
+    "000202",
+    "400002",
+    "200200",
+    "300002",
+    "800002",
+    "200000"
+   ],
+   "F": [
+    "200002",
+    "200902",
+    "200202",
+    "000002",
+    "400002",
+    "000202",
+    "200200",
+    "400202",
+    "800002",
+    "200000"
+   ]
+  },
+  "fifth": {
+   "global": [
+    "226200",
+    "200902",
+    "220060",
+    "206200",
+    "206202",
+    "200802",
+    "226002",
+    "220902",
+    "200060",
+    "220006"
+   ],
+   "prize": [
+    "220060",
+    "266060",
+    "806060",
+    "866060",
+    "466060",
+    "226066",
+    "226660",
+    "806066",
+    "966060",
+    "806660"
+   ],
+   "A": [
+    "220060",
+    "266060",
+    "806060",
+    "226200",
+    "466060",
+    "226066",
+    "226060",
+    "226660",
+    "866060",
+    "206060"
+   ],
+   "B": [
+    "220060",
+    "226200",
+    "266060",
+    "806060",
+    "466060",
+    "226060",
+    "220070",
+    "202060",
+    "226066",
+    "220800"
+   ],
+   "C": [
+    "220060",
+    "226200",
+    "266060",
+    "806060",
+    "220070",
+    "226060",
+    "202060",
+    "220800",
+    "226000",
+    "206200"
+   ],
+   "D": [
+    "220060",
+    "226200",
+    "206200",
+    "220070",
+    "202060",
+    "806060",
+    "266060",
+    "226060",
+    "220800",
+    "226000"
+   ],
+   "E": [
+    "220060",
+    "226200",
+    "206200",
+    "220070",
+    "202060",
+    "226000",
+    "220006",
+    "220800",
+    "226060",
+    "806060"
+   ],
+   "F": [
+    "226200",
+    "220060",
+    "206200",
+    "220006",
+    "226000",
+    "220070",
+    "202060",
+    "226002",
+    "200060",
+    "220800"
+   ]
+  }
+ },
+ "random_seed": null,
+ "evaluation_status": "pending",
+ "content_sha256": "750b446442132aa8931697ea2d3a52624a07d11815b813e9c2eb985998a59c99"
+}
