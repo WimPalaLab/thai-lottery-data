@@ -1965,6 +1965,42 @@ function yearRangeCard(bt, params) {
     h("p", { class: "note" }, "ใช้ชุดน้ำหนักที่เลือกใช้ของแต่ละรางวัล · ช่วงก่อน 2560 คือช่วงฝึกที่ใช้เลือกชุดน้ำหนัก ผลช่วงนั้นจึงดูดีกว่าความจริงได้ · ถ้าลองหลายช่วงหลังเห็นผลแล้ว ย่อมเจอบางช่วงที่ดูดีโดยบังเอิญ ให้ยึดช่วงทดสอบจริงด้านบนเป็นหลัก", gl("validation-holdout")));
 }
 
+// ราคาสลากและเงินรางวัลต่อใบ (อัตราปัจจุบัน) ใช้ทั้งหน้า "สุ่มจริงไหม" และตารางเงินในการทดสอบย้อนหลัง
+const TICKET_BAHT = 80;
+const SMALL_PRIZE_BAHT = { last2: 2000, back3: 4000, front3: 4000 };
+
+// ถ้าซื้อเลขที่แนะนำครบทุกงวดในการทดสอบย้อนหลัง (เลขละ 1 ใบ) จ่ายเท่าไร ได้รางวัลเท่าไร เทียบกับสุ่มซื้อจำนวนเท่ากัน
+function smallMoneyRows(bts) {
+  return SMALL.map((k) => {
+    const x = bts.results[k].all;
+    if (!x.draws || !x.random) return null;
+    const tickets = x.draws * bts.candidate_counts[k];
+    const cost = tickets * TICKET_BAHT;
+    return { kind: k, draws: x.draws, tickets, cost, won: x.hits * SMALL_PRIZE_BAHT[k], randomWon: x.random.expected * SMALL_PRIZE_BAHT[k] };
+  }).filter(Boolean);
+}
+
+function smallMoneyView(bts) {
+  const rows = smallMoneyRows(bts);
+  if (!rows.length) return null;
+  return [
+    h("h3", null, "ถ้าซื้อตามเลขที่แนะนำทุกงวด จะได้คืนเท่าไร?"),
+    h("p", { class: "note" }, `สมมติซื้อเลขที่แนะนำเลขละ 1 ใบ (ใบละ ${TICKET_BAHT} บาท) ทุกงวดในการทดสอบย้อนหลังข้างบน แล้วนับเฉพาะเงินรางวัลของรางวัลนั้น (เลขท้าย 2 ตัว ${fmt.format(SMALL_PRIZE_BAHT.last2)} บาท, เลขท้าย/หน้า 3 ตัว ${fmt.format(SMALL_PRIZE_BAHT.back3)} บาท ตามอัตราปัจจุบัน)`),
+    h("div", { class: "table-wrap" }, h("table", { class: "tight" },
+      h("thead", null, h("tr", null, h("th", null, "รางวัล"), h("th", { class: "n" }, "งวด"), h("th", { class: "n" }, "ซื้อรวม (ใบ)"), h("th", { class: "n" }, "จ่าย (บาท)"),
+        h("th", { class: "n" }, "ได้รางวัล (บาท)"), h("th", { class: "n" }, "ได้คืน"), h("th", { class: "n" }, "ถ้าสุ่มซื้อ ได้เฉลี่ย (บาท)"))),
+      h("tbody", null, rows.map((r) => h("tr", null,
+        h("th", null, PRIZE_LABEL[r.kind]),
+        h("td", { class: "n" }, fmt.format(r.draws)),
+        h("td", { class: "n" }, fmt.format(r.tickets)),
+        h("td", { class: "n" }, fmt.format(r.cost)),
+        h("td", { class: "n" }, fmt.format(r.won)),
+        h("td", { class: "n" }, pct(r.won / r.cost, 0)),
+        h("td", { class: "n" }, fmt.format(Math.round(r.randomWon)))))))),
+    h("p", null, `ทุกรางวัลได้คืนน้อยกว่าที่จ่ายมาก และใกล้กับการสุ่มซื้อจำนวนเท่ากัน เพราะเลขที่แนะนำถูกบ่อยพอ ๆ กับการสุ่มเลือก ไม่ว่าจะเลือกเลขแบบไหน เลขท้าย 3 ตัวคืนเฉลี่ยราว ${pct(SMALL_PRIZE_BAHT.back3 * 2 / 1000 / TICKET_BAHT, 0)} ของราคาสลาก (ออก 2 เลขจาก 1,000) และเลขท้าย 2 ตัวราว ${pct(SMALL_PRIZE_BAHT.last2 / 100 / TICKET_BAHT, 0)} (ออก 1 เลขจาก 100)`),
+  ];
+}
+
 function smallBacktestView(bts) {
   if (!bts) return null;
   const splitLabel = { validation: "ก่อน 2560", holdout: "ตั้งแต่ 2560 (ทดสอบจริง)", all: "ทั้งหมด" };
@@ -1998,6 +2034,7 @@ function smallBacktestView(bts) {
         return [k, sp, x.draws, x.hits, x.draws_with_hit ?? x.hits, x.draws ? r4((x.hits / x.draws) * 100) : "", x.random ? r4(x.random.expected) : "", x.random ? x.random.lo95 : "", x.random ? x.random.hi95 : "", r4(x.mean_pct)];
       })))),
     h("p", { class: "note" }, "\"ต่อ 100 งวด\" = จำนวนที่ถูกต่อ 100 งวด ตัวเลขในวงเล็บคือที่การสุ่มเลือกควรได้"),
+    smallMoneyView(bts),
     h("p", { class: "note" }, `ข้อมูลถึง ${thShort(bts.data_through)} · คำนวณเมื่อ ${thDateTime(bts.backtest_generated_at)}`));
 }
 
@@ -2242,7 +2279,7 @@ async function pageRandom() {
   const ev = [
     ["รางวัลที่ 1", 1, 6000000], ["ข้างเคียงรางวัลที่ 1", 2, 100000], ["รางวัลที่ 2", 5, 200000],
     ["รางวัลที่ 3", 10, 80000], ["รางวัลที่ 4", 50, 40000], ["รางวัลที่ 5", 100, 20000],
-    ["เลขหน้า 3 ตัว", 2000, 4000], ["เลขท้าย 3 ตัว", 2000, 4000], ["เลขท้าย 2 ตัว", 10000, 2000],
+    ["เลขหน้า 3 ตัว", 2000, SMALL_PRIZE_BAHT.front3], ["เลขท้าย 3 ตัว", 2000, SMALL_PRIZE_BAHT.back3], ["เลขท้าย 2 ตัว", 10000, SMALL_PRIZE_BAHT.last2],
   ];
   const total = ev.reduce((a, [, n, v]) => a + n * v, 0);
   const perTicket = total / 1000000;
@@ -2270,8 +2307,8 @@ async function pageRandom() {
         h("div", { class: "stat-row" }, stat(term("ความเกี่ยวข้องกับงวดก่อน", "autocorrelation"), ac.r.toFixed(3)), stat(term("ช่วงปกติ", "range95"), `±${ac.range95[1].toFixed(3)}`)),
         h("p", { class: "small muted" }, "วัดว่าเลขท้าย 2 ตัวของงวดหนึ่งเกี่ยวกับงวดถัดไปไหม (ค่า -1 ถึง 1) ค่าใกล้ 0 แปลว่าไม่เกี่ยวกัน"),
         h("h2", { class: "section" }, "ซื้อ 1 ใบ ได้คืนเฉลี่ยเท่าไร", gl("expected-return")),
-        h("div", { class: "stat-row" }, stat("ราคาสลาก", "80 บาท"), stat("รางวัลเฉลี่ยต่อใบ", `${fmt.format(perTicket)} บาท`)),
-        h("p", { class: "small muted" }, `จากเงินรางวัลรวม ${fmt.format(total)} บาทต่อสลาก 1 ล้านใบ (อัตรารางวัลปัจจุบัน โปรดตรวจสอบกับ GLO) ได้คืนเฉลี่ย ${pct(perTicket / 80, 0)} ของราคา`))),
+        h("div", { class: "stat-row" }, stat("ราคาสลาก", `${TICKET_BAHT} บาท`), stat("รางวัลเฉลี่ยต่อใบ", `${fmt.format(perTicket)} บาท`)),
+        h("p", { class: "small muted" }, `จากเงินรางวัลรวม ${fmt.format(total)} บาทต่อสลาก 1 ล้านใบ (อัตรารางวัลปัจจุบัน โปรดตรวจสอบกับ GLO) ได้คืนเฉลี่ย ${pct(perTicket / TICKET_BAHT, 0)} ของราคา`))),
     (r.runs || []).length ? h("section", { class: "card section stack" },
       h("h2", null, "สูง/ต่ำ คู่/คี่ สลับกันบ่อยเท่าการสุ่มไหม?", gl("runs-test")),
       h("p", { class: "small muted" }, "แบ่งผลแต่ละงวดเป็น 2 แบบ แล้วนับว่ามีกี่ช่วงที่ออกแบบเดียวกันติดกัน ถ้าออกแบบเดิมติดกันนานเกินไป หรือสลับกันถี่เกินไป จำนวนช่วงจะห่างจากค่าที่การสุ่มควรให้"),
