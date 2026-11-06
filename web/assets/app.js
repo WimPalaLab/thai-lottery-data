@@ -280,6 +280,14 @@ const GLOSSARY = [
   { id: "autocorrelation", group: "test", term: "ความเกี่ยวข้องกับงวดก่อน", aka: "autocorrelation", body: [
     "วัดว่าเลขของงวดหนึ่งช่วยบอกเลขงวดถัดไปได้ไหม ค่าอยู่ระหว่าง -1 ถึง 1 ค่าใกล้ 0 = ไม่เกี่ยวกัน",
     "ถ้าค่าอยู่ใน \"ช่วงปกติ\" (±) ที่แสดงไว้ ความต่างจาก 0 เป็นเรื่องบังเอิญ ผลจริงของสลากอยู่ในช่วงนี้ งวดก่อนจึงไม่ได้บอกอะไรเกี่ยวกับงวดถัดไป"], see: ["range95"] },
+  { id: "runs-test", group: "test", term: "การนับช่วงที่ออกติดกัน", aka: "runs test (Wald–Wolfowitz)", body: [
+    "แบ่งผลแต่ละงวดเป็น 2 แบบ เช่น เลขท้าย 2 ตัว 50–99 กับ 00–49 แล้วนับว่ามีกี่ \"ช่วง\" ที่ออกแบบเดียวกันติดกัน เช่น สูง สูง ต่ำ สูง = 3 ช่วง",
+    "ถ้าสุ่มจริง จำนวนช่วงจะใกล้ค่าที่คาดไว้ ถ้าน้อยไปแปลว่าออกแบบเดิมติดกันนานผิดปกติ ถ้ามากไปแปลว่าสลับกันถี่ผิดปกติ",
+    "ค่า z บอกว่าห่างจากค่าที่คาดไว้กี่เท่าของความแกว่งปกติ ราว -2 ถึง 2 ถือว่าปกติ"], see: ["p-value", "autocorrelation"] },
+  { id: "change-point", group: "test", term: "จุดเปลี่ยนของข้อมูล", aka: "change point detection", body: [
+    "ลองแบ่งข้อมูลเป็น \"ก่อน\" กับ \"หลัง\" ทุกงวดที่เป็นไปได้ แล้วหาจุดที่ตัวเลข 0–9 ก่อนและหลังกระจายต่างกันมากที่สุด",
+    "จุดที่ต่างที่สุดย่อมมีเสมอแม้ข้อมูลสุ่มล้วน ๆ จึงเทียบกับการสลับลำดับงวดแบบสุ่มหลายร้อยครั้ง ถ้าลำดับจริงไม่ต่างจากลำดับที่สลับแล้ว แปลว่าไม่มีจุดเปลี่ยน",
+    "ใช้ตรวจคุณภาพข้อมูล ถ้าเจอจุดเปลี่ยนใกล้วันที่เปลี่ยนแหล่งข้อมูลหรือเปลี่ยนรูปแบบรางวัล มักแปลว่าข้อมูลช่วงนั้นมีปัญหา ไม่ได้แปลว่ามีรูปแบบให้ใช้เดาเลข"], see: ["trust-level", "p-value"] },
   { id: "expected-return", group: "test", term: "ได้คืนเฉลี่ยต่อใบ", aka: "ค่าคาดหวังของสลาก 1 ใบ", body: [
     "นำเงินรางวัลทั้งหมดของสลาก 1 ล้านใบมาเฉลี่ยต่อใบ ได้ราว 48 บาท จากราคา 80 บาท หรือราว 60% ของราคา",
     "แปลว่าในระยะยาว ซื้อ 100 บาทจะได้คืนเฉลี่ยราว 60 บาท ไม่มีวิธีเลือกเลขใดเปลี่ยนตัวเลขนี้ได้"], see: [] },
@@ -2198,6 +2206,8 @@ async function pageRandom() {
     ["number", "แต่ละเลขออกเท่า ๆ กันไหม"],
     ["first_digit", "แต่ละหลักของรางวัลที่ 1"],
     ["prize_digits", "ตัวเลขในรางวัลที่ 2–5 แยกตามแหล่งข้อมูล"],
+    ["runs", "สูง/ต่ำ คู่/คี่ สลับกันเหมือนการสุ่มไหม"],
+    ["change_point", "การกระจายของตัวเลขเปลี่ยนตามช่วงเวลาไหม"],
   ];
   const testTable = h("div", { class: "table-wrap" }, h("table", null,
     h("thead", null, h("tr", null, h("th", null, "การทดสอบ"), h("th", null, "ช่วง"), h("th", { class: "n" }, term("ค่า p", "p-value")), h("th", { class: "n" }, term("ค่า p หลังปรับ", "bonferroni")), h("th", null, "ผล"))),
@@ -2208,8 +2218,26 @@ async function pageRandom() {
         h("td", null, ERA_LABEL[t.era] || t.era),
         h("td", { class: "n" }, fmtP(t.p)),
         h("td", { class: "n" }, fmtP(t.p_bonferroni)),
-        h("td", null, t.p_bonferroni < 0.05 ? h("span", { class: "chip warn" }, "ผิดปกติ")
-          : t.p < 0.05 ? h("span", { class: "chip gray" }, "บังเอิญได้") : h("span", { class: "chip ok" }, "ปกติ"))))))));
+        h("td", null, pChip(t))))))));
+
+  const runsTable = h("div", { class: "table-wrap" }, h("table", { class: "seq-table" },
+    h("thead", null, h("tr", null, h("th", null, "แบ่งเป็น 2 แบบ"), h("th", { class: "n" }, "จำนวนช่วง (ถ้าสุ่มควรเป็น)"),
+      h("th", { class: "n" }, "ค่า z"), h("th", { class: "n" }, term("ค่า p หลังปรับ", "bonferroni")), h("th", null, "ผล"))),
+    h("tbody", null, (r.runs || []).map((t) => h("tr", null,
+      h("td", null, t.label), h("td", { class: "n" }, `${fmt.format(t.runs)} (${fmt1.format(t.expected)})`),
+      h("td", { class: "n" }, t.z.toFixed(2)), h("td", { class: "n" }, fmtP(t.p_bonferroni)), h("td", null, pChip(t)))))));
+
+  const cps = r.change_points || [];
+  const cpTable = h("div", { class: "table-wrap" }, h("table", { class: "seq-table" },
+    h("thead", null, h("tr", null, h("th", null, "ข้อมูล"), h("th", null, "จุดที่ต่างที่สุด"), h("th", { class: "n" }, "ค่าไคสแควร์"),
+      h("th", { class: "n" }, term("ค่า p หลังปรับ", "bonferroni")), h("th", null, "ผล"))),
+    h("tbody", null, cps.map((c) => h("tr", null,
+      h("td", null, c.label, h("br"), h("span", { class: "small muted" }, `${fmt.format(c.draws)} งวด`)),
+      h("td", null, thShort(c.change_date), h("br"), h("span", { class: "small muted" }, c.nearest_boundary
+        ? `${c.aligned ? "ตรงกับ" : "ห่างจาก"} ${c.nearest_boundary.label} (${thShort(c.nearest_boundary.date)})${c.aligned ? "" : ` ${fmt.format(c.nearest_boundary.draws_away)} งวด`}`
+        : "")),
+      h("td", { class: "n" }, fmt1.format(c.stat)), h("td", { class: "n" }, fmtP(c.p_bonferroni)), h("td", null, pChip(c)))))));
+  const cpFlag = cps.filter((c) => c.p_bonferroni < 0.05);
 
   const ev = [
     ["รางวัลที่ 1", 1, 6000000], ["ข้างเคียงรางวัลที่ 1", 2, 100000], ["รางวัลที่ 2", 5, 200000],
@@ -2244,12 +2272,31 @@ async function pageRandom() {
         h("h2", { class: "section" }, "ซื้อ 1 ใบ ได้คืนเฉลี่ยเท่าไร", gl("expected-return")),
         h("div", { class: "stat-row" }, stat("ราคาสลาก", "80 บาท"), stat("รางวัลเฉลี่ยต่อใบ", `${fmt.format(perTicket)} บาท`)),
         h("p", { class: "small muted" }, `จากเงินรางวัลรวม ${fmt.format(total)} บาทต่อสลาก 1 ล้านใบ (อัตรารางวัลปัจจุบัน โปรดตรวจสอบกับ GLO) ได้คืนเฉลี่ย ${pct(perTicket / 80, 0)} ของราคา`))),
+    (r.runs || []).length ? h("section", { class: "card section stack" },
+      h("h2", null, "สูง/ต่ำ คู่/คี่ สลับกันบ่อยเท่าการสุ่มไหม?", gl("runs-test")),
+      h("p", { class: "small muted" }, "แบ่งผลแต่ละงวดเป็น 2 แบบ แล้วนับว่ามีกี่ช่วงที่ออกแบบเดียวกันติดกัน ถ้าออกแบบเดิมติดกันนานเกินไป หรือสลับกันถี่เกินไป จำนวนช่วงจะห่างจากค่าที่การสุ่มควรให้"),
+      runsTable,
+      h("p", null, r.runs.every((t) => t.p_bonferroni >= 0.05)
+        ? "จำนวนช่วงใกล้ค่าที่การสุ่มควรให้ทุกแบบ ผลงวดก่อนไม่ได้ทำให้งวดถัดไปออกแบบเดิมหรือสลับแบบมากกว่าปกติ"
+        : "มีบางแบบที่จำนวนช่วงห่างจากการสุ่ม (ดูผลทดสอบอื่นประกอบ)")) : null,
+    cps.length ? h("section", { class: "card section stack" },
+      h("h2", null, "ข้อมูลแต่ละช่วงเวลาสม่ำเสมอไหม?", gl("change-point")),
+      h("p", { class: "small muted" }, `ส่วนนี้ใช้ตรวจคุณภาพข้อมูล ไม่ได้ใช้หาเลข: ลองแบ่งข้อมูลเป็นก่อน/หลังทุกงวด หาจุดที่ตัวเลข 0–9 ก่อนและหลังต่างกันที่สุด แล้วเทียบกับการสลับลำดับงวดแบบสุ่ม ${fmt.format(cps[0].sims)} ครั้ง ถ้าเจอจุดเปลี่ยนตรงกับวันที่เปลี่ยนแหล่งข้อมูลหรือรูปแบบรางวัล มักแปลว่าข้อมูลช่วงนั้นมีปัญหา`),
+      cpTable,
+      h("p", null, cpFlag.length
+        ? `พบจุดเปลี่ยน ${cpFlag.length} ชุด ควรตรวจข้อมูลช่วงนั้นเทียบกับแหล่งอื่น (เป็นปัญหาข้อมูล ไม่ใช่รูปแบบของเลข)`
+        : "ไม่พบจุดเปลี่ยนที่ชัดเจน จุดที่ต่างที่สุดยังอยู่ในระดับที่การสลับลำดับแบบสุ่มให้ได้ตามปกติ ข้อมูลจากหลายแหล่งและหลายยุคจึงต่อกันได้ดี")) : null,
     h("section", { class: "card section stack" },
       h("h2", null, "ผลการทดสอบทั้งหมด", gl("chi-square")),
       h("p", { class: "small muted" }, `ค่า p คือโอกาสที่การสุ่มจริงจะให้ผลเบี้ยวอย่างน้อยเท่านี้ ยิ่งน้อยยิ่งน่าสงสัย ถ้าทดสอบหลายแบบ ย่อมมีบางแบบที่ต่ำกว่า 0.05 โดยบังเอิญ (ทดสอบ ${r.test_count} แบบ น่าจะเจอราว ${fmt1.format(r.test_count * 0.05)} แบบ เจอจริง ${rawFlag.length} แบบ) จึงปรับโดยคูณค่า p ด้วยจำนวนการทดสอบ`),
       testTable,
       h("p", { class: "small muted" }, "ตัวอย่าง: หลักหน่วยของรางวัลที่ 1 มีค่า p ต่ำ แต่หลังปรับแล้วไม่ผิดปกติ · ตัวเลขในรางวัลที่ 2–5 ผิดปกติเล็กน้อยเฉพาะข้อมูลแหล่งเดียวที่ยังไม่ได้ตรวจทาน ส่วนข้อมูลทางการกระจายเท่ากัน แสดงว่าคุณภาพข้อมูลมีผลต่อสถิติ")),
     responsibleBox());
+}
+
+function pChip(t) {
+  return t.p_bonferroni < 0.05 ? h("span", { class: "chip warn" }, "ผิดปกติ")
+    : t.p < 0.05 ? h("span", { class: "chip gray" }, "บังเอิญได้") : h("span", { class: "chip ok" }, "ปกติ");
 }
 
 // ---------- page: data ----------
@@ -2357,6 +2404,7 @@ const GLOSSARY_SEE = {
   "range95": ["stats.html", "สถิติ"], "p-value": ["random.html", "สุ่มจริงไหม"], "backtest": ["analysis.html?tab=backtest", "ทดสอบย้อนหลัง"],
   "hybrid-score": ["analysis.html", "วิเคราะห์"], "snapshot": ["history.html", "ประวัติทำนาย"], "sha256": ["data.html", "ข้อมูล"],
   "autocorrelation": ["random.html", "สุ่มจริงไหม"], "bonferroni": ["random.html", "สุ่มจริงไหม"], "expected-return": ["random.html", "สุ่มจริงไหม"],
+  "runs-test": ["random.html", "สุ่มจริงไหม"], "change-point": ["random.html", "สุ่มจริงไหม"],
   "trust-level": ["data.html", "ข้อมูล"], "log-loss": ["analysis.html?tab=backtest", "ทดสอบย้อนหลัง"],
 };
 

@@ -297,6 +297,7 @@ input[type="number"] { width: 7.5em; font-variant-numeric: tabular-nums; }
 .chart .ref { stroke: var(--text-2); stroke-width: 1.2; stroke-dasharray: 4 4; }
 .chart .line { fill: none; stroke: var(--text); stroke-width: 2; }
 .table-wrap { overflow-x: auto; }
+table.seq-table { min-width: 600px; }   /* runs test / จุดเปลี่ยน: มือถือเลื่อนตารางในกรอบแทนการบีบคอลัมน์ */
 table { border-collapse: collapse; width: 100%; font-size: .92rem; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
 th { color: var(--text-2); font-weight: 600; font-size: .85rem; }

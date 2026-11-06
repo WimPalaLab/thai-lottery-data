@@ -8,6 +8,8 @@
 import math
 from collections import Counter
 
+import lotto_sequence as Q
+
 SPACE = {"last2": 100, "back3": 1000, "front3": 1000}
 
 
@@ -296,13 +298,28 @@ def randomness(draws):
     for t in prize_digits_by_trust(draws):
         add("prize_digits", t["trust_level"], t["chi_square"], era="all", trust_level=t["trust_level"])
 
+    # ลำดับตามเวลา: runs test และจุดเปลี่ยน (นับรวมในการปรับตามจำนวนการทดสอบด้วย)
+    runs = Q.runs_tests(draws)
+    for r in runs:
+        tests.append({"group": "runs", "label": r["label"], "key": r["key"], "z": r["z"],
+                      "p": r["p"], "n": r["n"], "era": "all"})
+    cps = Q.change_points(draws)
+    for c in cps:
+        tests.append({"group": "change_point", "label": c["label"], "key": c["key"], "chi2": c["stat"],
+                      "df": c["df"], "p": c["p"], "n": c["draws"], "era": "all"})
+
     m = len(tests)
     for t in tests:
         t["p_bonferroni"] = min(1.0, t["p"] * m)
+    for r in runs + cps:
+        r["p_bonferroni"] = min(1.0, r["p"] * m)
 
     last2 = [int(d["prizes"]["last2"][0]) for d in draws if d["prizes"]["last2"]]
     return {
         "tests": tests,
+        "runs": runs,
+        "change_points": cps,
+        "change_boundaries": Q.boundaries(draws),
         "test_count": m,
         "first_prize_digits": fd,
         "prize_digits_by_trust": prize_digits_by_trust(draws),
