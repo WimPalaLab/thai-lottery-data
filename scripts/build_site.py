@@ -206,7 +206,40 @@ def analysis_files(draws, csv_hash, data_dir, meta):
         stale = [k for k, v in want.items() if sb.get(k) != v]
         files["analysis/backtest_small.json"] = {**sb, **meta, "backtest_generated_at": sb.get("generated_at"),
                                                  "fresh": not stale, "stale_reasons": stale}
+    ml = ml_study_file(os.path.join(data_dir, "analysis", "ml_study.json"), csv_hash, meta)
+    if ml:
+        files["analysis/ml_study.json"] = ml
     return files
+
+
+ML_STUDY_CODE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lotto_ml_study.py")
+
+
+def ml_study_file(path, csv_hash, meta):
+    """ผลวิจัยความน่าจะเป็น (scripts/lotto_ml_study.py) แบบย่อสำหรับหน้าวิเคราะห์:
+    ตัดตารางจูนค่าและข้อมูลรายงวดออก เหลือผลสรุป · รันเองด้วยมือ จึงบอกว่าข้อมูลถึงงวดไหน"""
+    if not os.path.exists(path):
+        return None
+    ml = read_json(path)
+    if ml.get("schema_version") != 1 or not isinstance(ml.get("groups"), dict):
+        raise SystemExit("ml_study.json ไม่ถูกต้อง")
+    groups = {}
+    for key, g in ml["groups"].items():
+        groups[key] = {
+            "label": g["label"], "targets": g["targets"], "chosen_params": g["chosen_params"],
+            "combined_holdout": g["combined_holdout"], "permutation_check": g["permutation_check"],
+            "results": {t: {"classes": r["classes"], "models": {
+                m: {"verdict": v["verdict"], "holdout": {f: v["holdout"][f] for f in (
+                    "draws", "logloss_minus_uniform", "logloss_minus_uniform_ci95", "topk")},
+                    "validation": {"logloss_minus_uniform": v["validation"]["logloss_minus_uniform"]}}
+                for m, v in r["models"].items()}} for t, r in g["results"].items()},
+        }
+    with open(ML_STUDY_CODE, "rb") as f:
+        code_ok = hashlib.sha256(f.read()).hexdigest() == ml.get("code_sha")
+    return {**meta, "study_generated_at": ml.get("generated_at"), "data_through": ml.get("data_through"),
+            "draw_count": ml.get("draw_count"), "evaluation": ml["evaluation"], "config": ml["config"],
+            "runtime_seconds": ml.get("runtime_seconds"), "csv_matches": ml.get("csv_sha256") == csv_hash,
+            "code_matches": code_ok, "groups": groups}
 
 
 def build_data(draws, csv_hash, generated_at, warnings=(), data_dir=DATA_DIR):

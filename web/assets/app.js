@@ -306,6 +306,10 @@ const GLOSSARY = [
   { id: "mean-rank", group: "model", term: "อันดับเฉลี่ย", aka: "percentile", body: [
     "เลขที่ออกจริงอยู่ตรงไหนในอันดับของวิธีนี้ คิดเป็น % จากบนสุด: 0% = อันดับ 1, 100% = อันดับสุดท้าย",
     "ถ้าวิธีนี้ไม่ช่วยอะไร เลขที่ออกจริงจะกระจายทั่วอันดับ เฉลี่ยราว 50% ถ้าช่วยได้จริงจะต่ำกว่า 50% อย่างสม่ำเสมอ ผลบนเว็บนี้อยู่ราว 50% คือเหมือนการสุ่ม"], see: ["backtest", "ci"] },
+  { id: "log-loss", group: "model", term: "คะแนนความผิดพลาดของความน่าจะเป็น", aka: "log-loss", body: [
+    "ใช้วัดวิธีที่ให้ \"ความน่าจะเป็น\" กับทุกเลข แทนการเลือกเลขเป็นกลุ่ม ทุกงวดดูว่าวิธีนั้นให้ความน่าจะเป็นกับเลขที่ออกจริงเท่าไร ถ้าให้น้อยจะโดนหักคะแนนมาก ยิ่งค่าเฉลี่ยต่ำยิ่งดี",
+    "เว็บแสดงเป็นผลต่างจากการให้ทุกเลขเท่ากัน: ติดลบ = ดีกว่า, บวก = แย่กว่า ถ้าช่วงคลาดเคลื่อนคร่อม 0 แปลว่าแยกไม่ออกจากการให้ทุกเลขเท่ากัน",
+    "การให้ทุกเลขเท่ากันเป็นค่าที่ดีที่สุดเมื่อการออกรางวัลสุ่มจริง วิธีอื่นจะดีกว่าได้ก็ต่อเมื่อมีรูปแบบจริงให้เรียนรู้"], see: ["backtest", "ci", "validation-holdout"] },
   { id: "exact-hit", group: "model", term: "ถูกตรง", aka: "exact match", body: [
     "เลขที่ออกจริงอยู่ในกลุ่มเลขอันดับต้นที่ระบบเลือกไว้ของรางวัลเดียวกัน และตรงครบทุกหลัก ตรงบางหลักไม่นับ",
     "ให้ดูคู่กับ \"ถ้าสุ่มควรถูก\" เสมอ ถ้าจำนวนที่ถูกใกล้เคียงหรืออยู่ในช่วงปกติของการสุ่ม แปลว่าไม่ได้ดีกว่าการสุ่มเลือก"], see: ["expected", "backtest"] },
@@ -1656,7 +1660,8 @@ function snapshotDetails(snap, small) {
 async function pageAnalysis() {
   const params = new URLSearchParams(location.search);
   const tab = params.get("tab") === "backtest" ? "backtest" : "rank";
-  const [pidx, bt, bts] = await Promise.all([optionalData("predictions/index.json"), optionalData("analysis/backtest.json"), optionalData("analysis/backtest_small.json")]);
+  const [pidx, bt, bts, ml] = await Promise.all([optionalData("predictions/index.json"), optionalData("analysis/backtest.json"), optionalData("analysis/backtest_small.json"),
+    tab === "backtest" ? optionalData("analysis/ml_study.json") : null]);
   const tabs = h("div", { class: "seg tabs", role: "group", "aria-label": "เลือกส่วน" },
     h("button", { type: "button", "aria-pressed": String(tab === "rank"), onclick: () => { location.search = ""; } }, "อันดับเลขงวดถัดไป"),
     h("button", { type: "button", "aria-pressed": String(tab === "backtest"), onclick: () => { location.search = "?tab=backtest"; } }, "ทดสอบย้อนหลัง"),
@@ -1667,7 +1672,7 @@ async function pageAnalysis() {
     "เมื่อลองย้อนหลังหลายร้อยงวด วิธีนี้เลือกเลขได้ไม่ดีกว่าการสุ่ม (ดูแท็บ \"ทดสอบย้อนหลัง\")");
   const head = pageHead("วิเคราะห์เลข", "จัดอันดับเลขของงวดถัดไปจากสถิติที่ผ่านมา: เลข 6 หลักรางวัลที่ 1–5, เลขท้าย 2 ตัว, เลขท้าย 3 ตัว และเลขหน้า 3 ตัว");
   if (tab === "backtest") {
-    render(head, h("section", { class: "card stack" }, tabs), backtestView(bt, params), smallBacktestView(bts), responsibleBox());
+    render(head, h("section", { class: "card stack" }, tabs), backtestView(bt, params), smallBacktestView(bts), mlStudyView(ml), responsibleBox());
     return;
   }
   if (!pidx || !pidx.snapshots.length) {
@@ -1988,6 +1993,81 @@ function smallBacktestView(bts) {
     h("p", { class: "note" }, `ข้อมูลถึง ${thShort(bts.data_through)} · คำนวณเมื่อ ${thDateTime(bts.backtest_generated_at)}`));
 }
 
+// งานวิจัย: ให้ "ความน่าจะเป็น" กับทุกเลข (ความถี่ย้อนหลัง / machine learning) เทียบกับให้ทุกเลขเท่ากัน
+// ข้อมูลจาก scripts/lotto_ml_study.py (รันเองด้วยมือ)
+const ML_MODEL_LABEL = { freq: "ความถี่ย้อนหลัง", logit: "Machine learning" };
+const ML_TARGET_LABEL = (t) => (t === "last2" ? "เลขท้าย 2 ตัว" : `รางวัลที่ 1 หลักที่ ${t.slice(-1)}`);
+const ML_VERDICT = {
+  lower_logloss_than_uniform: ["warn", "ดีกว่าเท่ากัน"],
+  no_difference_from_uniform: ["ok", "เหมือนเท่ากัน"],
+  higher_logloss_than_uniform: ["gray", "แย่กว่าเท่ากัน"],
+};
+const mlVerdictOf = (ci) => (ci[1] < 0 ? "lower_logloss_than_uniform" : ci[0] > 0 ? "higher_logloss_than_uniform" : "no_difference_from_uniform");
+const signed = (x, d = 4) => `${x > 0 ? "+" : x < 0 ? "−" : ""}${Math.abs(x).toFixed(d)}`;
+
+function mlVerdictChip(v) {
+  const [cls, text] = ML_VERDICT[v] || ["", v];
+  return h("span", { class: `chip ${cls}` }, text);
+}
+
+function mlStudyView(ml) {
+  if (!ml) return null;
+  const e = ml.evaluation;
+  const models = ["freq", "logit"];
+  // แถวหลัก: เลขท้าย 2 ตัว และรางวัลที่ 1 ทั้ง 6 หลักรวมกัน (ผลรวมของแต่ละหลัก)
+  const rows = Object.entries(ml.groups).flatMap(([key, g]) => models.map((m) => {
+    const c = g.combined_holdout[m];
+    const val = g.targets.reduce((a, t) => a + g.results[t].models[m].validation.logloss_minus_uniform, 0);
+    const pc = g.permutation_check[m];
+    return { key, label: key === "last2" ? "เลขท้าย 2 ตัว" : "รางวัลที่ 1 (6 หลักรวมกัน)", m, val, hold: c.holdout_logloss_minus_uniform,
+      ci: c.ci95, verdict: mlVerdictOf(c.ci95), perm: pc ? Math.round(pc.share_shuffled_at_or_below_actual * pc.shuffled_deltas.length) : null,
+      permN: pc ? pc.shuffled_deltas.length : null };
+  }));
+  const better = rows.filter((r) => r.verdict === "lower_logloss_than_uniform");
+  const last2 = ml.groups.last2;
+  const digits = ml.groups.first_digits;
+  const topRows = [];
+  if (last2) topRows.push({ t: "last2", g: last2, k: "10", pick: "10 เลขแรก" });
+  if (digits) digits.targets.forEach((t) => topRows.push({ t, g: digits, k: "3", pick: "3 ตัวแรก" }));
+  const fp = (last2 || digits).chosen_params;
+  return h("section", { class: "card section stack" },
+    h("h2", null, "ลองทำนายเป็นความน่าจะเป็น (รวม machine learning): ดีกว่าให้ทุกเลขเท่ากันไหม", gl("log-loss")),
+    h("div", { class: `callout ${better.length ? "warn" : "ok"}` },
+      h("strong", null, better.length ? `มี ${better.length} แบบที่คะแนนดีกว่าให้ทุกเลขเท่ากันในช่วงทดสอบจริง` : "ไม่มีวิธีใดให้ความน่าจะเป็นดีกว่าการให้ทุกเลขเท่ากัน"), h("br"),
+      better.length ? "ผลนี้อาจเป็นความบังเอิญได้ ให้ดูคู่กับการสลับลำดับงวดด้านล่าง" : "ทั้งความถี่ย้อนหลังและ machine learning ทำได้เท่ากับหรือแย่กว่าการให้ทุกเลขมีความน่าจะเป็นเท่ากัน ซึ่งเป็นสิ่งที่ควรเห็นเมื่อการออกรางวัลสุ่มจริง"),
+    h("p", { class: "note" }, `ก่อนแต่ละงวด ใช้เฉพาะงวดก่อนหน้าคำนวณความน่าจะเป็นของทุกเลข (เลขท้าย 2 ตัว 100 เลข และรางวัลที่ 1 ทีละหลัก หลักละ 10 ตัว) แล้วดูว่าให้ความน่าจะเป็นกับเลขที่ออกจริงเท่าไร · เริ่มทายงวดที่ ${fmt.format(e.first_predicted_index + 1)} · เลือกค่าตั้งของแต่ละวิธีจากช่วงฝึกเท่านั้น `, gl("validation-holdout"), ` (${thShort(e.validation.from)} – ${thShort(e.validation.to)}, ${fmt.format(e.validation.draws)} งวด) แล้ววัดผลครั้งเดียวในช่วงทดสอบจริง (${thShort(e.holdout.from)} – ${thShort(e.holdout.to)}, ${fmt.format(e.holdout.draws)} งวด)`),
+    h("ul", { class: "plain-list small" },
+      h("li", null, h("strong", null, "ทุกเลขเท่ากัน"), " — ฐานสำหรับเทียบ (เลขท้าย 2 ตัว เลขละ 1%, แต่ละหลัก ตัวละ 10%)"),
+      h("li", null, h("strong", null, ML_MODEL_LABEL.freq), ` — นับว่าแต่ละเลขออกกี่ครั้งในช่วงหลัง แล้วเกลี่ยเข้าหาค่าเท่ากัน (เลขท้าย 2 ตัว: ${fp.freq.window || "ทุก"} งวดล่าสุด)`),
+      h("li", null, h("strong", null, `${ML_MODEL_LABEL.logit} (logistic regression)`), " — เรียนรู้จากงวดก่อนหน้าว่าข้อมูล 5 อย่างช่วยบอกเลขถัดไปได้ไหม: ความถี่ 10 งวด, 50 งวด, ทั้งหมด, จำนวนงวดที่หายไป และเป็นเลขเดียวกับงวดก่อนไหม")),
+    h("div", { class: "table-wrap" }, h("table", { class: "tight" },
+      h("thead", null, h("tr", null, h("th", null, "เป้าหมาย"), h("th", null, "วิธี"),
+        h("th", { class: "n" }, term("ช่วงฝึก", "validation-holdout")), h("th", { class: "n" }, term("ช่วงทดสอบจริง", "validation-holdout")),
+        h("th", null, term("ช่วงคลาดเคลื่อน (ทดสอบจริง)", "ci")), h("th", null, "เทียบทุกเลขเท่ากัน"), h("th", { class: "n" }, "สลับลำดับงวดแล้วได้ดีเท่าหรือดีกว่า"))),
+      h("tbody", null, rows.map((r, i) => h("tr", null,
+        i % 2 === 0 ? h("th", { rowspan: "2" }, r.label) : null,
+        h("td", null, ML_MODEL_LABEL[r.m]),
+        h("td", { class: "n mono" }, signed(r.val)), h("td", { class: "n mono" }, signed(r.hold)),
+        h("td", { class: "mono small" }, `${signed(r.ci[0])} ถึง ${signed(r.ci[1])}`),
+        h("td", null, mlVerdictChip(r.verdict)),
+        h("td", { class: "n" }, r.perm === null ? "–" : `${r.perm} จาก ${r.permN} รอบ`)))))),
+    h("p", { class: "note" }, "ตัวเลขคือคะแนนความผิดพลาด (log-loss) เฉลี่ยต่องวด ลบด้วยของการให้ทุกเลขเท่ากัน: ติดลบ = ดีกว่า, บวก = แย่กว่า · ถ้าช่วงคลาดเคลื่อนคร่อม 0 แปลว่าแยกไม่ออกจากการให้ทุกเลขเท่ากัน · \"สลับลำดับงวด\" = สุ่มสลับลำดับงวดทั้งหมดแล้วรันใหม่ ถ้าลำดับเวลามีรูปแบบที่ใช้ทายได้จริง ผลจริงควรดีกว่าแทบทุกรอบที่สลับ"),
+    h("h3", null, "ถ้าเลือกเลขตามลำดับของแต่ละวิธี (ช่วงทดสอบจริง)"),
+    h("div", { class: "table-wrap" }, h("table", { class: "tight" },
+      h("thead", null, h("tr", null, h("th", null, "เป้าหมาย"), h("th", null, "เลือก"), h("th", { class: "n" }, ML_MODEL_LABEL.freq), h("th", { class: "n" }, "Machine learning"), h("th", { class: "n" }, term("ถ้าสุ่ม", "expected")))),
+      h("tbody", null, topRows.map(({ t, g, k, pick }) => {
+        const r = g.results[t].models;
+        return h("tr", null, h("th", null, ML_TARGET_LABEL(t)), h("td", null, pick),
+          h("td", { class: "n" }, pct(r.freq.holdout.topk[k].rate)), h("td", { class: "n" }, pct(r.logit.holdout.topk[k].rate)),
+          h("td", { class: "n" }, pct(r.freq.holdout.topk[k].random_expected_rate, 0)));
+      })))),
+    h("p", { class: "note" }, "% ของงวดที่เลขที่ออกจริงอยู่ในกลุ่มที่เลือก ถ้าเลขมีความน่าจะเป็นเท่ากันหลายตัว คิดแบบสุ่มเลือกจากตัวที่เท่ากัน · แต่ละหลักมีงวดทดสอบจริงไม่ถึง 300 งวด จึงแกว่งรอบค่าที่สุ่มควรได้หลาย % เป็นธรรมดา"),
+    !ml.code_matches ? h("div", { class: "callout warn" }, "โค้ดของงานวิจัยถูกแก้หลังจากคำนวณผลนี้ ควรรันใหม่ (python scripts/lotto_ml_study.py)") : null,
+    h("div", { class: "row" }, csvButton("lotto-probability-study.csv", ["เป้าหมาย", "วิธี", "ช่วงฝึก (ผลต่าง log-loss)", "ช่วงทดสอบจริง (ผลต่าง log-loss)", "ช่วงคลาดเคลื่อน ต่ำ", "ช่วงคลาดเคลื่อน สูง", "ผล", "สลับลำดับแล้วดีเท่าหรือดีกว่า", "จำนวนรอบสลับ"],
+      () => rows.map((r) => [r.key, r.m, r4(r.val), r4(r.hold), r4(r.ci[0]), r4(r.ci[1]), r.verdict, r.perm ?? "", r.permN ?? ""]))),
+    h("p", { class: "note" }, `ข้อมูลถึง ${thShort(ml.data_through)} (${fmt.format(ml.draw_count)} งวด)${ml.csv_matches ? "" : " ยังไม่รวมงวดที่ใหม่กว่านั้น"} · คำนวณเมื่อ ${thDateTime(ml.study_generated_at)} ใช้เวลา ${fmt.format(Math.round(ml.runtime_seconds))} วินาที`));
+}
+
 // ---------- page: history ----------
 async function pageHistory() {
   const params = new URLSearchParams(location.search);
@@ -2277,7 +2357,7 @@ const GLOSSARY_SEE = {
   "range95": ["stats.html", "สถิติ"], "p-value": ["random.html", "สุ่มจริงไหม"], "backtest": ["analysis.html?tab=backtest", "ทดสอบย้อนหลัง"],
   "hybrid-score": ["analysis.html", "วิเคราะห์"], "snapshot": ["history.html", "ประวัติทำนาย"], "sha256": ["data.html", "ข้อมูล"],
   "autocorrelation": ["random.html", "สุ่มจริงไหม"], "bonferroni": ["random.html", "สุ่มจริงไหม"], "expected-return": ["random.html", "สุ่มจริงไหม"],
-  "trust-level": ["data.html", "ข้อมูล"],
+  "trust-level": ["data.html", "ข้อมูล"], "log-loss": ["analysis.html?tab=backtest", "ทดสอบย้อนหลัง"],
 };
 
 async function pageGlossary() {

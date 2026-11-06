@@ -134,6 +134,23 @@ class AnalysisFilesTest(unittest.TestCase):
         self.assertFalse(files["analysis/backtest.json"]["fresh"])
         self.assertIn("csv_sha256", files["analysis/backtest.json"]["stale_reasons"])
 
+    def test_ml_study_summary(self):
+        real = os.path.join(build_site.DATA_DIR, "analysis", "ml_study.json")
+        if not os.path.exists(real):
+            self.skipTest("ยังไม่มี ml_study.json")
+        os.makedirs(os.path.join(self.tmp, "analysis"))
+        shutil.copyfile(real, os.path.join(self.tmp, "analysis", "ml_study.json"))
+        ml = build_site.analysis_files(self.draws, "x", self.tmp, {})["analysis/ml_study.json"]
+        self.assertFalse(ml["csv_matches"])
+        self.assertNotIn("per_draw_last2", ml)
+        self.assertEqual(set(ml["groups"]), {"last2", "first_digits"})
+        r = ml["groups"]["last2"]["results"]["last2"]["models"]["logit"]["holdout"]
+        self.assertEqual(len(r["logloss_minus_uniform_ci95"]), 2)
+        with open(os.path.join(self.tmp, "analysis", "ml_study.json"), "w", encoding="utf-8") as f:
+            json.dump({"schema_version": 99}, f)
+        with self.assertRaises(SystemExit):
+            build_site.analysis_files(self.draws, "x", self.tmp, {})
+
     def test_build_with_partial_dataset(self):
         files = build_site.build_data(self.draws[:3], "x", "t", [], self.tmp)
         self.assertEqual(files["manifest.json"]["draw_count"], 3)
