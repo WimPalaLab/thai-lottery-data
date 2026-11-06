@@ -104,6 +104,20 @@ class WebSecurityTest(unittest.TestCase):
         self.assertIn('closest("a.gl[data-gl]")', js)
         self.assertIn("ev.ctrlKey || ev.metaKey", js)   # กด Ctrl/Cmd = เปิดหน้าคำอธิบายศัพท์ในแท็บใหม่ตามปกติ
 
+    def test_backtest_money_table_uses_shared_prize_rates(self):
+        """ตารางเงินในการทดสอบย้อนหลังกับหน้า "สุ่มจริงไหม" ใช้ราคาสลากและเงินรางวัลชุดเดียวกัน"""
+        js = read(os.path.join(WEB, "assets", "app.js"))
+        self.assertIn("const TICKET_BAHT = 80;", js)
+        self.assertIn("const SMALL_PRIZE_BAHT = { last2: 2000, back3: 4000, front3: 4000 };", js)
+        view = re.search(r"\nfunction smallBacktestView\(bts\) \{(.*?)\n\}", js, re.S).group(1)
+        self.assertIn("smallMoneyView(bts)", view)
+        money = re.search(r"\nfunction smallMoneyRows\(bts\) \{(.*?)\n\}", js, re.S).group(1)
+        for need in ("candidate_counts[k]", "TICKET_BAHT", "x.hits * SMALL_PRIZE_BAHT[k]",
+                     "x.random.expected * SMALL_PRIZE_BAHT[k]"):
+            self.assertIn(need, money)
+        rnd = re.search(r"\nasync function pageRandom\(\) \{(.*?)\n\}", js, re.S).group(1)
+        self.assertNotRegex(rnd, r"\b(2000|4000)\]")   # หน้า "สุ่มจริงไหม" ใช้ค่ากลาง ไม่พิมพ์เงินรางวัลซ้ำ
+
     def test_prohibited_wording(self):
         for p in files(".html") + files(".js"):
             text = read(p).lower()
