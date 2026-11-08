@@ -107,6 +107,9 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(len(a["index.json"]["rows"]), len(draws))
         for t in a["stats/randomness.json"]["tests"]:
             self.assertTrue(0 <= t["p"] <= 1 and not math.isnan(t["p"]))
+        gr = a.get("analysis/global_rank.json")
+        self.assertIsNotNone(gr, "data/analysis/global_rank.json ต้องถูกคัดลอกขึ้นเว็บ")
+        self.assertTrue(gr["rows"] and all(len(r["number"]) == 6 for r in gr["rows"]))
 
 
 if __name__ == "__main__":

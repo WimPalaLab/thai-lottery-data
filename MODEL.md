@@ -15,6 +15,7 @@
 | `scripts/lotto_small.py` | โมเดลเลขท้าย 2 ตัว / ท้าย 3 ตัว / หน้า 3 ตัว (small-v1) + walk-forward + การเลือกแบบสุ่มแม่นตรง (ไลบรารีมาตรฐาน) |
 | `data/analysis/backtest.json` | ผล backtest ล่าสุด (สร้างใหม่เมื่อ CSV/config/โค้ดเปลี่ยน) |
 | `data/analysis/backtest_small.json` | ผล backtest ของ small-v1 (สร้างใหม่เมื่อ CSV/`small_numbers`/`lotto_small.py` เปลี่ยน) |
+| `data/analysis/global_rank.json` | 20 อันดับตามคะแนน global (รางวัลที่ 1–5 รวมกัน) พร้อมเหตุผล ไม่ใช่โอกาสถูกรางวัล (`lotto_predict.py global`, สร้างใหม่เมื่อ CSV/config/โค้ดโมเดลเปลี่ยน) |
 | `data/predictions/<วันที่>.json` | snapshot ก่อนออกรางวัล (ห้ามแก้) |
 | `data/predictions/small/<วันที่>.json` | snapshot เสริมของเลขท้าย/หน้า สำหรับ snapshot schema 1 ที่สร้างไว้ก่อนมี small-v1 (ห้ามแก้) |
 | `data/evaluations/<วันที่>.json`, `data/evaluations/small/<วันที่>.json` | ผลเทียบ snapshot กับผลจริง (ห้ามแก้) |

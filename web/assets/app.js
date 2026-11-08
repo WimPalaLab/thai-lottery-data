@@ -1668,8 +1668,8 @@ function snapshotDetails(snap, small) {
 async function pageAnalysis() {
   const params = new URLSearchParams(location.search);
   const tab = params.get("tab") === "backtest" ? "backtest" : "rank";
-  const [pidx, bt, bts, ml] = await Promise.all([optionalData("predictions/index.json"), optionalData("analysis/backtest.json"), optionalData("analysis/backtest_small.json"),
-    tab === "backtest" ? optionalData("analysis/ml_study.json") : null]);
+  const [pidx, bt, bts, ml, gr] = await Promise.all([optionalData("predictions/index.json"), optionalData("analysis/backtest.json"), optionalData("analysis/backtest_small.json"),
+    tab === "backtest" ? optionalData("analysis/ml_study.json") : null, tab === "rank" ? optionalData("analysis/global_rank.json") : null]);
   const tabs = h("div", { class: "seg tabs", role: "group", "aria-label": "เลือกส่วน" },
     h("button", { type: "button", "aria-pressed": String(tab === "rank"), onclick: () => { location.search = ""; } }, "อันดับเลขงวดถัดไป"),
     h("button", { type: "button", "aria-pressed": String(tab === "backtest"), onclick: () => { location.search = "?tab=backtest"; } }, "ทดสอบย้อนหลัง"),
@@ -1742,8 +1742,38 @@ async function pageAnalysis() {
       h("div", { class: "small muted" }, "เลข 6 หลัก"), segSix,
       h("div", { class: "small muted" }, "เลขท้าย / เลขหน้า"), segSmall,
       h("div", { class: "row" }, h("label", { for: "count", class: "small muted" }, "แสดง"), countSel, countNote)),
-    body, determinismCard(snap, small), responsibleBox());
+    body, globalRankView(gr), determinismCard(snap, small), responsibleBox());
   draw();
+}
+
+// โอกาสที่เลข 6 หลัก 1 เลขจะถูกรางวัลใดรางวัลหนึ่งในงวดเดียว (เท่ากันทุกเลข)
+// รางวัลที่ 1 + ข้างเคียง 2 + รางวัลที่ 2–5 (5 + 10 + 50 + 100) = 168 เลขจาก 1 ล้าน
+// เลขหน้า 3 ตัว 2 เลข และเลขท้าย 3 ตัว 2 เลขจาก 1,000 · เลขท้าย 2 ตัว 1 เลขจาก 100
+const SIX_PRIZE_SLOTS = 1 + 2 + 5 + 10 + 50 + 100;
+const P_ANY_PRIZE = 1 - (1 - SIX_PRIZE_SLOTS / 1e6) * (1 - 2 / 1000) * (1 - 2 / 1000) * (1 - 1 / 100);
+
+// เลข 6 หลักที่คล้ายเลขที่เคยออกมากที่สุด เมื่อดูรางวัลที่ 1–5 รวมกัน (คะแนน "ดูทุกรางวัล") พร้อมเหตุผล
+function globalRankView(gr) {
+  if (!gr || !gr.rows || !gr.rows.length) return null;
+  const rows = gr.rows.slice(0, 10);
+  return h("section", { class: "card section stack" },
+    h("h2", null, "เลข 6 หลักที่คล้ายเลขที่เคยออกมากที่สุด (ดูทุกรางวัลรวมกัน)", gl("global-score")),
+    !gr.fresh ? h("div", { class: "callout warn" }, "อันดับนี้คำนวณจากข้อมูล/การตั้งค่า/โค้ดชุดเก่า จะอัปเดตในรอบถัดไปของ GitHub Actions") : null,
+    h("div", { class: "callout" },
+      h("strong", null, "ทุกเลขมีโอกาสถูกรางวัลเท่ากัน"), h("br"),
+      `เลข 6 หลักทุกเลขมีโอกาสถูกรางวัลใดรางวัลหนึ่งราว ${pct(P_ANY_PRIZE)} ต่องวด (ประมาณ 1 ใน ${fmt.format(Math.round(1 / P_ANY_PRIZE))}) `,
+      `ส่วนรางวัลที่ 1–5 และข้างเคียงรวมกันมี ${fmt.format(SIX_PRIZE_SLOTS)} เลขจาก 1 ล้านเลข เลขอันดับต้นข้างล่างไม่ได้ออกง่ายกว่าเลขอื่น`),
+    h("p", { class: "note" }, `จัดอันดับจากสถิติของเลขรางวัลที่ 1–5 ทุกงวดรวมกัน (ไม่แยกรางวัล) ว่าเลขไหนมีตัวเลข ตำแหน่ง และรูปแบบคล้ายเลขที่เคยออกมากที่สุด ใช้ข้อมูล ${fmt.format(gr.draw_count)} งวด ถึง ${thShort(gr.data_through)}`),
+    h("div", { class: "table-wrap" }, h("table", { class: "cand-table" },
+      h("thead", null, h("tr", null, h("th", { class: "n" }, "อันดับ"), h("th", null, "เลข"), h("th", { class: "n" }, term("ดูทุกรางวัล", "global-score")), h("th", null, "เหตุผลหลัก"))),
+      h("tbody", null, rows.map((r) => h("tr", null,
+        h("td", { class: "n" }, r.rank),
+        h("td", { class: "num6" }, RE_SIX.test(r.number) ? r.number : "–"),
+        scoreCell(r.global_score),
+        h("td", { class: "why" }, h("ul", { class: "contrib" }, r.contributions.map((c) => h("li", null,
+          h("b", null, GROUP_LABEL[c.group]), ` — ${c.detail}`))))))))),
+    h("p", null, "เหตุผลแต่ละข้อต่างจาก \"ถ้าสุ่ม\" เพียงเล็กน้อย (เช่น 10.1% เทียบ 10%) ซึ่งอยู่ในระดับที่ความบังเอิญให้ได้ตามปกติ ผลทดสอบย้อนหลังพบว่าเลขคะแนน \"ดูทุกรางวัล\" สูงไม่ได้ถูกบ่อยกว่าการสุ่มเลือก (ดูแท็บ \"ทดสอบย้อนหลัง\" แถว \"ดูทุกรางวัลรวมกันอย่างเดียว\")"),
+    h("p", { class: "note" }, `คำนวณเมื่อ ${thDateTime(gr.rank_generated_at || gr.generated_at)}`));
 }
 
 function scoreCell(v) {

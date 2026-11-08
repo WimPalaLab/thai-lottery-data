@@ -206,6 +206,15 @@ def analysis_files(draws, csv_hash, data_dir, meta):
         stale = [k for k, v in want.items() if sb.get(k) != v]
         files["analysis/backtest_small.json"] = {**sb, **meta, "backtest_generated_at": sb.get("generated_at"),
                                                  "fresh": not stale, "stale_reasons": stale}
+    gr_path = os.path.join(data_dir, "analysis", "global_rank.json")
+    if os.path.exists(gr_path):
+        gr = read_json(gr_path)
+        cfg = META.load_config()
+        want = {"csv_sha256": csv_hash, "config_sha": META.config_sha(cfg), "code_sha": META.code_sha(),
+                "model_version": cfg["model_version"]}
+        stale = [k for k, v in want.items() if gr.get(k) != v]
+        files["analysis/global_rank.json"] = {**gr, **meta, "rank_generated_at": gr.get("generated_at"),
+                                              "fresh": not stale, "stale_reasons": stale}
     ml = ml_study_file(os.path.join(data_dir, "analysis", "ml_study.json"), csv_hash, meta)
     if ml:
         files["analysis/ml_study.json"] = ml

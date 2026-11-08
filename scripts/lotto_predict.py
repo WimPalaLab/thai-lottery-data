@@ -30,6 +30,7 @@ PRED_DIR = os.path.join(ROOT, "data", "predictions")
 EVAL_DIR = os.path.join(ROOT, "data", "evaluations")
 BACKTEST = os.path.join(ROOT, "data", "analysis", "backtest.json")
 BACKTEST_SMALL = os.path.join(ROOT, "data", "analysis", "backtest_small.json")
+GLOBAL_RANK = os.path.join(ROOT, "data", "analysis", "global_rank.json")
 SMALL_SUBDIR = "small"   # ไฟล์เสริมของ snapshot เดิมที่ยังไม่มีอันดับเลขท้าย
 SCHEMA_VERSION = 2       # 2: เพิ่ม small_predictions (เลขท้าย 2 ตัว, ท้าย 3 ตัว, หน้า 3 ตัว)
 DRAW_CUTOFF_UTC = datetime.time(7, 0)   # 14:00 น. เวลาไทย (UTC+7) ก่อนเริ่มถ่ายทอดการออกรางวัล
@@ -160,6 +161,41 @@ def cmd_backtest(args):
     secs = (datetime.datetime.now() - t0).total_seconds()
     print(f"backtest: {len(idxs)} draws ({summary['evaluation']['first_draw']}..{summary['evaluation']['last_draw']}) "
           f"in {secs:.0f}s; tuned {summary['tuning']['chosen']}")
+    return 0
+
+
+# ---------- อันดับ "ดูทุกรางวัล" ----------
+def build_global_rank(draws, cfg):
+    """เลข 6 หลักอันดับต้นตามคะแนน "ดูทุกรางวัล" (สถิติรางวัลที่ 1–5 รวมกัน) พร้อมเหตุผล
+    เป็นการจัดอันดับว่าเลขไหนคล้ายเลขที่เคยออก ไม่ใช่โอกาสถูกรางวัล (ทุกเลขมีโอกาสเท่ากัน)"""
+    import lotto_backtest as B
+    import lotto_model as M
+    prep = B.prepare(draws)
+    g, pms = B.models_at(prep, prep["n"], cfg)
+    zg = g.scores
+    g100 = M.scale_100(zg)
+    rows = []
+    for r, x in enumerate(M.top_k(zg, cfg["report_top_n"]), start=1):
+        # w_global = 1: ส่วนของโมเดลรางวัลเฉพาะมีน้ำหนัก 0 จึงเหลือแต่เหตุผลจากทุกรางวัลรวมกัน
+        why = [c for c in M.explain(int(x), g, pms["first"], 1.0, top=len(M.GROUPS) * 2) if c["scope"] == "global"]
+        rows.append({"number": f"{int(x):06d}", "rank": r, "global_score": round(float(g100(zg[x])), 3),
+                     "global_z": round(float(zg[x]), 4), "contributions": why[:3]})
+    return rows
+
+
+def cmd_global(args):
+    cfg = meta.load_config()
+    inputs = backtest_inputs(args.csv, cfg)
+    if not args.force and backtest_is_fresh(args.global_out, inputs):
+        print("global rank: up to date")
+        return 0
+    draws, _ = L.load(args.csv)
+    out = {"schema_version": SCHEMA_VERSION, "kind": "global_rank", **inputs, "data_through": draws[-1]["draw_date"],
+           "draw_count": len(draws), "generated_at": iso(utcnow()), "rows": build_global_rank(draws, cfg)}
+    os.makedirs(os.path.dirname(args.global_out), exist_ok=True)
+    with open(args.global_out, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"global rank: top {len(out['rows'])} from {len(draws)} draws, #1 = {out['rows'][0]['number']}")
     return 0
 
 
@@ -439,7 +475,7 @@ def cmd_evaluate(args):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("command", choices=["backtest", "snapshot", "evaluate"])
+    ap.add_argument("command", choices=["backtest", "snapshot", "evaluate", "global"])
     ap.add_argument("--csv", default=CSV)
     ap.add_argument("--pred-dir", default=PRED_DIR)
     ap.add_argument("--eval-dir", default=EVAL_DIR)
@@ -447,11 +483,12 @@ def main(argv=None):
     ap.add_argument("--out", default=BACKTEST)
     ap.add_argument("--small-backtest", default=BACKTEST_SMALL)
     ap.add_argument("--small-out", default=BACKTEST_SMALL)
+    ap.add_argument("--global-out", default=GLOBAL_RANK)
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--workers", type=int, default=None)
     ap.add_argument("--now", default=None, help="เวลาปัจจุบันแบบ YYYY-MM-DDTHH:MM:SSZ (ใช้ทดสอบ)")
     args = ap.parse_args(argv)
-    return {"backtest": cmd_backtest, "snapshot": cmd_snapshot, "evaluate": cmd_evaluate}[args.command](args)
+    return {"backtest": cmd_backtest, "snapshot": cmd_snapshot, "evaluate": cmd_evaluate, "global": cmd_global}[args.command](args)
 
 
 if __name__ == "__main__":
