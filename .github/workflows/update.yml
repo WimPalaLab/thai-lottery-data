@@ -71,6 +71,9 @@ jobs:
       - name: Create snapshot for the next draw (only if missing and before the draw)
         run: python scripts/lotto_predict.py snapshot
 
+      - name: Update all-prize ranking (only if data, config or model code changed)
+        run: python scripts/lotto_predict.py global
+
       - name: Refuse changes to existing snapshots and evaluations
         run: |
           changed=$(git diff --name-only --diff-filter=MDR -- data/predictions data/evaluations)

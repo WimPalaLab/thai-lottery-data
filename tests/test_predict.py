@@ -159,5 +159,41 @@ class BuildSnapshotTest(unittest.TestCase):
         self.assertEqual(json.dumps(snap["predictions"]), json.dumps(again["predictions"]))
 
 
+@unittest.skipIf(np is None, "ต้องใช้ numpy")
+class GlobalRankTest(unittest.TestCase):
+    def test_matches_snapshot_global_and_explains_only_global(self):
+        """อันดับ "ดูทุกรางวัล" ตรงกับทางเลือก global ใน snapshot และเหตุผลมาจากทุกรางวัลรวมกันเท่านั้น"""
+        draws = synthetic_draws(25)
+        cfg = META.load_config()
+        rows = P.build_global_rank(draws, cfg)
+        self.assertEqual(len(rows), cfg["report_top_n"])
+        self.assertEqual([r["rank"] for r in rows], list(range(1, len(rows) + 1)))
+        self.assertEqual(rows[0]["global_score"], 100.0)
+        z = [r["global_z"] for r in rows]
+        self.assertEqual(z, sorted(z, reverse=True))
+        for r in rows:
+            self.assertTrue(r["contributions"])
+            self.assertTrue(all(c["scope"] == "global" and c["detail"] for c in r["contributions"]))
+        chosen = {k: cfg["default_experiment"] for k in META.SIX_PRIZES}
+        now = datetime.datetime(2011, 1, 1, tzinfo=datetime.timezone.utc)
+        snap = P.build_snapshot(draws, cfg, chosen, now, "x", {"source": "default"})
+        alt = snap["alternatives"]["first"]["global"]
+        self.assertEqual([r["number"] for r in rows[:len(alt)]], alt)
+        self.assertEqual(json.dumps(rows), json.dumps(P.build_global_rank(copy.deepcopy(draws), cfg)))
+
+    def test_command_skips_when_up_to_date(self):
+        d = tempfile.mkdtemp()
+        try:
+            out = os.path.join(d, "global_rank.json")
+            inputs = P.backtest_inputs(CSV, META.load_config())
+            with open(out, "w", encoding="utf-8") as f:
+                json.dump({**inputs, "rows": "kept"}, f)
+            P.main(["global", "--global-out", out])
+            with open(out, encoding="utf-8") as f:
+                self.assertEqual(json.load(f)["rows"], "kept")
+        finally:
+            shutil.rmtree(d)
+
+
 if __name__ == "__main__":
     unittest.main()
